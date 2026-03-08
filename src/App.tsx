@@ -15,6 +15,8 @@ import Billing from "@/pages/Billing";
 import Payments from "@/pages/Payments";
 import OLTManagement from "@/pages/OLTManagement";
 import ONUManagement from "@/pages/ONUManagement";
+import Tickets from "@/pages/Tickets";
+import SMSLogs from "@/pages/SMSLogs";
 import CustomerLogin from "@/pages/portal/CustomerLogin";
 import CustomerDashboard from "@/pages/portal/CustomerDashboard";
 import CustomerBills from "@/pages/portal/CustomerBills";
