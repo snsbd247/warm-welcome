@@ -204,6 +204,8 @@ Deno.serve(async (req: Request) => {
 
       try {
         await withRouter(routerConfig, async (mt) => {
+          // Ensure profile exists before assigning
+          await ensureProfileExists(mt, profile_name || "default");
           const listRes = await mt.send(["/ppp/secret/print", `?name=${pppoe_username}`]);
           const existing = parseItems(listRes.sentences);
           if (existing.length > 0) {
