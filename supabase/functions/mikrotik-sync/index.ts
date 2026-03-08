@@ -146,6 +146,21 @@ async function updateSyncStatus(supabase: any, customerId: string, status: strin
   await supabase.from("customers").update({ mikrotik_sync_status: status }).eq("id", customerId);
 }
 
+// Helper: ensure a PPP profile exists on the router, create if missing
+async function ensureProfileExists(mt: MikroTikConnection, profileName: string) {
+  if (!profileName || profileName === "default") return;
+  try {
+    const listRes = await mt.send(["/ppp/profile/print", `?name=${profileName}`]);
+    const existing = parseItems(listRes.sentences);
+    if (existing.length === 0) {
+      console.log(`Auto-creating missing PPP profile: ${profileName}`);
+      await mt.send(["/ppp/profile/add", `=name=${profileName}`, "=local-address=10.10.10.1"]);
+    }
+  } catch (e) {
+    console.error(`Failed to ensure profile ${profileName}:`, e.message);
+  }
+}
+
 // ─── Edge Function Handler ──────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
