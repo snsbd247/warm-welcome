@@ -122,6 +122,58 @@ export default function MikroTikRouters() {
     }
   };
 
+  const testConnection = async (router: any) => {
+    setTesting(router.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("mikrotik-sync/test-connection", {
+        body: {
+          ip_address: router.ip_address,
+          username: router.username,
+          password: router.password,
+          api_port: router.api_port,
+        },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success(`Connected! Identity: ${data.identity}, Version: ${data.version}, Uptime: ${data.uptime}`);
+      } else {
+        toast.error(`Connection failed: ${data?.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      toast.error(`Test failed: ${err.message}`);
+    } finally {
+      setTesting(null);
+    }
+  };
+
+  const testFormConnection = async () => {
+    if (!form.ip_address || !form.username || !form.password) {
+      toast.error("Please fill IP, username and password first");
+      return;
+    }
+    setTesting("form");
+    try {
+      const { data, error } = await supabase.functions.invoke("mikrotik-sync/test-connection", {
+        body: {
+          ip_address: form.ip_address,
+          username: form.username,
+          password: form.password,
+          api_port: parseInt(form.api_port) || 8728,
+        },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success(`Connected! Identity: ${data.identity}, Version: ${data.version}`);
+      } else {
+        toast.error(`Connection failed: ${data?.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      toast.error(`Test failed: ${err.message}`);
+    } finally {
+      setTesting(null);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
