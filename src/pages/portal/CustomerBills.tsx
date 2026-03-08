@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import PortalLayout from "@/components/layout/PortalLayout";
@@ -12,11 +13,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, CreditCard } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2, CreditCard, Smartphone, Building2, Banknote } from "lucide-react";
 import { toast } from "sonner";
+
+const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 
 export default function CustomerBills() {
   const { customer } = useCustomerAuth();
+  const queryClient = useQueryClient();
+  const [payOpen, setPayOpen] = useState(false);
+  const [selectedBill, setSelectedBill] = useState<any>(null);
+  const [paying, setPaying] = useState(false);
 
   const { data: bills, isLoading } = useQuery({
     queryKey: ["customer-bills-list", customer?.id],
@@ -42,9 +55,83 @@ export default function CustomerBills() {
   };
 
   const handlePayNow = (bill: any) => {
-    // Placeholder — in production this would integrate with a payment gateway
-    toast.info("Payment gateway integration coming soon. Please contact your ISP to make a payment.");
+    setSelectedBill(bill);
+    setPayOpen(true);
   };
+
+  const handleBkashPay = async () => {
+    if (!selectedBill || !customer) return;
+    setPaying(true);
+    try {
+      const callbackUrl = `${window.location.origin}/portal/payment-callback`;
+
+      const res = await fetch(
+        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/bkash-payment/create`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bill_id: selectedBill.id,
+            customer_id: customer.id,
+            amount: Number(selectedBill.amount),
+            callback_url: callbackUrl,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.bkashURL) {
+        // Store paymentID for callback
+        localStorage.setItem("bkash_payment_id", data.paymentID);
+        // Redirect to bKash
+        window.location.href = data.bkashURL;
+      } else {
+        toast.error(data.error || "Failed to initiate payment");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Payment failed");
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const paymentMethods = [
+    {
+      id: "bkash",
+      name: "bKash",
+      icon: Smartphone,
+      color: "text-pink-600",
+      bgColor: "bg-pink-50",
+      available: true,
+      action: handleBkashPay,
+    },
+    {
+      id: "nagad",
+      name: "Nagad",
+      icon: Smartphone,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      available: false,
+    },
+    {
+      id: "bank",
+      name: "Bank Transfer",
+      icon: Building2,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      available: false,
+    },
+    {
+      id: "cash",
+      name: "Cash",
+      icon: Banknote,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      available: false,
+      note: "Pay at office",
+    },
+  ];
 
   return (
     <PortalLayout>
@@ -106,6 +193,60 @@ export default function CustomerBills() {
           </div>
         )}
       </div>
+
+      {/* Payment Method Dialog */}
+      <Dialog open={payOpen} onOpenChange={setPayOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choose Payment Method</DialogTitle>
+          </DialogHeader>
+          {selectedBill && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-muted">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Bill Month</span>
+                  <span className="font-medium text-foreground">{selectedBill.month}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className="font-bold text-lg text-foreground">৳{Number(selectedBill.amount).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {paymentMethods.map((method) => (
+                  <button
+                    key={method.id}
+                    disabled={!method.available || paying}
+                    onClick={method.action}
+                    className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                      method.available
+                        ? "hover:border-primary hover:shadow-sm cursor-pointer border-border"
+                        : "opacity-50 cursor-not-allowed border-border"
+                    }`}
+                  >
+                    <div className={`h-10 w-10 rounded-lg ${method.bgColor} flex items-center justify-center`}>
+                      <method.icon className={`h-5 w-5 ${method.color}`} />
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="font-medium text-sm text-foreground">{method.name}</p>
+                      {method.note && (
+                        <p className="text-xs text-muted-foreground">{method.note}</p>
+                      )}
+                      {!method.available && (
+                        <p className="text-xs text-muted-foreground">Coming soon</p>
+                      )}
+                    </div>
+                    {paying && method.id === "bkash" && (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </PortalLayout>
   );
 }
