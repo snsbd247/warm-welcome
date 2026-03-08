@@ -184,34 +184,43 @@ export type Database = {
         Row: {
           amount: number
           bill_id: string | null
+          bkash_payment_id: string | null
+          bkash_trx_id: string | null
           created_at: string
           customer_id: string
           id: string
           month: string | null
           paid_at: string
           payment_method: string
+          status: string
           transaction_id: string | null
         }
         Insert: {
           amount: number
           bill_id?: string | null
+          bkash_payment_id?: string | null
+          bkash_trx_id?: string | null
           created_at?: string
           customer_id: string
           id?: string
           month?: string | null
           paid_at?: string
           payment_method?: string
+          status?: string
           transaction_id?: string | null
         }
         Update: {
           amount?: number
           bill_id?: string | null
+          bkash_payment_id?: string | null
+          bkash_trx_id?: string | null
           created_at?: string
           customer_id?: string
           id?: string
           month?: string | null
           paid_at?: string
           payment_method?: string
+          status?: string
           transaction_id?: string | null
         }
         Relationships: [
