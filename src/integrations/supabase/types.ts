@@ -75,6 +75,7 @@ export type Database = {
           id: string
           installation_date: string | null
           ip_address: string | null
+          mikrotik_sync_status: string
           monthly_bill: number
           name: string
           nid: string | null
@@ -104,6 +105,7 @@ export type Database = {
           id?: string
           installation_date?: string | null
           ip_address?: string | null
+          mikrotik_sync_status?: string
           monthly_bill?: number
           name: string
           nid?: string | null
@@ -133,6 +135,7 @@ export type Database = {
           id?: string
           installation_date?: string | null
           ip_address?: string | null
+          mikrotik_sync_status?: string
           monthly_bill?: number
           name?: string
           nid?: string | null
@@ -336,6 +339,7 @@ export type Database = {
           mikrotik_profile_name: string | null
           monthly_price: number
           name: string
+          router_id: string | null
           speed: string
           updated_at: string
           upload_speed: number
@@ -350,6 +354,7 @@ export type Database = {
           mikrotik_profile_name?: string | null
           monthly_price?: number
           name: string
+          router_id?: string | null
           speed: string
           updated_at?: string
           upload_speed?: number
@@ -364,11 +369,20 @@ export type Database = {
           mikrotik_profile_name?: string | null
           monthly_price?: number
           name?: string
+          router_id?: string | null
           speed?: string
           updated_at?: string
           upload_speed?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "packages_router_id_fkey"
+            columns: ["router_id"]
+            isOneToOne: false
+            referencedRelation: "mikrotik_routers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
