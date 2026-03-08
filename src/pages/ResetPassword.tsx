@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,22 +8,48 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Wifi, Loader2 } from "lucide-react";
 
-export default function Login() {
-  const [email, setEmail] = useState("");
+export default function ResetPassword() {
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [isRecovery, setIsRecovery] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Listen for PASSWORD_RECOVERY event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      }
+    });
+
+    // Also check URL hash for recovery type
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery")) {
+      setIsRecovery(true);
+    }
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
     setLoading(true);
     try {
-      await signIn(email, password);
-      navigate("/");
-      toast.success("Welcome back!");
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      toast.success("Password updated successfully!");
+      navigate("/admin/login");
     } catch (error: any) {
-      toast.error(error.message || "Login failed");
+      toast.error(error.message || "Failed to update password");
     } finally {
       setLoading(false);
     }
@@ -44,26 +70,13 @@ export default function Login() {
 
         <Card className="glass-card">
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">Admin Sign In</CardTitle>
-            <CardDescription>
-              Enter your credentials to access the admin panel
-            </CardDescription>
+            <CardTitle className="text-xl">Reset Password</CardTitle>
+            <CardDescription>Enter your new password below</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@smartisp.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">New Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -74,17 +87,26 @@ export default function Login() {
                   minLength={6}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+              </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Sign In
+                Update Password
               </Button>
             </form>
-            <div className="mt-4 text-center space-y-2">
-              <a href="/admin/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors block">
-                Forgot password?
-              </a>
-              <a href="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors block">
-                ← Customer Login
+            <div className="mt-4 text-center">
+              <a href="/admin/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Back to Sign In
               </a>
             </div>
           </CardContent>
