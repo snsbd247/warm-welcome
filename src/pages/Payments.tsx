@@ -176,6 +176,18 @@ export default function Payments() {
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(payment.paid_at), "dd MMM yyyy HH:mm")}
                       </TableCell>
+                      <TableCell className="text-right">
+                        {payment.status === "completed" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => generatePaymentReceiptPDF(payment, payment.customers)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

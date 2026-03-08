@@ -76,6 +76,16 @@ export default function CustomerPayments() {
                       <TableCell className="font-mono text-sm">
                         {payment.transaction_id ?? "—"}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => generatePaymentReceiptPDF(payment, customer)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
