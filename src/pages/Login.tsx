@@ -79,8 +79,11 @@ export default function Login() {
                 Sign In
               </Button>
             </form>
-            <div className="mt-4 text-center">
-              <a href="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            <div className="mt-4 text-center space-y-2">
+              <a href="/admin/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors block">
+                Forgot password?
+              </a>
+              <a href="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors block">
                 ← Customer Login
               </a>
             </div>

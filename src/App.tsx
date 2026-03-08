@@ -46,6 +46,8 @@ function App() {
               <Routes>
                 {/* Admin Routes */}
                 <Route path="/admin/login" element={<Login />} />
+                <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
                 <Route path="/packages" element={<ProtectedRoute><Packages /></ProtectedRoute>} />
