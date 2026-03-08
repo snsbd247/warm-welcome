@@ -33,6 +33,7 @@ import CustomerPayments from "@/pages/portal/CustomerPayments";
 import CustomerProfile from "@/pages/portal/CustomerProfile";
 import CustomerTickets from "@/pages/portal/CustomerTickets";
 import PaymentCallback from "@/pages/portal/PaymentCallback";
+import AdminUsers from "@/pages/AdminUsers";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
