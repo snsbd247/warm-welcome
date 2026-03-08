@@ -61,6 +61,53 @@ export type Database = {
           },
         ]
       }
+      customer_ledger: {
+        Row: {
+          balance: number
+          created_at: string
+          credit: number
+          customer_id: string
+          date: string
+          debit: number
+          description: string
+          id: string
+          reference: string | null
+          type: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          credit?: number
+          customer_id: string
+          date?: string
+          debit?: number
+          description: string
+          id?: string
+          reference?: string | null
+          type?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          credit?: number
+          customer_id?: string
+          date?: string
+          debit?: number
+          description?: string
+          id?: string
+          reference?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_ledger_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           alt_phone: string | null
