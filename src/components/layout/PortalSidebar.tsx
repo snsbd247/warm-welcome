@@ -8,6 +8,7 @@ import {
   LogOut,
   Wifi,
   ChevronLeft,
+  Ticket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
