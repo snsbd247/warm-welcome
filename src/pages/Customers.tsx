@@ -38,7 +38,7 @@ export default function Customers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("customers")
-        .select("*, packages(name)")
+        .select("*, packages(name), mikrotik_routers(name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -57,7 +57,16 @@ export default function Customers() {
     switch (status) {
       case "active": return "bg-success/10 text-success border-success/20";
       case "suspended": return "bg-destructive/10 text-destructive border-destructive/20";
+      case "disconnected": return "bg-muted text-muted-foreground border-border";
       default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const connectionColor = (status: string) => {
+    switch (status) {
+      case "active": return "bg-success/10 text-success border-success/20";
+      case "suspended": return "bg-warning/10 text-warning border-warning/20";
+      default: return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -102,13 +111,14 @@ export default function Customers() {
                   <TableHead>Package</TableHead>
                   <TableHead>Monthly Bill</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Connection</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
                       No customers found
                     </TableCell>
                   </TableRow>
@@ -124,6 +134,11 @@ export default function Customers() {
                       <TableCell>
                         <Badge variant="outline" className={statusColor(customer.status)}>
                           {customer.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={connectionColor((customer as any).connection_status || "active")}>
+                          {(customer as any).connection_status || "active"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">

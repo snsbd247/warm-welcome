@@ -43,12 +43,22 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
     router_mac: customer?.router_mac ?? "",
     installation_date: customer?.installation_date ?? "",
     status: customer?.status ?? "active",
+    router_id: customer?.router_id ?? "",
   });
 
   const { data: packages } = useQuery({
     queryKey: ["packages"],
     queryFn: async () => {
       const { data, error } = await supabase.from("packages").select("*").eq("is_active", true);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: routers } = useQuery({
+    queryKey: ["mikrotik-routers-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("mikrotik_routers").select("*").eq("status", "active");
       if (error) throw error;
       return data;
     },
@@ -63,15 +73,51 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
     if (pkg) update("monthly_bill", pkg.monthly_price.toString());
   };
 
+  const syncPPPoEUser = async (customerId: string, customerData: any, pkg: any, router: any) => {
+    try {
+      const { error } = await supabase.functions.invoke("mikrotik-sync/create-pppoe", {
+        body: {
+          customer_id: customerId,
+          pppoe_username: customerData.pppoe_username,
+          pppoe_password: customerData.pppoe_password,
+          profile_name: pkg?.mikrotik_profile_name || pkg?.name || "default",
+          comment: customerData.name,
+          router_id: customerData.router_id,
+        },
+      });
+      if (error) throw error;
+      toast.success("PPPoE user created on MikroTik");
+    } catch (e: any) {
+      console.error("MikroTik PPPoE sync failed:", e);
+      toast.warning("Customer saved but MikroTik PPPoE sync failed. You can retry later.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const payload = {
-      ...form,
-      monthly_bill: parseFloat(form.monthly_bill) || 0,
+    const payload: any = {
+      name: form.name,
+      father_name: form.father_name || null,
+      nid: form.nid || null,
+      phone: form.phone,
+      alt_phone: form.alt_phone || null,
+      email: form.email || null,
+      area: form.area,
+      road: form.road || null,
+      house: form.house || null,
+      city: form.city || null,
       package_id: form.package_id || null,
+      monthly_bill: parseFloat(form.monthly_bill) || 0,
+      ip_address: form.ip_address || null,
+      pppoe_username: form.pppoe_username || null,
+      pppoe_password: form.pppoe_password || null,
+      onu_mac: form.onu_mac || null,
+      router_mac: form.router_mac || null,
       installation_date: form.installation_date || null,
+      status: form.status,
+      router_id: form.router_id || null,
     };
 
     try {
@@ -90,7 +136,14 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
           .single();
         if (error) throw error;
         toast.success("Customer created successfully");
-        // Generate PDF for new customer
+
+        // Auto-create PPPoE user on MikroTik if router and PPPoE credentials are set
+        if (data && form.router_id && form.pppoe_username) {
+          const pkg = packages?.find((p) => p.id === form.package_id);
+          const router = routers?.find((r) => r.id === form.router_id);
+          await syncPPPoEUser(data.id, payload, pkg, router);
+        }
+
         if (data) generateCustomerPDF(data);
       }
       onSuccess();
@@ -161,6 +214,19 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
       <div>
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Connection Details</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label>MikroTik Router</Label>
+            <Select value={form.router_id} onValueChange={(v) => update("router_id", v)}>
+              <SelectTrigger><SelectValue placeholder="Select router" /></SelectTrigger>
+              <SelectContent>
+                {routers?.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.name} — {r.ip_address}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1.5">
             <Label>Package</Label>
             <Select value={form.package_id} onValueChange={handlePackageChange}>

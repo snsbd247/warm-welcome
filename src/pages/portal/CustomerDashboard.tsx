@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Package,
   Wifi,
+  WifiOff,
   CreditCard,
   Loader2,
 } from "lucide-react";
@@ -92,10 +93,19 @@ export default function CustomerDashboard() {
     ?.filter((b) => b.status === "unpaid")
     .reduce((sum, b) => sum + Number(b.amount), 0) ?? 0;
 
+  const connectionStatus = (customer as any)?.connection_status || customer?.status || "active";
+  const isConnected = connectionStatus === "active";
+
   const statusColor =
     customer?.status === "active"
       ? "bg-success/10 text-success border-success/20"
-      : "bg-destructive/10 text-destructive border-destructive/20";
+      : customer?.status === "suspended"
+      ? "bg-destructive/10 text-destructive border-destructive/20"
+      : "bg-muted text-muted-foreground border-border";
+
+  const connectionColor = isConnected
+    ? "bg-success/10 text-success border-success/20"
+    : "bg-destructive/10 text-destructive border-destructive/20";
 
   if (isLoading) {
     return (
@@ -117,6 +127,9 @@ export default function CustomerDashboard() {
           <p className="text-muted-foreground font-mono text-sm">{customer?.customer_id}</p>
           <Badge variant="outline" className={statusColor}>
             {customer?.status}
+          </Badge>
+          <Badge variant="outline" className={connectionColor}>
+            {isConnected ? "Online" : "Suspended (Due Bill)"}
           </Badge>
         </div>
       </div>
@@ -149,12 +162,14 @@ export default function CustomerDashboard() {
         <Card className="glass-card animate-fade-in">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
-                <Wifi className="h-5 w-5 text-success" />
+              <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${isConnected ? "bg-success/10" : "bg-destructive/10"}`}>
+                {isConnected ? <Wifi className="h-5 w-5 text-success" /> : <WifiOff className="h-5 w-5 text-destructive" />}
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Connection Status</p>
-                <p className="text-lg font-bold capitalize text-card-foreground">{customer?.status}</p>
+                <p className={`text-lg font-bold capitalize ${isConnected ? "text-success" : "text-destructive"}`}>
+                  {isConnected ? "Active" : "Suspended (Due Bill)"}
+                </p>
               </div>
             </div>
             <div className="space-y-2 text-sm">

@@ -6,16 +6,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// MikroTik REST API helper (RouterOS v7+)
-// Note: For RouterOS API protocol, a TCP socket library would be needed.
-// Using REST API as it's more compatible with edge functions.
-async function mikrotikRequest(path: string, method: string = "GET", body?: any) {
-  const host = Deno.env.get("MIKROTIK_HOST")!;
-  const username = Deno.env.get("MIKROTIK_USERNAME")!;
-  const password = Deno.env.get("MIKROTIK_PASSWORD")!;
-
-  const url = `https://${host}/rest${path}`;
-  const auth = btoa(`${username}:${password}`);
+// MikroTik REST API helper — uses per-router credentials from DB when available
+async function mikrotikRequestWithRouter(
+  router: { ip_address: string; username: string; password: string; api_port: number },
+  path: string,
+  method: string = "GET",
+  body?: any
+) {
+  const url = `https://${router.ip_address}/rest${path}`;
+  const auth = btoa(`${router.username}:${router.password}`);
 
   const options: RequestInit = {
     method,
@@ -42,11 +41,31 @@ async function mikrotikRequest(path: string, method: string = "GET", body?: any)
   return null;
 }
 
+// Fallback: use env vars for router credentials
+function getEnvRouter() {
+  return {
+    ip_address: Deno.env.get("MIKROTIK_HOST")!,
+    username: Deno.env.get("MIKROTIK_USERNAME")!,
+    password: Deno.env.get("MIKROTIK_PASSWORD")!,
+    api_port: 8728,
+  };
+}
+
 function getSupabaseAdmin() {
   return createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
+}
+
+async function getRouterById(supabase: any, routerId: string) {
+  const { data, error } = await supabase
+    .from("mikrotik_routers")
+    .select("*")
+    .eq("id", routerId)
+    .single();
+  if (error || !data) return null;
+  return data;
 }
 
 Deno.serve(async (req: Request) => {
@@ -58,7 +77,268 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const path = url.pathname.split("/").pop();
 
-    // Sync a package's bandwidth profile to MikroTik
+    // ─── CREATE PPPOE USER ──────────────────────────────────────
+    if (req.method === "POST" && path === "create-pppoe") {
+      const { customer_id, pppoe_username, pppoe_password, profile_name, comment, router_id } = await req.json();
+
+      if (!pppoe_username || !pppoe_password) {
+        return new Response(JSON.stringify({ error: "Missing PPPoE credentials" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const supabase = getSupabaseAdmin();
+      const router = router_id ? await getRouterById(supabase, router_id) : null;
+      const routerConfig = router || getEnvRouter();
+
+      try {
+        // Check if PPPoE secret already exists
+        const secrets = await mikrotikRequestWithRouter(routerConfig, "/ppp/secret");
+        const existing = secrets?.find((s: any) => s.name === pppoe_username);
+
+        if (existing) {
+          // Update existing
+          await mikrotikRequestWithRouter(routerConfig, `/ppp/secret/${existing[".id"]}`, "PATCH", {
+            password: pppoe_password,
+            profile: profile_name || "default",
+            comment: comment || "",
+          });
+        } else {
+          // Create new PPPoE secret
+          await mikrotikRequestWithRouter(routerConfig, "/ppp/secret", "PUT", {
+            name: pppoe_username,
+            password: pppoe_password,
+            service: "pppoe",
+            profile: profile_name || "default",
+            comment: comment || "",
+          });
+        }
+
+        // Update customer connection_status
+        if (customer_id) {
+          await supabase
+            .from("customers")
+            .update({ connection_status: "active" })
+            .eq("id", customer_id);
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (e) {
+        console.error("PPPoE create failed:", e.message);
+        return new Response(JSON.stringify({ error: "MikroTik PPPoE creation failed", details: e.message }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // ─── DISABLE PPPOE USER ─────────────────────────────────────
+    if (req.method === "POST" && path === "disable-pppoe") {
+      const { pppoe_username, router_id, customer_id } = await req.json();
+
+      if (!pppoe_username) {
+        return new Response(JSON.stringify({ error: "Missing pppoe_username" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const supabase = getSupabaseAdmin();
+      const router = router_id ? await getRouterById(supabase, router_id) : null;
+      const routerConfig = router || getEnvRouter();
+
+      try {
+        const secrets = await mikrotikRequestWithRouter(routerConfig, "/ppp/secret");
+        const existing = secrets?.find((s: any) => s.name === pppoe_username);
+
+        if (existing) {
+          await mikrotikRequestWithRouter(routerConfig, `/ppp/secret/${existing[".id"]}`, "PATCH", {
+            disabled: "true",
+          });
+
+          // Also disconnect active session
+          try {
+            const active = await mikrotikRequestWithRouter(routerConfig, "/ppp/active");
+            const session = active?.find((a: any) => a.name === pppoe_username);
+            if (session) {
+              await mikrotikRequestWithRouter(routerConfig, `/ppp/active/${session[".id"]}`, "DELETE");
+            }
+          } catch (e) {
+            console.error("Failed to disconnect active session:", e.message);
+          }
+        }
+
+        if (customer_id) {
+          await supabase
+            .from("customers")
+            .update({ connection_status: "suspended", status: "suspended" })
+            .eq("id", customer_id);
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (e) {
+        console.error("PPPoE disable failed:", e.message);
+        return new Response(JSON.stringify({ error: "MikroTik disable failed", details: e.message }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // ─── ENABLE PPPOE USER ──────────────────────────────────────
+    if (req.method === "POST" && path === "enable-pppoe") {
+      const { pppoe_username, router_id, customer_id } = await req.json();
+
+      if (!pppoe_username) {
+        return new Response(JSON.stringify({ error: "Missing pppoe_username" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const supabase = getSupabaseAdmin();
+      const router = router_id ? await getRouterById(supabase, router_id) : null;
+      const routerConfig = router || getEnvRouter();
+
+      try {
+        const secrets = await mikrotikRequestWithRouter(routerConfig, "/ppp/secret");
+        const existing = secrets?.find((s: any) => s.name === pppoe_username);
+
+        if (existing) {
+          await mikrotikRequestWithRouter(routerConfig, `/ppp/secret/${existing[".id"]}`, "PATCH", {
+            disabled: "false",
+          });
+        }
+
+        if (customer_id) {
+          await supabase
+            .from("customers")
+            .update({ connection_status: "active", status: "active" })
+            .eq("id", customer_id);
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (e) {
+        console.error("PPPoE enable failed:", e.message);
+        return new Response(JSON.stringify({ error: "MikroTik enable failed", details: e.message }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // ─── BILL CONTROL: Suspend overdue, reactivate paid ─────────
+    if (req.method === "POST" && path === "bill-control") {
+      const supabase = getSupabaseAdmin();
+      const results = { suspended: 0, reactivated: 0, errors: [] as string[] };
+
+      // 1. Find overdue unpaid bills and suspend those customers
+      const today = new Date().toISOString().split("T")[0];
+      const { data: overdueBills } = await supabase
+        .from("bills")
+        .select("*, customers!inner(id, pppoe_username, router_id, connection_status, status)")
+        .eq("status", "unpaid")
+        .lt("due_date", today);
+
+      if (overdueBills) {
+        for (const bill of overdueBills) {
+          const cust = bill.customers;
+          if (!cust || cust.connection_status === "suspended" || !cust.pppoe_username) continue;
+
+          try {
+            const router = cust.router_id ? await getRouterById(supabase, cust.router_id) : null;
+            const routerConfig = router || getEnvRouter();
+
+            const secrets = await mikrotikRequestWithRouter(routerConfig, "/ppp/secret");
+            const existing = secrets?.find((s: any) => s.name === cust.pppoe_username);
+
+            if (existing) {
+              await mikrotikRequestWithRouter(routerConfig, `/ppp/secret/${existing[".id"]}`, "PATCH", {
+                disabled: "true",
+              });
+
+              // Disconnect active session
+              try {
+                const active = await mikrotikRequestWithRouter(routerConfig, "/ppp/active");
+                const session = active?.find((a: any) => a.name === cust.pppoe_username);
+                if (session) {
+                  await mikrotikRequestWithRouter(routerConfig, `/ppp/active/${session[".id"]}`, "DELETE");
+                }
+              } catch { /* ignore */ }
+            }
+
+            await supabase
+              .from("customers")
+              .update({ connection_status: "suspended", status: "suspended" })
+              .eq("id", cust.id);
+
+            results.suspended++;
+          } catch (e) {
+            console.error(`Failed to suspend ${cust.id}:`, e.message);
+            results.errors.push(`Suspend ${cust.id}: ${e.message}`);
+          }
+        }
+      }
+
+      // 2. Find recently paid customers that are still suspended and reactivate
+      const { data: suspendedCustomers } = await supabase
+        .from("customers")
+        .select("id, pppoe_username, router_id")
+        .eq("connection_status", "suspended")
+        .not("pppoe_username", "is", null);
+
+      if (suspendedCustomers) {
+        for (const cust of suspendedCustomers) {
+          // Check if all bills are paid
+          const { data: unpaidBills } = await supabase
+            .from("bills")
+            .select("id")
+            .eq("customer_id", cust.id)
+            .eq("status", "unpaid")
+            .lt("due_date", today)
+            .limit(1);
+
+          if (unpaidBills && unpaidBills.length > 0) continue; // Still has overdue bills
+
+          try {
+            const router = cust.router_id ? await getRouterById(supabase, cust.router_id) : null;
+            const routerConfig = router || getEnvRouter();
+
+            const secrets = await mikrotikRequestWithRouter(routerConfig, "/ppp/secret");
+            const existing = secrets?.find((s: any) => s.name === cust.pppoe_username);
+
+            if (existing) {
+              await mikrotikRequestWithRouter(routerConfig, `/ppp/secret/${existing[".id"]}`, "PATCH", {
+                disabled: "false",
+              });
+            }
+
+            await supabase
+              .from("customers")
+              .update({ connection_status: "active", status: "active" })
+              .eq("id", cust.id);
+
+            results.reactivated++;
+          } catch (e) {
+            console.error(`Failed to reactivate ${cust.id}:`, e.message);
+            results.errors.push(`Reactivate ${cust.id}: ${e.message}`);
+          }
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, results }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ─── SYNC PROFILE (existing) ────────────────────────────────
     if (req.method === "POST" && path === "sync-profile") {
       const { package_id } = await req.json();
 
@@ -83,85 +363,32 @@ Deno.serve(async (req: Request) => {
         });
       }
 
+      const routerConfig = getEnvRouter();
       const profileName = pkg.mikrotik_profile_name || `ISP-${pkg.name.replace(/\s+/g, "-")}`;
       const downloadLimit = `${pkg.download_speed}M`;
       const uploadLimit = `${pkg.upload_speed}M`;
       const maxLimit = `${uploadLimit}/${downloadLimit}`;
 
-      // Check if profile exists
-      let existingProfiles;
       try {
-        existingProfiles = await mikrotikRequest("/queue/simple");
-      } catch (e) {
-        // Try /queue/type for profile-based approach
-        try {
-          existingProfiles = await mikrotikRequest("/ppp/profile");
-        } catch {
-          return new Response(JSON.stringify({ error: "Cannot connect to MikroTik", details: e.message }), {
-            status: 502,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
-
-      // Create or update PPP profile
-      try {
-        const profiles = await mikrotikRequest("/ppp/profile");
+        const profiles = await mikrotikRequestWithRouter(routerConfig, "/ppp/profile");
         const existing = profiles?.find((p: any) => p.name === profileName);
 
         if (existing) {
-          // Update existing profile
-          await mikrotikRequest(`/ppp/profile/${existing[".id"]}`, "PATCH", {
+          await mikrotikRequestWithRouter(routerConfig, `/ppp/profile/${existing[".id"]}`, "PATCH", {
             name: profileName,
             "rate-limit": maxLimit,
           });
         } else {
-          // Create new profile
-          await mikrotikRequest("/ppp/profile", "PUT", {
+          await mikrotikRequestWithRouter(routerConfig, "/ppp/profile", "PUT", {
             name: profileName,
             "rate-limit": maxLimit,
             "local-address": "10.10.10.1",
           });
         }
       } catch (e) {
-        console.error("PPP profile sync failed, trying simple queue:", e.message);
-
-        // Fallback: Update simple queues for customers on this package
-        const { data: customers } = await supabase
-          .from("customers")
-          .select("ip_address, name, customer_id")
-          .eq("package_id", package_id)
-          .not("ip_address", "is", null);
-
-        if (customers && customers.length > 0) {
-          for (const customer of customers) {
-            if (!customer.ip_address) continue;
-
-            try {
-              const queues = await mikrotikRequest("/queue/simple");
-              const existing = queues?.find((q: any) =>
-                q.target === `${customer.ip_address}/32` || q.name === customer.customer_id
-              );
-
-              if (existing) {
-                await mikrotikRequest(`/queue/simple/${existing[".id"]}`, "PATCH", {
-                  "max-limit": maxLimit,
-                });
-              } else {
-                await mikrotikRequest("/queue/simple", "PUT", {
-                  name: customer.customer_id,
-                  target: `${customer.ip_address}/32`,
-                  "max-limit": maxLimit,
-                });
-              }
-            } catch (qErr) {
-              console.error(`Failed to update queue for ${customer.customer_id}:`, qErr.message);
-            }
-          }
-        }
+        console.error("PPP profile sync failed:", e.message);
       }
 
-      // Update package with profile name
       await supabase
         .from("packages")
         .update({ mikrotik_profile_name: profileName })
@@ -172,7 +399,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Sync a single customer's bandwidth
+    // ─── SYNC CUSTOMER (existing) ───────────────────────────────
     if (req.method === "POST" && path === "sync-customer") {
       const { customer_id } = await req.json();
 
@@ -190,21 +417,23 @@ Deno.serve(async (req: Request) => {
         });
       }
 
+      const router = customer.router_id ? await getRouterById(supabase, customer.router_id) : null;
+      const routerConfig = router || getEnvRouter();
       const pkg = customer.packages;
       const maxLimit = `${pkg.upload_speed}M/${pkg.download_speed}M`;
 
       try {
-        const queues = await mikrotikRequest("/queue/simple");
+        const queues = await mikrotikRequestWithRouter(routerConfig, "/queue/simple");
         const existing = queues?.find((q: any) =>
           q.target === `${customer.ip_address}/32` || q.name === customer.customer_id
         );
 
         if (existing) {
-          await mikrotikRequest(`/queue/simple/${existing[".id"]}`, "PATCH", {
+          await mikrotikRequestWithRouter(routerConfig, `/queue/simple/${existing[".id"]}`, "PATCH", {
             "max-limit": maxLimit,
           });
         } else {
-          await mikrotikRequest("/queue/simple", "PUT", {
+          await mikrotikRequestWithRouter(routerConfig, "/queue/simple", "PUT", {
             name: customer.customer_id,
             target: `${customer.ip_address}/32`,
             "max-limit": maxLimit,
