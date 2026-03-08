@@ -182,11 +182,19 @@ export default function AdminUsers() {
         <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add User</Button>
       </div>
 
-      <div className="mb-4 max-w-sm">
-        <div className="relative">
+      <div className="mb-4 flex gap-3 items-center">
+        <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="disabled">Disabled</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
