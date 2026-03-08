@@ -25,7 +25,31 @@ export default function Customers() {
   const [viewOpen, setViewOpen] = useState(false);
   const [editCustomer, setEditCustomer] = useState<any>(null);
   const [viewCustomer, setViewCustomer] = useState<any>(null);
+  const [bulkSyncing, setBulkSyncing] = useState(false);
   const queryClient = useQueryClient();
+
+  const bulkSyncCustomers = async () => {
+    setBulkSyncing(true);
+    try {
+      const res = await fetch(
+        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/bulk-sync-customers`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }
+      );
+      const data = await res.json();
+      if (data.success) {
+        const r = data.results;
+        toast.success(`Bulk sync complete: ${r.synced} synced, ${r.failed} failed`);
+        if (r.errors?.length > 0) toast.warning(`Errors: ${r.errors.slice(0, 3).join("; ")}`);
+        queryClient.invalidateQueries({ queryKey: ["customers"] });
+      } else {
+        toast.error(data.error || "Bulk sync failed");
+      }
+    } catch {
+      toast.error("Could not connect to MikroTik");
+    } finally {
+      setBulkSyncing(false);
+    }
+  };
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ["customers"],
