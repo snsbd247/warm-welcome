@@ -148,10 +148,23 @@ export default function CustomerView({ customer }: CustomerViewProps) {
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">MikroTik Sync</h4>
           {customer.pppoe_username && (
-            <Button variant="outline" size="sm" onClick={retrySyncHandler} disabled={retrying}>
-              {retrying ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
-              {retrying ? "Syncing..." : "Retry Sync"}
-            </Button>
+            <div className="flex gap-2">
+              {customer.connection_status !== "suspended" ? (
+                <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={suspendPPPoE} disabled={suspending}>
+                  {suspending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Ban className="h-3.5 w-3.5 mr-1.5" />}
+                  Suspend PPPoE
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" className="text-success border-success/30 hover:bg-success/10" onClick={reactivatePPPoE} disabled={reactivating}>
+                  {reactivating ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
+                  Reactivate PPPoE
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={retrySyncHandler} disabled={retrying}>
+                {retrying ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
+                Retry Sync
+              </Button>
+            </div>
           )}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
