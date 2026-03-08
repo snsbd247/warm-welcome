@@ -20,6 +20,7 @@ const mainNav = [
   { to: "/sms", icon: MessageSquare, label: "SMS" },
   { to: "/sms-settings", icon: Settings, label: "SMS Settings" },
   { to: "/reminders", icon: Bell, label: "Reminders" },
+  { to: "/users", icon: Shield, label: "Users" },
   { to: "/profile", icon: UserCircle, label: "Profile" },
 ];
 

@@ -64,6 +64,7 @@ function App() {
                 <Route path="/sms-settings" element={<ProtectedRoute><SMSSettings /></ProtectedRoute>} />
                 <Route path="/reminders" element={<ProtectedRoute><ReminderLogs /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
+                <Route path="/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
 
                 {/* Settings Routes */}
                 <Route path="/settings/general" element={<ProtectedRoute><GeneralSettings /></ProtectedRoute>} />
