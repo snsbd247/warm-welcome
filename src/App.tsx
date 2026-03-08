@@ -47,6 +47,8 @@ function App() {
                 <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
                 <Route path="/olt" element={<ProtectedRoute><OLTManagement /></ProtectedRoute>} />
                 <Route path="/onu" element={<ProtectedRoute><ONUManagement /></ProtectedRoute>} />
+                <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
+                <Route path="/sms" element={<ProtectedRoute><SMSLogs /></ProtectedRoute>} />
 
                 {/* Customer Portal Routes */}
                 <Route path="/portal/login" element={<CustomerLogin />} />
