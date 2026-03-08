@@ -136,6 +136,11 @@ export default function Customers() {
                           {customer.status}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={connectionColor((customer as any).connection_status || "active")}>
+                          {(customer as any).connection_status || "active"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
