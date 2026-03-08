@@ -33,6 +33,7 @@ import CustomerPayments from "@/pages/portal/CustomerPayments";
 import CustomerProfile from "@/pages/portal/CustomerProfile";
 import CustomerTickets from "@/pages/portal/CustomerTickets";
 import PaymentCallback from "@/pages/portal/PaymentCallback";
+import AdminUsers from "@/pages/AdminUsers";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ function App() {
                 <Route path="/sms-settings" element={<ProtectedRoute><SMSSettings /></ProtectedRoute>} />
                 <Route path="/reminders" element={<ProtectedRoute><ReminderLogs /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
+                <Route path="/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
 
                 {/* Settings Routes */}
                 <Route path="/settings/general" element={<ProtectedRoute><GeneralSettings /></ProtectedRoute>} />

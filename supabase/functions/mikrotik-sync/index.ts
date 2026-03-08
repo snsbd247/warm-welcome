@@ -146,6 +146,21 @@ async function updateSyncStatus(supabase: any, customerId: string, status: strin
   await supabase.from("customers").update({ mikrotik_sync_status: status }).eq("id", customerId);
 }
 
+// Helper: ensure a PPP profile exists on the router, create if missing
+async function ensureProfileExists(mt: MikroTikConnection, profileName: string) {
+  if (!profileName || profileName === "default") return;
+  try {
+    const listRes = await mt.send(["/ppp/profile/print", `?name=${profileName}`]);
+    const existing = parseItems(listRes.sentences);
+    if (existing.length === 0) {
+      console.log(`Auto-creating missing PPP profile: ${profileName}`);
+      await mt.send(["/ppp/profile/add", `=name=${profileName}`, "=local-address=10.10.10.1"]);
+    }
+  } catch (e) {
+    console.error(`Failed to ensure profile ${profileName}:`, e.message);
+  }
+}
+
 // ─── Edge Function Handler ──────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -189,6 +204,8 @@ Deno.serve(async (req: Request) => {
 
       try {
         await withRouter(routerConfig, async (mt) => {
+          // Ensure profile exists before assigning
+          await ensureProfileExists(mt, profile_name || "default");
           const listRes = await mt.send(["/ppp/secret/print", `?name=${pppoe_username}`]);
           const existing = parseItems(listRes.sentences);
           if (existing.length > 0) {
@@ -227,6 +244,8 @@ Deno.serve(async (req: Request) => {
 
       try {
         await withRouter(routerConfig, async (mt) => {
+          // Ensure profile exists before assigning
+          if (profile_name) await ensureProfileExists(mt, profile_name);
           // Find by old username if renamed, else current
           const searchName = old_pppoe_username || pppoe_username;
           const listRes = await mt.send(["/ppp/secret/print", `?name=${searchName}`]);

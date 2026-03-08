@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2, Ban, Play } from "lucide-react";
 import { toast } from "sonner";
 
 const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -35,6 +35,8 @@ function SyncStatusBadge({ status }: { status: string }) {
 
 export default function CustomerView({ customer }: CustomerViewProps) {
   const [retrying, setRetrying] = useState(false);
+  const [suspending, setSuspending] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
 
   const statusColor =
     customer.status === "active"
@@ -65,6 +67,34 @@ export default function CustomerView({ customer }: CustomerViewProps) {
     } finally {
       setRetrying(false);
     }
+  };
+
+  const suspendPPPoE = async () => {
+    if (!customer.pppoe_username) { toast.error("No PPPoE username"); return; }
+    setSuspending(true);
+    try {
+      const res = await fetch(
+        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/disable-pppoe`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pppoe_username: customer.pppoe_username, router_id: customer.router_id, customer_id: customer.id }) }
+      );
+      const data = await res.json();
+      if (data.success) toast.success("PPPoE suspended on MikroTik");
+      else toast.error(`Suspend failed: ${data.error || "Unknown"}`);
+    } catch { toast.error("Could not connect to MikroTik"); } finally { setSuspending(false); }
+  };
+
+  const reactivatePPPoE = async () => {
+    if (!customer.pppoe_username) { toast.error("No PPPoE username"); return; }
+    setReactivating(true);
+    try {
+      const res = await fetch(
+        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/enable-pppoe`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pppoe_username: customer.pppoe_username, router_id: customer.router_id, customer_id: customer.id }) }
+      );
+      const data = await res.json();
+      if (data.success) toast.success("PPPoE reactivated on MikroTik");
+      else toast.error(`Reactivate failed: ${data.error || "Unknown"}`);
+    } catch { toast.error("Could not connect to MikroTik"); } finally { setReactivating(false); }
   };
 
   return (
@@ -118,10 +148,23 @@ export default function CustomerView({ customer }: CustomerViewProps) {
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">MikroTik Sync</h4>
           {customer.pppoe_username && (
-            <Button variant="outline" size="sm" onClick={retrySyncHandler} disabled={retrying}>
-              {retrying ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
-              {retrying ? "Syncing..." : "Retry Sync"}
-            </Button>
+            <div className="flex gap-2">
+              {customer.connection_status !== "suspended" ? (
+                <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={suspendPPPoE} disabled={suspending}>
+                  {suspending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Ban className="h-3.5 w-3.5 mr-1.5" />}
+                  Suspend PPPoE
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" className="text-success border-success/30 hover:bg-success/10" onClick={reactivatePPPoE} disabled={reactivating}>
+                  {reactivating ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
+                  Reactivate PPPoE
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={retrySyncHandler} disabled={retrying}>
+                {retrying ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
+                Retry Sync
+              </Button>
+            </div>
           )}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
