@@ -1,0 +1,305 @@
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FileText, Pencil, CheckCircle, Loader2, Search } from "lucide-react";
+import { toast } from "sonner";
+import { format } from "date-fns";
+
+export default function Billing() {
+  const [search, setSearch] = useState("");
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [editBill, setEditBill] = useState<any>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editAmount, setEditAmount] = useState("");
+  const [genMonth, setGenMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [genLoading, setGenLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: bills, isLoading } = useQuery({
+    queryKey: ["bills"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bills")
+        .select("*, customers(customer_id, name)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filtered = bills?.filter(
+    (b) =>
+      b.customers?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      b.customers?.customer_id?.toLowerCase().includes(search.toLowerCase()) ||
+      b.month.includes(search)
+  );
+
+  const handleGenerate = async () => {
+    setGenLoading(true);
+    try {
+      // Get all active customers
+      const { data: customers, error: custErr } = await supabase
+        .from("customers")
+        .select("id, monthly_bill")
+        .eq("status", "active");
+      if (custErr) throw custErr;
+
+      if (!customers?.length) {
+        toast.info("No active customers to generate bills for");
+        setGenLoading(false);
+        return;
+      }
+
+      // Check for existing bills this month
+      const { data: existing } = await supabase
+        .from("bills")
+        .select("customer_id")
+        .eq("month", genMonth);
+
+      const existingIds = new Set(existing?.map((b) => b.customer_id));
+      const newBills = customers
+        .filter((c) => !existingIds.has(c.id))
+        .map((c) => ({
+          customer_id: c.id,
+          month: genMonth,
+          amount: c.monthly_bill,
+          status: "unpaid" as const,
+        }));
+
+      if (!newBills.length) {
+        toast.info("Bills already generated for this month");
+        setGenLoading(false);
+        setGenerateOpen(false);
+        return;
+      }
+
+      const { error } = await supabase.from("bills").insert(newBills);
+      if (error) throw error;
+
+      toast.success(`Generated ${newBills.length} bills for ${genMonth}`);
+      setGenerateOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
+      queryClient.invalidateQueries({ queryKey: ["bills-stats"] });
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setGenLoading(false);
+    }
+  };
+
+  const handleMarkPaid = async (bill: any) => {
+    const { error } = await supabase
+      .from("bills")
+      .update({ status: "paid", paid_date: new Date().toISOString() })
+      .eq("id", bill.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Bill marked as paid");
+    queryClient.invalidateQueries({ queryKey: ["bills"] });
+    queryClient.invalidateQueries({ queryKey: ["bills-stats"] });
+  };
+
+  const handleEditSave = async () => {
+    if (!editBill) return;
+    const { error } = await supabase
+      .from("bills")
+      .update({ amount: parseFloat(editAmount) })
+      .eq("id", editBill.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Bill amount updated");
+    setEditOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["bills"] });
+  };
+
+  const statusColor = (status: string) => {
+    switch (status) {
+      case "paid": return "bg-success/10 text-success border-success/20";
+      case "unpaid": return "bg-destructive/10 text-destructive border-destructive/20";
+      case "partial": return "bg-warning/10 text-warning border-warning/20";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Billing</h1>
+          <p className="text-muted-foreground mt-1">Generate and manage customer bills</p>
+        </div>
+        <Button onClick={() => setGenerateOpen(true)}>
+          <FileText className="h-4 w-4 mr-2" /> Generate Bills
+        </Button>
+      </div>
+
+      <div className="glass-card rounded-xl">
+        <div className="p-4 border-b border-border">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search bills..."
+              className="pl-9"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center h-48">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer ID</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Month</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                      No bills found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filtered?.map((bill) => (
+                    <TableRow key={bill.id}>
+                      <TableCell className="font-mono text-sm">{bill.customers?.customer_id}</TableCell>
+                      <TableCell className="font-medium">{bill.customers?.name}</TableCell>
+                      <TableCell>{bill.month}</TableCell>
+                      <TableCell>৳{Number(bill.amount).toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={statusColor(bill.status)}>
+                          {bill.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(bill.created_at), "dd MMM yyyy")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => {
+                              setEditBill(bill);
+                              setEditAmount(bill.amount.toString());
+                              setEditOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          {bill.status !== "paid" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-success"
+                              onClick={() => handleMarkPaid(bill)}
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+
+      {/* Generate Dialog */}
+      <Dialog open={generateOpen} onOpenChange={setGenerateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate Monthly Bills</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Month</Label>
+              <Input
+                type="month"
+                value={genMonth}
+                onChange={(e) => setGenMonth(e.target.value)}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              This will generate bills for all active customers who don't already have a bill for this month.
+            </p>
+            <div className="flex justify-end">
+              <Button onClick={handleGenerate} disabled={genLoading}>
+                {genLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Generate
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Amount Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Bill Amount</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Amount</Label>
+              <Input
+                type="number"
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={handleEditSave}>Save</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout>
+  );
+}
