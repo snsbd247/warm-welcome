@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+import bcryptjs from "https://esm.sh/bcryptjs@2.4.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const passwordValid = await bcrypt.compare(pppoe_password, storedHash);
+    const passwordValid = bcryptjs.compareSync(pppoe_password, storedHash);
     if (!passwordValid) {
       return new Response(
         JSON.stringify({ error: "Invalid PPPoE username or password" }),
