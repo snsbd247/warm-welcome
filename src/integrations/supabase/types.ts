@@ -260,6 +260,7 @@ export type Database = {
           payment_date: string
           reference: string | null
           sender_phone: string
+          sms_text: string | null
           status: string
           transaction_id: string
           updated_at: string
@@ -274,6 +275,7 @@ export type Database = {
           payment_date?: string
           reference?: string | null
           sender_phone: string
+          sms_text?: string | null
           status?: string
           transaction_id: string
           updated_at?: string
@@ -288,6 +290,7 @@ export type Database = {
           payment_date?: string
           reference?: string | null
           sender_phone?: string
+          sms_text?: string | null
           status?: string
           transaction_id?: string
           updated_at?: string

@@ -1,0 +1,1 @@
+ALTER TABLE public.merchant_payments ADD COLUMN IF NOT EXISTS sms_text text;
