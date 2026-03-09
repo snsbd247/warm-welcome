@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Phone, MapPin, Package, Wifi, Calendar, CreditCard } from "lucide-react";
+import { User, Phone, MapPin, Package, Wifi, Calendar, CreditCard, Clock } from "lucide-react";
 
 interface Props {
   customer: any;
