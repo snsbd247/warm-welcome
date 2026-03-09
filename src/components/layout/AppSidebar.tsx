@@ -3,11 +3,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, Users, Receipt, CreditCard, LogOut, Wifi,
   ChevronLeft, ChevronDown, Ticket, MessageSquare, Settings, Bell, UserCircle,
-  Package, MapPin, Router, Shield, Wallet, BarChart3, Monitor, FileText,
+  Package, MapPin, Router, Shield, Wallet, BarChart3, Monitor, FileText, Menu, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const topNav = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -47,9 +47,10 @@ interface NavGroupProps {
   collapsed: boolean;
   location: ReturnType<typeof useLocation>;
   defaultOpen?: boolean;
+  onNavigate?: () => void;
 }
 
-function NavGroup({ label, icon: Icon, items, collapsed, location, defaultOpen = false }: NavGroupProps) {
+function NavGroup({ label, icon: Icon, items, collapsed, location, defaultOpen = false, onNavigate }: NavGroupProps) {
   const isChildActive = items.some((item) => location.pathname === item.to);
   const [open, setOpen] = useState(defaultOpen || isChildActive);
 
@@ -60,6 +61,7 @@ function NavGroup({ label, icon: Icon, items, collapsed, location, defaultOpen =
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={onNavigate}
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
               location.pathname === item.to
@@ -90,6 +92,7 @@ function NavGroup({ label, icon: Icon, items, collapsed, location, defaultOpen =
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                 location.pathname === item.to
@@ -111,42 +114,64 @@ export default function AppSidebar() {
   const { signOut } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  return (
-    <aside
-      className={cn(
-        "h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border transition-all duration-300 sticky top-0",
-        collapsed ? "w-[68px]" : "w-64"
-      )}
-    >
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  // Prevent body scroll when mobile sidebar open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
+  const sidebarContent = (isMobile: boolean) => (
+    <>
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
         <div className="h-9 w-9 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
           <Wifi className="h-5 w-5 text-sidebar-primary-foreground" />
         </div>
-        {!collapsed && (
+        {(!collapsed || isMobile) && (
           <div className="overflow-hidden">
             <h2 className="font-bold text-sm leading-tight">Smart ISP</h2>
             <p className="text-[11px] text-sidebar-foreground/60">Admin Panel</p>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ml-auto h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
-        </Button>
+        {isMobile ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
+            onClick={() => setMobileOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent shrink-0"
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
+          </Button>
+        )}
       </div>
 
       {/* Nav */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {/* Dashboard & Customers */}
         {topNav.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={isMobile ? () => setMobileOpen(false) : undefined}
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
               location.pathname === item.to
@@ -155,32 +180,65 @@ export default function AppSidebar() {
             )}
           >
             <item.icon className="h-5 w-5 shrink-0" />
-            {!collapsed && <span>{item.label}</span>}
+            {(!collapsed || isMobile) && <span>{item.label}</span>}
           </NavLink>
         ))}
 
-        {/* Accounts Group */}
-        <NavGroup label="Accounts" icon={CreditCard} items={accountsNav} collapsed={collapsed} location={location} />
-
-        {/* Support Group */}
-        <NavGroup label="Support" icon={Ticket} items={supportNav} collapsed={collapsed} location={location} />
-
-        {/* Settings Group */}
-        <NavGroup label="Settings" icon={Settings} items={settingsNav} collapsed={collapsed} location={location} />
+        <NavGroup label="Accounts" icon={CreditCard} items={accountsNav} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />
+        <NavGroup label="Support" icon={Ticket} items={supportNav} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />
+        <NavGroup label="Settings" icon={Settings} items={settingsNav} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />
       </nav>
 
       {/* Footer */}
       <div className="p-2 border-t border-sidebar-border">
         <button
           onClick={() => signOut()}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-          )}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           <LogOut className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>Sign Out</span>}
+          {(!collapsed || isMobile) && <span>Sign Out</span>}
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-sidebar border-b border-sidebar-border flex items-center px-4 gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 text-sidebar-foreground"
+          onClick={() => setMobileOpen(true)}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
+          <Wifi className="h-4 w-4 text-sidebar-primary-foreground" />
+        </div>
+        <h2 className="font-bold text-sm text-sidebar-foreground">Smart ISP</h2>
+      </div>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-72 bg-sidebar text-sidebar-foreground flex flex-col shadow-xl animate-in slide-in-from-left duration-300">
+            {sidebarContent(true)}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <aside
+        className={cn(
+          "h-screen bg-sidebar text-sidebar-foreground flex-col border-r border-sidebar-border transition-all duration-300 sticky top-0 hidden md:flex",
+          collapsed ? "w-[68px]" : "w-64"
+        )}
+      >
+        {sidebarContent(false)}
+      </aside>
+    </>
   );
 }

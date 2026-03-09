@@ -28,7 +28,7 @@ function StatCard({ title, value, icon: Icon, color, bgColor }: StatCardProps) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold mt-1 text-card-foreground">{value}</p>
+            <p className="text-2xl sm:text-3xl font-bold mt-1 text-card-foreground">{value}</p>
           </div>
           <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${bgColor}`}>
             <Icon className={`h-6 w-6 ${color}`} />
@@ -204,12 +204,12 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Welcome to Smart ISP Admin Panel</p>
         </div>
-        <Button variant="outline" onClick={runBillControl} disabled={runningBillControl}>
+        <Button variant="outline" onClick={runBillControl} disabled={runningBillControl} className="w-full sm:w-auto">
           {runningBillControl ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
           Run Bill Control
         </Button>
