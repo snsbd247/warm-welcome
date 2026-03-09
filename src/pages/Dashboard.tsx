@@ -37,6 +37,22 @@ function StatCard({ title, value, icon: Icon, color, bgColor }: StatCardProps) {
   );
 }
 
+// Monthly revenue data query - last 6 months
+function useMonthlyRevenue() {
+  return useQuery({
+    queryKey: ["monthly-revenue"],
+    queryFn: async () => {
+      const sixMonthsAgo = subMonths(new Date(), 5);
+      const { data, error } = await supabase
+        .from("bills")
+        .select("amount, status, month")
+        .gte("created_at", format(sixMonthsAgo, "yyyy-MM-01"));
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export default function Dashboard() {
   const [runningBillControl, setRunningBillControl] = useState(false);
 
