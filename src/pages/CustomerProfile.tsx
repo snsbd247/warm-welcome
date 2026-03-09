@@ -1,19 +1,24 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import CustomerInfoCard from "@/components/customers/CustomerInfoCard";
+import CustomerView from "@/components/customers/CustomerView";
 import CustomerLedger from "@/components/customers/CustomerLedger";
+import CustomerForm from "@/components/customers/CustomerForm";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Download, FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, Loader2, Download, Pencil } from "lucide-react";
 import { generateApplicationFormPDF } from "@/lib/applicationFormPdf";
 import { toast } from "sonner";
 
 export default function CustomerProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [generating, setGenerating] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: customer, isLoading } = useQuery({
     queryKey: ["customer-profile", id],
@@ -98,8 +103,8 @@ export default function CustomerProfilePage() {
           <h1 className="text-2xl font-bold text-foreground">Customer Profile</h1>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => navigate(`/customers?edit=${id}`)}>
-            <FileText className="h-4 w-4 mr-2" /> Edit Customer
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4 mr-2" /> Edit Customer
           </Button>
           <Button size="sm" onClick={handleDownloadPDF} disabled={generating}>
             {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
@@ -110,8 +115,27 @@ export default function CustomerProfilePage() {
 
       <div className="space-y-6">
         <CustomerInfoCard customer={customer} dueAmount={dueAmount ?? 0} />
+        <div className="glass-card rounded-xl p-6">
+          <CustomerView customer={customer} />
+        </div>
         <CustomerLedger customerId={customer.id} customerName={customer.name} />
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Customer</DialogTitle>
+          </DialogHeader>
+          <CustomerForm
+            customer={customer}
+            onSuccess={() => {
+              setEditOpen(false);
+              queryClient.invalidateQueries({ queryKey: ["customer-profile", id] });
+              queryClient.invalidateQueries({ queryKey: ["customer-due", id] });
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
