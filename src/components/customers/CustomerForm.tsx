@@ -128,6 +128,8 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
     const payload: any = {
       name: form.name,
       father_name: form.father_name || null,
+      mother_name: form.mother_name || null,
+      occupation: form.occupation || null,
       nid: form.nid || null,
       phone: form.phone,
       alt_phone: form.alt_phone || null,
@@ -147,6 +149,19 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
       status: form.status,
       router_id: form.router_id || null,
       due_date_day: form.due_date_day ? parseInt(form.due_date_day) : null,
+    };
+
+    // Upload photo if selected
+    const uploadPhoto = async (customerId: string) => {
+      if (!photoFile) return null;
+      const ext = photoFile.name.split(".").pop();
+      const path = `customer-photos/${customerId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, photoFile, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      return urlData.publicUrl;
     };
 
     try {
