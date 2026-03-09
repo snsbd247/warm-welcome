@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { useCustomerAuth, CustomerProfile as CustomerProfileType } from "@/contexts/CustomerAuthContext";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { User, MapPin, Wifi, Loader2, CreditCard, Briefcase } from "lucide-react";
+import { User, MapPin, Wifi, Loader2, CreditCard } from "lucide-react";
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
@@ -16,9 +16,16 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 }
 
 export default function CustomerProfile() {
-  const { customer } = useCustomerAuth();
+  const { customer, fetchProfile } = useCustomerAuth();
 
-  const { data: pkg, isLoading } = useQuery({
+  // Fetch full profile from server (sensitive data never stored locally)
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ["customer-full-profile", customer?.id],
+    queryFn: fetchProfile,
+    enabled: !!customer,
+  });
+
+  const { data: pkg, isLoading: pkgLoading } = useQuery({
     queryKey: ["customer-profile-package", customer?.package_id],
     queryFn: async () => {
       if (!customer?.package_id) return null;
@@ -38,7 +45,7 @@ export default function CustomerProfile() {
       ? "bg-success/10 text-success border-success/20"
       : "bg-destructive/10 text-destructive border-destructive/20";
 
-  if (isLoading) {
+  if (profileLoading || pkgLoading) {
     return (
       <PortalLayout>
         <div className="flex items-center justify-center h-64">
@@ -48,9 +55,10 @@ export default function CustomerProfile() {
     );
   }
 
-  const monthlyBill = Number(customer?.monthly_bill || 0);
-  const discount = Number(customer?.discount || 0);
-  const connectivityFee = Number(customer?.connectivity_fee || 0);
+  const p = profile;
+  const monthlyBill = Number(p?.monthly_bill || 0);
+  const discount = Number(p?.discount || 0);
+  const connectivityFee = Number(p?.connectivity_fee || 0);
   const totalAmount = monthlyBill - discount + connectivityFee;
 
   return (
@@ -66,8 +74,8 @@ export default function CustomerProfile() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-3 flex-1">
-                {customer?.photo_url ? (
-                  <img src={customer.photo_url} alt={customer?.name} className="h-12 w-12 rounded-lg object-cover border border-border" />
+                {p?.photo_url ? (
+                  <img src={p.photo_url} alt={p?.name} className="h-12 w-12 rounded-lg object-cover border border-border" />
                 ) : (
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <User className="h-5 w-5 text-primary" />
@@ -75,24 +83,24 @@ export default function CustomerProfile() {
                 )}
                 <div>
                   <CardTitle className="text-base">Personal Information</CardTitle>
-                  <p className="text-sm text-muted-foreground font-mono">{customer?.customer_id}</p>
+                  <p className="text-sm text-muted-foreground font-mono">{p?.customer_id}</p>
                 </div>
               </div>
               <Badge variant="outline" className={`ml-auto ${statusColor}`}>
-                {customer?.status}
+                {p?.status}
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Name" value={customer?.name} />
-              <Field label="Father Name" value={customer?.father_name} />
-              <Field label="Mother Name" value={customer?.mother_name} />
-              <Field label="Occupation" value={customer?.occupation} />
-              <Field label="Phone" value={customer?.phone} />
-              <Field label="Alt Phone" value={customer?.alt_phone} />
-              <Field label="Email" value={customer?.email} />
-              <Field label="National ID" value={customer?.nid} />
+              <Field label="Name" value={p?.name} />
+              <Field label="Father Name" value={p?.father_name} />
+              <Field label="Mother Name" value={p?.mother_name} />
+              <Field label="Occupation" value={p?.occupation} />
+              <Field label="Phone" value={p?.phone} />
+              <Field label="Alt Phone" value={p?.alt_phone} />
+              <Field label="Email" value={p?.email} />
+              <Field label="National ID" value={p?.nid} />
             </div>
           </CardContent>
         </Card>
@@ -109,13 +117,13 @@ export default function CustomerProfile() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Area" value={customer?.area} />
-              <Field label="Road" value={customer?.road} />
-              <Field label="House" value={customer?.house} />
-              <Field label="City" value={customer?.city} />
+              <Field label="Area" value={p?.area} />
+              <Field label="Road" value={p?.road} />
+              <Field label="House" value={p?.house} />
+              <Field label="City" value={p?.city} />
             </div>
             <div className="mt-4">
-              <Field label="Permanent Address" value={customer?.permanent_address} />
+              <Field label="Permanent Address" value={p?.permanent_address} />
             </div>
           </CardContent>
         </Card>
@@ -134,13 +142,13 @@ export default function CustomerProfile() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <Field label="Package" value={pkg?.name} />
               <Field label="Speed" value={pkg?.speed} />
-              <Field label="IP Address" value={customer?.ip_address} />
-              <Field label="Gateway" value={customer?.gateway} />
-              <Field label="Subnet" value={customer?.subnet} />
-              <Field label="PPPoE Username" value={customer?.pppoe_username} />
-              <Field label="ONU MAC" value={customer?.onu_mac} />
-              <Field label="Router MAC" value={customer?.router_mac} />
-              <Field label="Installation Date" value={customer?.installation_date} />
+              <Field label="IP Address" value={p?.ip_address} />
+              <Field label="Gateway" value={p?.gateway} />
+              <Field label="Subnet" value={p?.subnet} />
+              <Field label="PPPoE Username" value={p?.pppoe_username} />
+              <Field label="ONU MAC" value={p?.onu_mac} />
+              <Field label="Router MAC" value={p?.router_mac} />
+              <Field label="Installation Date" value={p?.installation_date} />
             </div>
           </CardContent>
         </Card>
@@ -161,7 +169,7 @@ export default function CustomerProfile() {
               <Field label="Discount" value={`৳${discount.toLocaleString()}`} />
               <Field label="Connectivity Fee" value={`৳${connectivityFee.toLocaleString()}`} />
               <Field label="Total Amount" value={`৳${totalAmount.toLocaleString()}`} />
-              <Field label="Due Date" value={customer?.due_date_day ? `${customer.due_date_day}th of every month` : "—"} />
+              <Field label="Due Date" value={p?.due_date_day ? `${p.due_date_day}th of every month` : "—"} />
             </div>
           </CardContent>
         </Card>

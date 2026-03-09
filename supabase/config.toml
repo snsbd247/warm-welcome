@@ -2,3 +2,6 @@ project_id = "udxrzqpivtzunnfenmyd"
 
 [functions.session-expiry]
 verify_jwt = false
+
+[functions.customer-verify]
+verify_jwt = false

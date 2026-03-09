@@ -1,8 +1,24 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-interface CustomerUser {
+// Only store minimal, non-sensitive fields in localStorage
+interface CustomerSession {
+  id: string;
+  customer_id: string;
+  name: string;
+  phone: string;
+  area: string;
+  status: string;
+  monthly_bill: number;
+  package_id: string | null;
+  photo_url: string | null;
+  session_token: string;
+  expires_at: string;
+}
+
+// Full profile with sensitive fields — only fetched on demand from server
+export interface CustomerProfile {
   id: string;
   customer_id: string;
   name: string;
@@ -36,10 +52,11 @@ interface CustomerUser {
 }
 
 interface CustomerAuthContextType {
-  customer: CustomerUser | null;
+  customer: CustomerSession | null;
   loading: boolean;
   signIn: (pppoeUsername: string, pppoePassword: string) => Promise<void>;
   signOut: () => void;
+  fetchProfile: () => Promise<CustomerProfile | null>;
 }
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | undefined>(undefined);
@@ -47,21 +64,50 @@ const CustomerAuthContext = createContext<CustomerAuthContextType | undefined>(u
 const STORAGE_KEY = "customer_portal_session";
 
 export function CustomerAuthProvider({ children }: { children: ReactNode }) {
-  const [customer, setCustomer] = useState<CustomerUser | null>(null);
+  const [customer, setCustomer] = useState<CustomerSession | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Validate session on load
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    const validateSession = async () => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        setCustomer(JSON.parse(saved));
-      } catch {}
-    }
-    setLoading(false);
+        const session: CustomerSession = JSON.parse(saved);
+
+        // Client-side expiry check
+        if (new Date(session.expires_at) < new Date()) {
+          localStorage.removeItem(STORAGE_KEY);
+          setLoading(false);
+          return;
+        }
+
+        // Server-side validation
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_token: session.session_token }),
+        });
+
+        if (res.ok) {
+          setCustomer(session);
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+      setLoading(false);
+    };
+
+    validateSession();
   }, []);
 
   const signIn = async (pppoeUsername: string, pppoePassword: string) => {
-    // Use secure edge function — never query passwords client-side
     const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -75,50 +121,55 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     }
 
     const data = result.customer;
-    const customerUser: CustomerUser = {
+    const session: CustomerSession = {
       id: data.id,
       customer_id: data.customer_id,
       name: data.name,
       phone: data.phone,
       area: data.area,
-      road: data.road,
-      house: data.house,
-      city: data.city,
-      email: data.email,
-      package_id: data.package_id,
-      monthly_bill: Number(data.monthly_bill),
-      ip_address: data.ip_address,
-      pppoe_username: data.pppoe_username,
-      onu_mac: data.onu_mac,
-      router_mac: data.router_mac,
-      installation_date: data.installation_date,
       status: data.status,
-      username: data.username,
-      father_name: data.father_name ?? null,
-      mother_name: data.mother_name ?? null,
-      occupation: data.occupation ?? null,
-      nid: data.nid ?? null,
-      alt_phone: data.alt_phone ?? null,
-      permanent_address: data.permanent_address ?? null,
-      gateway: data.gateway ?? null,
-      subnet: data.subnet ?? null,
-      discount: data.discount != null ? Number(data.discount) : null,
-      connectivity_fee: data.connectivity_fee != null ? Number(data.connectivity_fee) : null,
-      due_date_day: data.due_date_day ?? null,
-      photo_url: data.photo_url ?? null,
+      monthly_bill: Number(data.monthly_bill),
+      package_id: data.package_id,
+      photo_url: data.photo_url,
+      session_token: result.session_token,
+      expires_at: result.expires_at,
     };
 
-    setCustomer(customerUser);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(customerUser));
+    setCustomer(session);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   };
 
-  const signOut = () => {
+  const signOut = useCallback(() => {
     setCustomer(null);
     localStorage.removeItem(STORAGE_KEY);
-  };
+  }, []);
+
+  const fetchProfile = useCallback(async (): Promise<CustomerProfile | null> => {
+    if (!customer?.session_token) return null;
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_token: customer.session_token, include_profile: true }),
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          signOut();
+        }
+        return null;
+      }
+
+      const data = await res.json();
+      return data.customer as CustomerProfile;
+    } catch {
+      return null;
+    }
+  }, [customer?.session_token, signOut]);
 
   return (
-    <CustomerAuthContext.Provider value={{ customer, loading, signIn, signOut }}>
+    <CustomerAuthContext.Provider value={{ customer, loading, signIn, signOut, fetchProfile }}>
       {children}
     </CustomerAuthContext.Provider>
   );

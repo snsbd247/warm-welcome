@@ -44,7 +44,6 @@ Deno.serve(async (req) => {
     // Compare password using bcrypt hash
     const storedHash = customer.pppoe_password_hash;
     if (!storedHash) {
-      // No hash stored yet — reject login until passwords are migrated
       return new Response(
         JSON.stringify({ error: "Account requires password reset. Please contact support." }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -67,11 +66,49 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Return customer data WITHOUT password hash
-    const { pppoe_password_hash: _, ...safeCustomer } = customer;
+    // Create a session token
+    const sessionToken = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(); // 8 hours
+
+    // Invalidate any existing sessions for this customer
+    await supabase
+      .from("customer_sessions")
+      .delete()
+      .eq("customer_id", customer.id);
+
+    // Insert new session
+    const { error: sessionError } = await supabase
+      .from("customer_sessions")
+      .insert({
+        customer_id: customer.id,
+        session_token: sessionToken,
+        expires_at: expiresAt,
+      });
+
+    if (sessionError) {
+      console.error("Session creation failed:", sessionError);
+      return new Response(
+        JSON.stringify({ error: "Internal server error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Return ONLY minimal non-sensitive fields + session token
+    // Sensitive PII (NID, gateway, subnet, IP, etc.) stays server-side
+    const safeCustomer = {
+      id: customer.id,
+      customer_id: customer.customer_id,
+      name: customer.name,
+      phone: customer.phone,
+      area: customer.area,
+      status: customer.status,
+      monthly_bill: customer.monthly_bill,
+      package_id: customer.package_id,
+      photo_url: customer.photo_url,
+    };
 
     return new Response(
-      JSON.stringify({ customer: safeCustomer }),
+      JSON.stringify({ customer: safeCustomer, session_token: sessionToken, expires_at: expiresAt }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

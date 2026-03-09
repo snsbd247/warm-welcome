@@ -185,6 +185,38 @@ export type Database = {
           },
         ]
       }
+      customer_sessions: {
+        Row: {
+          created_at: string
+          customer_id: string
+          expires_at: string
+          id: string
+          session_token: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          expires_at?: string
+          id?: string
+          session_token: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          expires_at?: string
+          id?: string
+          session_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_sessions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           alt_phone: string | null
@@ -214,7 +246,6 @@ export type Database = {
           occupation: string | null
           onu_mac: string | null
           package_id: string | null
-          password: string | null
           permanent_address: string | null
           phone: string
           photo_url: string | null
@@ -258,7 +289,6 @@ export type Database = {
           occupation?: string | null
           onu_mac?: string | null
           package_id?: string | null
-          password?: string | null
           permanent_address?: string | null
           phone: string
           photo_url?: string | null
@@ -302,7 +332,6 @@ export type Database = {
           occupation?: string | null
           onu_mac?: string | null
           package_id?: string | null
-          password?: string | null
           permanent_address?: string | null
           phone?: string
           photo_url?: string | null
