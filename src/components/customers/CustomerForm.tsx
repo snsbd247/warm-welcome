@@ -168,6 +168,8 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
       const pkg = packages?.find((p) => p.id === form.package_id);
 
       if (isEdit) {
+        const photoUrl = await uploadPhoto(customer.id);
+        if (photoUrl) payload.photo_url = photoUrl;
         const { error } = await supabase
           .from("customers")
           .update(payload)
