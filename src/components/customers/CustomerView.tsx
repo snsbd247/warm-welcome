@@ -50,23 +50,12 @@ export default function CustomerView({ customer }: CustomerViewProps) {
     try {
       const res = await fetch(
         `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/retry-sync`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ customer_id: customer.id }),
-        }
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customer_id: customer.id }) }
       );
       const data = await res.json();
-      if (data.success) {
-        toast.success("MikroTik sync successful");
-      } else {
-        toast.error(`Sync failed: ${data.error || "Unknown error"}`);
-      }
-    } catch {
-      toast.error("Could not connect to MikroTik");
-    } finally {
-      setRetrying(false);
-    }
+      if (data.success) toast.success("MikroTik sync successful");
+      else toast.error(`Sync failed: ${data.error || "Unknown error"}`);
+    } catch { toast.error("Could not connect to MikroTik"); } finally { setRetrying(false); }
   };
 
   const suspendPPPoE = async () => {
@@ -97,53 +86,102 @@ export default function CustomerView({ customer }: CustomerViewProps) {
     } catch { toast.error("Could not connect to MikroTik"); } finally { setReactivating(false); }
   };
 
+  const monthlyBill = Number(customer.monthly_bill || 0);
+  const discount = Number(customer.discount || 0);
+  const connectivityFee = Number(customer.connectivity_fee || 0);
+  const totalAmount = monthlyBill - discount + connectivityFee;
+
   return (
     <div className="space-y-6">
+      {/* Header with photo */}
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xl font-bold text-foreground">{customer.name}</p>
-          <p className="text-sm font-mono text-muted-foreground">{customer.customer_id}</p>
+        <div className="flex items-center gap-4">
+          {customer.photo_url ? (
+            <img src={customer.photo_url} alt={customer.name} className="h-16 w-16 rounded-lg object-cover border border-border" />
+          ) : (
+            <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center border border-border">
+              <span className="text-muted-foreground text-xs">No Photo</span>
+            </div>
+          )}
+          <div>
+            <p className="text-xl font-bold text-foreground">{customer.name}</p>
+            <p className="text-sm font-mono text-muted-foreground">{customer.customer_id}</p>
+          </div>
         </div>
         <Badge variant="outline" className={statusColor}>{customer.status}</Badge>
       </div>
 
       <Separator />
 
+      {/* Personal Information */}
       <div>
-        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Personal</h4>
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Personal Information</h4>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <Field label="Father Name" value={customer.father_name} />
-          <Field label="NID" value={customer.nid} />
+          <Field label="Mother Name" value={customer.mother_name} />
+          <Field label="Occupation" value={customer.occupation} />
+          <Field label="National ID" value={customer.nid} />
           <Field label="Phone" value={customer.phone} />
           <Field label="Alt Phone" value={customer.alt_phone} />
           <Field label="Email" value={customer.email} />
         </div>
       </div>
 
+      {/* Address Information */}
       <div>
-        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Address</h4>
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Address Information</h4>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Field label="Area" value={customer.area} />
+          <Field label="Zone / Area" value={customer.area} />
           <Field label="Road" value={customer.road} />
           <Field label="House" value={customer.house} />
           <Field label="City" value={customer.city} />
         </div>
-      </div>
-
-      <div>
-        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Connection</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <Field label="Package" value={customer.packages?.name} />
-          <Field label="Monthly Bill" value={`৳${Number(customer.monthly_bill).toLocaleString()}`} />
-          <Field label="IP Address" value={customer.ip_address} />
-          <Field label="PPPoE Username" value={customer.pppoe_username} />
-          <Field label="ONU MAC" value={customer.onu_mac} />
-          <Field label="Router MAC" value={customer.router_mac} />
-          <Field label="Router" value={customer.mikrotik_routers?.name} />
-          <Field label="Installation Date" value={customer.installation_date} />
+        <div className="mt-3">
+          <Field label="Permanent Address" value={customer.permanent_address} />
         </div>
       </div>
 
+      {/* Connection Details */}
+      <div>
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Connection Details</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <Field label="Package" value={customer.packages?.name} />
+          <Field label="PPPoE Username" value={customer.pppoe_username} />
+          <Field label="PPPoE Password" value={customer.pppoe_password} />
+          <Field label="IP Address" value={customer.ip_address} />
+          <Field label="Gateway" value={customer.gateway} />
+          <Field label="Subnet" value={customer.subnet} />
+          <Field label="ONU MAC" value={customer.onu_mac} />
+          <Field label="Router MAC" value={customer.router_mac} />
+          <Field label="Router" value={customer.mikrotik_routers?.name} />
+          <Field label="Connection Date" value={customer.installation_date} />
+        </div>
+      </div>
+
+      {/* Billing Information */}
+      <div>
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Billing Information</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <Field label="Monthly Bill" value={`৳${monthlyBill.toLocaleString()}`} />
+          <Field label="Discount" value={`৳${discount.toLocaleString()}`} />
+          <Field label="Connectivity Fee" value={`৳${connectivityFee.toLocaleString()}`} />
+          <Field label="Total Amount" value={`৳${totalAmount.toLocaleString()}`} />
+          <Field label="Due Date (Day)" value={customer.due_date_day ? `${customer.due_date_day}th of every month` : "—"} />
+        </div>
+      </div>
+
+      {/* Office Use */}
+      <div>
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Office Use</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <Field label="POP Location" value={customer.pop_location} />
+          <Field label="Installed By" value={customer.installed_by} />
+          <Field label="Box Name" value={customer.box_name} />
+          <Field label="Cable Length" value={customer.cable_length} />
+        </div>
+      </div>
+
+      {/* MikroTik Sync */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">MikroTik Sync</h4>
@@ -170,9 +208,7 @@ export default function CustomerView({ customer }: CustomerViewProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div>
             <p className="text-xs text-muted-foreground">Sync Status</p>
-            <div className="mt-1">
-              <SyncStatusBadge status={customer.mikrotik_sync_status || "pending"} />
-            </div>
+            <div className="mt-1"><SyncStatusBadge status={customer.mikrotik_sync_status || "pending"} /></div>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Connection Status</p>

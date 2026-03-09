@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Phone, MapPin, Package, Wifi, Calendar, CreditCard, Clock } from "lucide-react";
+import { User, Phone, MapPin, Package, Wifi, Calendar, CreditCard, Clock, Mail, Briefcase } from "lucide-react";
 
 interface Props {
   customer: any;
@@ -30,10 +30,23 @@ export default function CustomerInfoCard({ customer, dueAmount }: Props) {
   return (
     <Card className="border-border">
       <CardContent className="p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-foreground">{customer.name}</h2>
-            <p className="text-sm font-mono text-muted-foreground">{customer.customer_id}</p>
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            {customer.photo_url ? (
+              <img
+                src={customer.photo_url}
+                alt={customer.name}
+                className="h-16 w-16 rounded-lg object-cover border border-border"
+              />
+            ) : (
+              <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center border border-border">
+                <User className="h-7 w-7 text-muted-foreground" />
+              </div>
+            )}
+            <div>
+              <h2 className="text-xl font-bold text-foreground">{customer.name}</h2>
+              <p className="text-sm font-mono text-muted-foreground">{customer.customer_id}</p>
+            </div>
           </div>
           <Badge variant="outline" className={statusColor}>
             {customer.connection_status}
@@ -42,20 +55,16 @@ export default function CustomerInfoCard({ customer, dueAmount }: Props) {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
           <Info icon={Phone} label="Phone" value={customer.phone} />
+          <Info icon={Phone} label="Alt Phone" value={customer.alt_phone} />
+          <Info icon={Mail} label="Email" value={customer.email} />
           <Info icon={MapPin} label="Zone / Area" value={customer.area} />
           <Info icon={Package} label="Package" value={customer.packages?.name} />
           <Info icon={CreditCard} label="Monthly Bill" value={`৳${Number(customer.monthly_bill).toLocaleString()}`} />
+          <Info icon={CreditCard} label="Discount" value={`৳${Number(customer.discount || 0).toLocaleString()}`} />
+          <Info icon={CreditCard} label="Connectivity Fee" value={`৳${Number(customer.connectivity_fee || 0).toLocaleString()}`} />
           <Info icon={Wifi} label="PPPoE Username" value={customer.pppoe_username} />
           <Info icon={Calendar} label="Connection Date" value={customer.installation_date} />
           <Info icon={Clock} label="Due Date (Day)" value={customer.due_date_day ? `${customer.due_date_day}th of every month` : "—"} />
-          <Info icon={Calendar} label="Next Billing Date" value={(() => {
-            if (!customer.due_date_day) return "—";
-            const now = new Date();
-            const day = customer.due_date_day;
-            let next = new Date(now.getFullYear(), now.getMonth(), day);
-            if (next <= now) next = new Date(now.getFullYear(), now.getMonth() + 1, day);
-            return next.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-          })()} />
           <div className="flex items-start gap-3">
             <CreditCard className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
             <div>
