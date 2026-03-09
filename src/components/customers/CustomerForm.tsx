@@ -334,6 +334,17 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
             <Label>Installation Date</Label>
             <Input type="date" value={form.installation_date} onChange={(e) => update("installation_date", e.target.value)} />
           </div>
+          <div className="space-y-1.5">
+            <Label>Due Date (Day of Month)</Label>
+            <Select value={form.due_date_day} onValueChange={(v) => update("due_date_day", v)}>
+              <SelectTrigger><SelectValue placeholder="Select day" /></SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                  <SelectItem key={d} value={d.toString()}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
