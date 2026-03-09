@@ -9,6 +9,19 @@ interface Settings {
 }
 
 export async function generateApplicationFormPDF(customer: any, pkg: any, settings: Settings, photoDataUrl?: string | null) {
+  // If customer has photo_url but no dataUrl passed, try to fetch it
+  let photoData = photoDataUrl;
+  if (!photoData && customer.photo_url) {
+    try {
+      const response = await fetch(customer.photo_url);
+      const blob = await response.blob();
+      photoData = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch { /* skip photo if fetch fails */ }
+  }
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.getWidth();
   const margin = 15;
