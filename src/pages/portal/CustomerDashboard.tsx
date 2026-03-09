@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { fetchCustomerData } from "@/hooks/useCustomerData";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,35 +59,20 @@ export default function CustomerDashboard() {
     enabled: !!customer?.package_id,
   });
 
-  const { data: bills, isLoading } = useQuery({
-    queryKey: ["customer-bills", customer?.id],
+  const { data: portalData, isLoading } = useQuery({
+    queryKey: ["customer-dashboard-data", customer?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bills")
-        .select("*")
-        .eq("customer_id", customer!.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      const result = await fetchCustomerData(customer!.session_token, {
+        include_bills: true,
+        include_payments: true,
+      });
+      return result;
     },
     enabled: !!customer,
   });
 
-  const { data: lastPayment } = useQuery({
-    queryKey: ["customer-last-payment", customer?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("payments")
-        .select("*")
-        .eq("customer_id", customer!.id)
-        .order("paid_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) return null;
-      return data;
-    },
-    enabled: !!customer,
-  });
+  const bills = portalData?.bills || [];
+  const lastPayment = portalData?.payments?.[0] || null;
 
   const currentBill = bills?.[0];
   const totalDue = bills

@@ -12,7 +12,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { session_token, include_profile } = await req.json();
+    const body = await req.json();
+    const { session_token, include_profile, include_bills, include_payments, include_ledger } = body;
 
     if (!session_token) {
       return new Response(
@@ -42,7 +43,6 @@ Deno.serve(async (req) => {
 
     // Check expiry
     if (new Date(session.expires_at) < new Date()) {
-      // Clean up expired session
       await supabase
         .from("customer_sessions")
         .delete()
@@ -54,30 +54,58 @@ Deno.serve(async (req) => {
       );
     }
 
-    // If profile data requested, fetch full customer record
+    const customerId = session.customer_id;
+    const result: Record<string, any> = { valid: true, customer_id: customerId };
+
+    // Fetch profile if requested
     if (include_profile) {
-      const { data: customer, error: custError } = await supabase
+      const { data: customer } = await supabase
         .from("customers")
         .select("id, customer_id, name, phone, area, road, house, city, email, package_id, monthly_bill, ip_address, pppoe_username, onu_mac, router_mac, installation_date, status, username, father_name, mother_name, occupation, nid, alt_phone, permanent_address, gateway, subnet, discount, connectivity_fee, due_date_day, photo_url")
-        .eq("id", session.customer_id)
+        .eq("id", customerId)
         .single();
 
-      if (custError || !customer) {
+      if (!customer) {
         return new Response(
           JSON.stringify({ error: "Customer not found", valid: false }),
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-
-      return new Response(
-        JSON.stringify({ valid: true, customer }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      result.customer = customer;
     }
 
-    // Just validate — return minimal info
+    // Fetch bills if requested
+    if (include_bills) {
+      const { data: bills } = await supabase
+        .from("bills")
+        .select("*")
+        .eq("customer_id", customerId)
+        .order("month", { ascending: false });
+      result.bills = bills || [];
+    }
+
+    // Fetch payments if requested
+    if (include_payments) {
+      const { data: payments } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("customer_id", customerId)
+        .order("paid_at", { ascending: false });
+      result.payments = payments || [];
+    }
+
+    // Fetch ledger if requested
+    if (include_ledger) {
+      const { data: ledger } = await supabase
+        .from("customer_ledger")
+        .select("*")
+        .eq("customer_id", customerId)
+        .order("date", { ascending: false });
+      result.ledger = ledger || [];
+    }
+
     return new Response(
-      JSON.stringify({ valid: true, customer_id: session.customer_id }),
+      JSON.stringify(result),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

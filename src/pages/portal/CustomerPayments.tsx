@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { fetchCustomerData } from "@/hooks/useCustomerData";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,13 +21,8 @@ export default function CustomerPayments() {
   const { data: payments, isLoading } = useQuery({
     queryKey: ["customer-payments", customer?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("payments")
-        .select("*")
-        .eq("customer_id", customer!.id)
-        .order("paid_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      const result = await fetchCustomerData(customer!.session_token, { include_payments: true });
+      return result.payments || [];
     },
     enabled: !!customer,
   });
