@@ -141,6 +141,7 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
       installation_date: form.installation_date || null,
       status: form.status,
       router_id: form.router_id || null,
+      due_date_day: form.due_date_day ? parseInt(form.due_date_day) : null,
     };
 
     try {
