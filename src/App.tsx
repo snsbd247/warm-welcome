@@ -50,6 +50,7 @@ function App() {
         <BrowserRouter>
           <AuthProvider>
             <CustomerAuthProvider>
+              <SessionApprovalListener />
               <Routes>
                 {/* Admin Routes */}
                 <Route path="/admin/login" element={<Login />} />
