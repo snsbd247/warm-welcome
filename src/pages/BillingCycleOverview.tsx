@@ -1,10 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, AlertTriangle, Clock, CheckCircle, Users } from "lucide-react";
+import { Loader2, AlertTriangle, Clock, CheckCircle, Users, Zap } from "lucide-react";
 import { format, setDate, isAfter, isBefore, addMonths, subDays } from "date-fns";
+import { toast } from "@/hooks/use-toast";
 
 type CustomerWithBill = {
   id: string;
