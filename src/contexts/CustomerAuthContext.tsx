@@ -21,6 +21,18 @@ interface CustomerUser {
   installation_date: string | null;
   status: string;
   username: string | null;
+  father_name: string | null;
+  mother_name: string | null;
+  occupation: string | null;
+  nid: string | null;
+  alt_phone: string | null;
+  permanent_address: string | null;
+  gateway: string | null;
+  subnet: string | null;
+  discount: number | null;
+  connectivity_fee: number | null;
+  due_date_day: number | null;
+  photo_url: string | null;
 }
 
 interface CustomerAuthContextType {
@@ -82,6 +94,18 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
       installation_date: data.installation_date,
       status: data.status,
       username: data.username,
+      father_name: data.father_name ?? null,
+      mother_name: data.mother_name ?? null,
+      occupation: data.occupation ?? null,
+      nid: data.nid ?? null,
+      alt_phone: data.alt_phone ?? null,
+      permanent_address: data.permanent_address ?? null,
+      gateway: data.gateway ?? null,
+      subnet: data.subnet ?? null,
+      discount: data.discount != null ? Number(data.discount) : null,
+      connectivity_fee: data.connectivity_fee != null ? Number(data.connectivity_fee) : null,
+      due_date_day: data.due_date_day ?? null,
+      photo_url: data.photo_url ?? null,
     };
 
     setCustomer(customerUser);
