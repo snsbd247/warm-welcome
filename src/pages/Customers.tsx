@@ -155,14 +155,14 @@ export default function Customers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered?.length === 0 ? (
+                {paginatedCustomers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
                       No customers found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filtered?.map((customer) => (
+                  paginatedCustomers.map((customer) => (
                     <TableRow key={customer.id}>
                       <TableCell className="font-mono text-sm">{customer.customer_id}</TableCell>
                       <TableCell className="font-medium">{customer.name}</TableCell>
