@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Users, UserCheck, UserX, DollarSign, AlertCircle, Loader2, Wifi, WifiOff, RefreshCw, Wallet } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
-import { useState } from "react";
-import { format } from "date-fns";
+import { useState, useMemo } from "react";
+import { format, subMonths } from "date-fns";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
 
 interface StatCardProps {
   title: string;
@@ -32,6 +35,22 @@ function StatCard({ title, value, icon: Icon, color, bgColor }: StatCardProps) {
       </CardContent>
     </Card>
   );
+}
+
+// Monthly revenue data query - last 6 months
+function useMonthlyRevenue() {
+  return useQuery({
+    queryKey: ["monthly-revenue"],
+    queryFn: async () => {
+      const sixMonthsAgo = subMonths(new Date(), 5);
+      const { data, error } = await supabase
+        .from("bills")
+        .select("amount, status, month")
+        .gte("created_at", format(sixMonthsAgo, "yyyy-MM-01"));
+      if (error) throw error;
+      return data;
+    },
+  });
 }
 
 export default function Dashboard() {
@@ -85,6 +104,30 @@ export default function Dashboard() {
   const merchantUnmatched = merchantPayments?.filter((p) => p.status === "unmatched").length ?? 0;
   const merchantAmount = merchantPayments?.reduce((sum, p) => sum + Number(p.amount), 0) ?? 0;
 
+  const { data: revenueBills } = useMonthlyRevenue();
+
+  const revenueChartData = useMemo(() => {
+    if (!revenueBills) return [];
+    const months: Record<string, { paid: number; due: number }> = {};
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const m = format(subMonths(new Date(), i), "yyyy-MM");
+      months[m] = { paid: 0, due: 0 };
+    }
+    revenueBills.forEach((b) => {
+      const m = b.month;
+      if (months[m]) {
+        if (b.status === "paid") months[m].paid += Number(b.amount);
+        else months[m].due += Number(b.amount);
+      }
+    });
+    return Object.entries(months).map(([month, vals]) => ({
+      month: format(new Date(month + "-01"), "MMM yy"),
+      paid: vals.paid,
+      due: vals.due,
+    }));
+  }, [revenueBills]);
+
   const runBillControl = async () => {
     setRunningBillControl(true);
     try {
@@ -134,6 +177,38 @@ export default function Dashboard() {
         <StatCard title="Suspended Connections" value={suspendedConn} icon={WifiOff} color="text-destructive" bgColor="bg-destructive/10" />
         <StatCard title="Total Due" value={`৳${totalDue.toLocaleString()}`} icon={AlertCircle} color="text-warning" bgColor="bg-warning/10" />
       </div>
+
+      {/* Monthly Revenue Trend Chart */}
+      <Card className="glass-card animate-fade-in mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-primary" />
+            Monthly Revenue Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {revenueChartData.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">No revenue data available</p>
+          ) : (
+            <div className="h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={revenueChartData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                  <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                    labelStyle={{ color: "hsl(var(--foreground))" }}
+                    formatter={(value: number) => [`৳${value.toLocaleString()}`, undefined]}
+                  />
+                  <Bar dataKey="paid" name="Collected" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="due" name="Due" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Merchant Payments Today Widget */}
       <Card className="glass-card animate-fade-in">
