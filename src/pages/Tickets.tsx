@@ -197,7 +197,7 @@ export default function Tickets() {
           {viewTicket && (
             <div className="space-y-4">
               {/* Ticket Info */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground">Customer</Label>
                   <p className="font-medium">{viewTicket.customers?.name}</p>
