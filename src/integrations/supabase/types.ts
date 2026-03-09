@@ -249,6 +249,66 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          matched_bill_id: string | null
+          matched_customer_id: string | null
+          notes: string | null
+          payment_date: string
+          reference: string | null
+          sender_phone: string
+          status: string
+          transaction_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          matched_bill_id?: string | null
+          matched_customer_id?: string | null
+          notes?: string | null
+          payment_date?: string
+          reference?: string | null
+          sender_phone: string
+          status?: string
+          transaction_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          matched_bill_id?: string | null
+          matched_customer_id?: string | null
+          notes?: string | null
+          payment_date?: string
+          reference?: string | null
+          sender_phone?: string
+          status?: string
+          transaction_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_payments_matched_bill_id_fkey"
+            columns: ["matched_bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_payments_matched_customer_id_fkey"
+            columns: ["matched_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mikrotik_routers: {
         Row: {
           api_port: number

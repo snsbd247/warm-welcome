@@ -15,6 +15,7 @@ import Customers from "@/pages/Customers";
 import Packages from "@/pages/Packages";
 import Billing from "@/pages/Billing";
 import Payments from "@/pages/Payments";
+import MerchantPayments from "@/pages/MerchantPayments";
 import OLTManagement from "@/pages/OLTManagement";
 import ONUManagement from "@/pages/ONUManagement";
 import Tickets from "@/pages/Tickets";
@@ -59,6 +60,7 @@ function App() {
                 <Route path="/packages" element={<ProtectedRoute><Packages /></ProtectedRoute>} />
                 <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
                 <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+                <Route path="/merchant-payments" element={<ProtectedRoute><MerchantPayments /></ProtectedRoute>} />
                 <Route path="/olt" element={<ProtectedRoute><OLTManagement /></ProtectedRoute>} />
                 <Route path="/onu" element={<ProtectedRoute><ONUManagement /></ProtectedRoute>} />
                 <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />

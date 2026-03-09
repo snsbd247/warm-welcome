@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, Users, Receipt, CreditCard, Server, Radio, LogOut, Wifi,
   ChevronLeft, ChevronDown, Ticket, MessageSquare, Settings, Bell, UserCircle,
-  Package, MapPin, Router, Shield,
+  Package, MapPin, Router, Shield, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ const mainNav = [
   { to: "/customers", icon: Users, label: "Customers" },
   { to: "/billing", icon: Receipt, label: "Billing" },
   { to: "/payments", icon: CreditCard, label: "Payments" },
+  { to: "/merchant-payments", icon: Wallet, label: "Merchant Pay" },
   { to: "/olt", icon: Server, label: "OLT" },
   { to: "/onu", icon: Radio, label: "ONU" },
   { to: "/tickets", icon: Ticket, label: "Tickets" },
