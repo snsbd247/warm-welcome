@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     // Find customer by pppoe_username
     const { data: customer, error } = await supabase
       .from("customers")
-      .select("id, customer_id, name, phone, area, road, house, city, email, package_id, monthly_bill, ip_address, pppoe_username, pppoe_password, onu_mac, router_mac, installation_date, status, username")
+      .select("id, customer_id, name, phone, area, road, house, city, email, package_id, monthly_bill, ip_address, pppoe_username, pppoe_password, onu_mac, router_mac, installation_date, status, username, father_name, mother_name, occupation, nid, alt_phone, permanent_address, gateway, subnet, discount, connectivity_fee, due_date_day, photo_url")
       .eq("pppoe_username", pppoe_username)
       .single();
 
