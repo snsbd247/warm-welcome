@@ -15,6 +15,7 @@ import Customers from "@/pages/Customers";
 import Packages from "@/pages/Packages";
 import Billing from "@/pages/Billing";
 import Payments from "@/pages/Payments";
+import MerchantPayments from "@/pages/MerchantPayments";
 import OLTManagement from "@/pages/OLTManagement";
 import ONUManagement from "@/pages/ONUManagement";
 import Tickets from "@/pages/Tickets";
