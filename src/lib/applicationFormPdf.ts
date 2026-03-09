@@ -113,9 +113,9 @@ export async function generateApplicationFormPDF(customer: any, pkg: any, settin
   const photoY = y;
   doc.setDrawColor(...borderGray);
   doc.rect(photoX, photoY, photoSize, photoSize, "S");
-  if (photoDataUrl) {
+  if (photoData) {
     try {
-      doc.addImage(photoDataUrl, "JPEG", photoX + 1, photoY + 1, photoSize - 2, photoSize - 2);
+      doc.addImage(photoData, "JPEG", photoX + 1, photoY + 1, photoSize - 2, photoSize - 2);
     } catch { /* skip if image fails */ }
   } else {
     doc.setFontSize(7);
