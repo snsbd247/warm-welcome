@@ -448,6 +448,23 @@ export default function MerchantPayments() {
             </div>
 
             <div className="space-y-1.5">
+              <Label>Headers (Required)</Label>
+              <pre className="bg-muted rounded-lg p-3 text-xs font-mono overflow-x-auto whitespace-pre">
+{`Content-Type: application/json
+X-API-KEY: YOUR_SMS_RECEIVER_API_KEY`}
+              </pre>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Request Format (POST JSON)</Label>
+              <pre className="bg-muted rounded-lg p-3 text-xs font-mono overflow-x-auto whitespace-pre">
+{`{
+  "sms_text": "You have received Tk 800 from 017XXXXXXXX. TrxID: 9F3X4K. Reference: ISP-00001."
+}`}
+              </pre>
+            </div>
+
+            <div className="space-y-1.5">
               <Label>Compatible SMS Sources</Label>
               <ul className="list-disc list-inside text-muted-foreground text-xs space-y-1">
                 <li>Android SMS Gateway App (e.g., SMS Gateway API, Tasker)</li>
