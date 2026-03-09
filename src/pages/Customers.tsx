@@ -76,6 +76,21 @@ export default function Customers() {
       c.area.toLowerCase().includes(search.toLowerCase())
   );
 
+  const totalItems = filtered?.length ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedCustomers = useMemo(() => {
+    if (!filtered) return [];
+    const start = (safeCurrentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, safeCurrentPage, pageSize]);
+
+  // Reset to page 1 when search changes
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
   const statusColor = (status: string) => {
     switch (status) {
       case "active": return "bg-success/10 text-success border-success/20";
