@@ -21,6 +21,18 @@ interface CustomerUser {
   installation_date: string | null;
   status: string;
   username: string | null;
+  father_name: string | null;
+  mother_name: string | null;
+  occupation: string | null;
+  nid: string | null;
+  alt_phone: string | null;
+  permanent_address: string | null;
+  gateway: string | null;
+  subnet: string | null;
+  discount: number | null;
+  connectivity_fee: number | null;
+  due_date_day: number | null;
+  photo_url: string | null;
 }
 
 interface CustomerAuthContextType {
