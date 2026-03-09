@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { generateCustomerPDF } from "@/lib/pdf";
 
 interface CustomerFormProps {
@@ -21,9 +21,13 @@ const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 export default function CustomerForm({ customer, onSuccess }: CustomerFormProps) {
   const isEdit = !!customer;
   const [loading, setLoading] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(customer?.photo_url || null);
   const [form, setForm] = useState({
     name: customer?.name ?? "",
     father_name: customer?.father_name ?? "",
+    mother_name: customer?.mother_name ?? "",
+    occupation: customer?.occupation ?? "",
     nid: customer?.nid ?? "",
     phone: customer?.phone ?? "",
     alt_phone: customer?.alt_phone ?? "",
@@ -123,6 +127,8 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
     const payload: any = {
       name: form.name,
       father_name: form.father_name || null,
+      mother_name: form.mother_name || null,
+      occupation: form.occupation || null,
       nid: form.nid || null,
       phone: form.phone,
       alt_phone: form.alt_phone || null,
@@ -144,10 +150,25 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
       due_date_day: form.due_date_day ? parseInt(form.due_date_day) : null,
     };
 
+    // Upload photo if selected
+    const uploadPhoto = async (customerId: string) => {
+      if (!photoFile) return null;
+      const ext = photoFile.name.split(".").pop();
+      const path = `customer-photos/${customerId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, photoFile, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      return urlData.publicUrl;
+    };
+
     try {
       const pkg = packages?.find((p) => p.id === form.package_id);
 
       if (isEdit) {
+        const photoUrl = await uploadPhoto(customer.id);
+        if (photoUrl) payload.photo_url = photoUrl;
         const { error } = await supabase
           .from("customers")
           .update(payload)
@@ -194,6 +215,15 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
           .select()
           .single();
         if (error) throw error;
+
+        // Upload photo for new customer
+        if (data && photoFile) {
+          const photoUrl = await uploadPhoto(data.id);
+          if (photoUrl) {
+            await supabase.from("customers").update({ photo_url: photoUrl }).eq("id", data.id);
+          }
+        }
+
         toast.success("Customer created successfully");
 
         // Auto-create PPPoE user on MikroTik
@@ -226,6 +256,14 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
             <Input value={form.father_name} onChange={(e) => update("father_name", e.target.value)} />
           </div>
           <div className="space-y-1.5">
+            <Label>Mother Name</Label>
+            <Input value={form.mother_name} onChange={(e) => update("mother_name", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Occupation</Label>
+            <Input value={form.occupation} onChange={(e) => update("occupation", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
             <Label>NID</Label>
             <Input value={form.nid} onChange={(e) => update("nid", e.target.value)} />
           </div>
@@ -240,6 +278,30 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
           <div className="space-y-1.5">
             <Label>Email</Label>
             <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
+          </div>
+          <div className="sm:col-span-2 space-y-1.5">
+            <Label>Customer Photo</Label>
+            <div className="flex items-center gap-4">
+              {photoPreview && (
+                <div className="relative">
+                  <img src={photoPreview} alt="Customer" className="h-20 w-20 rounded-lg object-cover border border-border" />
+                  <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(null); }} className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              <label className="flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background text-sm cursor-pointer hover:bg-accent transition-colors">
+                <Upload className="h-4 w-4" />
+                {photoPreview ? "Change Photo" : "Upload Photo"}
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 5 * 1024 * 1024) { toast.error("Photo must be under 5MB"); return; }
+                  setPhotoFile(file);
+                  setPhotoPreview(URL.createObjectURL(file));
+                }} />
+              </label>
+            </div>
           </div>
         </div>
       </div>

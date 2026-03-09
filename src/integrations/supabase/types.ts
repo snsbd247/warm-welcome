@@ -125,12 +125,15 @@ export type Database = {
           ip_address: string | null
           mikrotik_sync_status: string
           monthly_bill: number
+          mother_name: string | null
           name: string
           nid: string | null
+          occupation: string | null
           onu_mac: string | null
           package_id: string | null
           password: string | null
           phone: string
+          photo_url: string | null
           pppoe_password: string | null
           pppoe_username: string | null
           road: string | null
@@ -156,12 +159,15 @@ export type Database = {
           ip_address?: string | null
           mikrotik_sync_status?: string
           monthly_bill?: number
+          mother_name?: string | null
           name: string
           nid?: string | null
+          occupation?: string | null
           onu_mac?: string | null
           package_id?: string | null
           password?: string | null
           phone: string
+          photo_url?: string | null
           pppoe_password?: string | null
           pppoe_username?: string | null
           road?: string | null
@@ -187,12 +193,15 @@ export type Database = {
           ip_address?: string | null
           mikrotik_sync_status?: string
           monthly_bill?: number
+          mother_name?: string | null
           name?: string
           nid?: string | null
+          occupation?: string | null
           onu_mac?: string | null
           package_id?: string | null
           password?: string | null
           phone?: string
+          photo_url?: string | null
           pppoe_password?: string | null
           pppoe_username?: string | null
           road?: string | null
