@@ -256,6 +256,14 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
             <Input value={form.father_name} onChange={(e) => update("father_name", e.target.value)} />
           </div>
           <div className="space-y-1.5">
+            <Label>Mother Name</Label>
+            <Input value={form.mother_name} onChange={(e) => update("mother_name", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Occupation</Label>
+            <Input value={form.occupation} onChange={(e) => update("occupation", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
             <Label>NID</Label>
             <Input value={form.nid} onChange={(e) => update("nid", e.target.value)} />
           </div>
@@ -270,6 +278,30 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
           <div className="space-y-1.5">
             <Label>Email</Label>
             <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
+          </div>
+          <div className="sm:col-span-2 space-y-1.5">
+            <Label>Customer Photo</Label>
+            <div className="flex items-center gap-4">
+              {photoPreview && (
+                <div className="relative">
+                  <img src={photoPreview} alt="Customer" className="h-20 w-20 rounded-lg object-cover border border-border" />
+                  <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(null); }} className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              <label className="flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background text-sm cursor-pointer hover:bg-accent transition-colors">
+                <Upload className="h-4 w-4" />
+                {photoPreview ? "Change Photo" : "Upload Photo"}
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 5 * 1024 * 1024) { toast.error("Photo must be under 5MB"); return; }
+                  setPhotoFile(file);
+                  setPhotoPreview(URL.createObjectURL(file));
+                }} />
+              </label>
+            </div>
           </div>
         </div>
       </div>
