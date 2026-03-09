@@ -14,6 +14,7 @@ import Dashboard from "@/pages/Dashboard";
 import Customers from "@/pages/Customers";
 import Packages from "@/pages/Packages";
 import Billing from "@/pages/Billing";
+import BillingCycleOverview from "@/pages/BillingCycleOverview";
 import Payments from "@/pages/Payments";
 import MerchantPayments from "@/pages/MerchantPayments";
 import MerchantPaymentReports from "@/pages/MerchantPaymentReports";
