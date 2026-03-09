@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,16 +22,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use service role to query securely server-side
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Find customer by pppoe_username
+    // Find customer by pppoe_username — select hash column + needed fields (never return plaintext password)
     const { data: customer, error } = await supabase
       .from("customers")
-      .select("id, customer_id, name, phone, area, road, house, city, email, package_id, monthly_bill, ip_address, pppoe_username, pppoe_password, onu_mac, router_mac, installation_date, status, username, father_name, mother_name, occupation, nid, alt_phone, permanent_address, gateway, subnet, discount, connectivity_fee, due_date_day, photo_url")
+      .select("id, customer_id, name, phone, area, road, house, city, email, package_id, monthly_bill, ip_address, pppoe_username, pppoe_password_hash, onu_mac, router_mac, installation_date, status, username, father_name, mother_name, occupation, nid, alt_phone, permanent_address, gateway, subnet, discount, connectivity_fee, due_date_day, photo_url")
       .eq("pppoe_username", pppoe_username)
       .single();
 
@@ -41,8 +41,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Compare password (plain text for now — stored as-is in DB)
-    if (customer.pppoe_password !== pppoe_password) {
+    // Compare password using bcrypt hash
+    const storedHash = customer.pppoe_password_hash;
+    if (!storedHash) {
+      // No hash stored yet — reject login until passwords are migrated
+      return new Response(
+        JSON.stringify({ error: "Account requires password reset. Please contact support." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const passwordValid = await bcrypt.compare(pppoe_password, storedHash);
+    if (!passwordValid) {
       return new Response(
         JSON.stringify({ error: "Invalid PPPoE username or password" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -57,8 +67,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Return customer data WITHOUT password
-    const { pppoe_password: _, ...safeCustomer } = customer;
+    // Return customer data WITHOUT password hash
+    const { pppoe_password_hash: _, ...safeCustomer } = customer;
 
     return new Response(
       JSON.stringify({ customer: safeCustomer }),

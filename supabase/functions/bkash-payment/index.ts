@@ -43,16 +43,47 @@ Deno.serve(async (req: Request) => {
     const path = url.pathname.split("/").pop();
 
     if (req.method === "POST" && path === "create") {
-      // Create payment
-      const { bill_id, customer_id, amount, callback_url } = await req.json();
+      const { bill_id, customer_id, callback_url } = await req.json();
 
-      if (!bill_id || !customer_id || !amount) {
+      if (!bill_id || !customer_id) {
         return new Response(JSON.stringify({ error: "Missing required fields" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
+      // Fetch the real bill amount server-side — never trust client-supplied amount
+      const supabase = getSupabaseAdmin();
+      const { data: bill, error: billError } = await supabase
+        .from("bills")
+        .select("amount, customer_id, status")
+        .eq("id", bill_id)
+        .single();
+
+      if (billError || !bill) {
+        return new Response(JSON.stringify({ error: "Bill not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Verify bill belongs to the claimed customer
+      if (bill.customer_id !== customer_id) {
+        return new Response(JSON.stringify({ error: "Bill does not belong to this customer" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Reject already-paid bills
+      if (bill.status === "paid") {
+        return new Response(JSON.stringify({ error: "This bill has already been paid" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const amount = Number(bill.amount);
       const token = await getBkashToken();
       const invoiceNumber = `INV-${Date.now()}`;
 
@@ -77,8 +108,6 @@ Deno.serve(async (req: Request) => {
       const data = await res.json();
 
       if (data.bkashURL) {
-        // Store pending payment
-        const supabase = getSupabaseAdmin();
         await supabase.from("payments").insert({
           customer_id,
           bill_id,
@@ -102,7 +131,6 @@ Deno.serve(async (req: Request) => {
     }
 
     if (req.method === "POST" && path === "execute") {
-      // Execute payment after customer returns from bKash
       const { paymentID } = await req.json();
 
       if (!paymentID) {
@@ -128,6 +156,27 @@ Deno.serve(async (req: Request) => {
       const supabase = getSupabaseAdmin();
 
       if (data.statusCode === "0000" && data.transactionStatus === "Completed") {
+        // Verify the bKash-confirmed amount matches the stored payment amount
+        const { data: payment } = await supabase
+          .from("payments")
+          .select("bill_id, customer_id, amount")
+          .eq("bkash_payment_id", paymentID)
+          .single();
+
+        const bkashAmount = parseFloat(data.amount);
+        if (payment && Math.abs(bkashAmount - Number(payment.amount)) > 0.01) {
+          // Amount mismatch — flag for manual review, do NOT mark bill as paid
+          await supabase
+            .from("payments")
+            .update({ status: "failed", bkash_trx_id: data.trxID })
+            .eq("bkash_payment_id", paymentID);
+
+          return new Response(JSON.stringify({ error: "Payment amount mismatch. Flagged for review." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
         // Update payment record
         await supabase
           .from("payments")
@@ -139,16 +188,8 @@ Deno.serve(async (req: Request) => {
           })
           .eq("bkash_payment_id", paymentID);
 
-        // Get the payment to find the bill_id
-        const { data: payment } = await supabase
-          .from("payments")
-          .select("bill_id, customer_id")
-          .eq("bkash_payment_id", paymentID)
-          .single();
-
         // Mark bill as paid
         if (payment?.bill_id) {
-          // Get the bill to get the month
           const { data: bill } = await supabase
             .from("bills")
             .select("month")
@@ -160,7 +201,6 @@ Deno.serve(async (req: Request) => {
             .update({ status: "paid", paid_date: new Date().toISOString() })
             .eq("id", payment.bill_id);
 
-          // Update payment month
           if (bill?.month) {
             await supabase
               .from("payments")
@@ -174,7 +214,7 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      // Payment failed - update status
+      // Payment failed
       await supabase
         .from("payments")
         .update({ status: "failed" })
@@ -192,7 +232,7 @@ Deno.serve(async (req: Request) => {
     });
   } catch (err) {
     console.error("bKash payment error:", err);
-    return new Response(JSON.stringify({ error: err.message || "Internal server error" }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

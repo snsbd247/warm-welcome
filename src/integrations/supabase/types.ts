@@ -220,6 +220,7 @@ export type Database = {
           photo_url: string | null
           pop_location: string | null
           pppoe_password: string | null
+          pppoe_password_hash: string | null
           pppoe_username: string | null
           road: string | null
           router_id: string | null
@@ -263,6 +264,7 @@ export type Database = {
           photo_url?: string | null
           pop_location?: string | null
           pppoe_password?: string | null
+          pppoe_password_hash?: string | null
           pppoe_username?: string | null
           road?: string | null
           router_id?: string | null
@@ -306,6 +308,7 @@ export type Database = {
           photo_url?: string | null
           pop_location?: string | null
           pppoe_password?: string | null
+          pppoe_password_hash?: string | null
           pppoe_username?: string | null
           road?: string | null
           router_id?: string | null
