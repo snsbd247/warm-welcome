@@ -32,6 +32,32 @@ export default function MerchantPayments() {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
+  // Realtime subscription for new merchant payments
+  useEffect(() => {
+    const channel = supabase
+      .channel("merchant-payments-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "merchant_payments" },
+        (payload) => {
+          const p = payload.new as any;
+          const statusLabel = p.status === "matched" ? "✅ Matched" : p.status === "manual_review" ? "⚠️ Needs Review" : "❓ Unmatched";
+          toast.info(`New Merchant Payment Received`, {
+            description: `TrxID: ${p.transaction_id} — ৳${Number(p.amount).toLocaleString()} — ${statusLabel}`,
+            duration: 8000,
+          });
+          queryClient.invalidateQueries({ queryKey: ["merchant-payments"] });
+          queryClient.invalidateQueries({ queryKey: ["bills"] });
+          queryClient.invalidateQueries({ queryKey: ["payments"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   // Form state
   const [form, setForm] = useState({
     transaction_id: "",
