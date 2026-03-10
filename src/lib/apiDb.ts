@@ -122,6 +122,7 @@ class QueryBuilder<T = any> {
   like(column: string, value: any) { this._filters.push({ column, op: "like", value }); return this; }
   ilike(column: string, value: any) { this._filters.push({ column, op: "ilike", value }); return this; }
   is(column: string, value: any) { this._filters.push({ column, op: "is", value }); return this; }
+  or(filterString: string) { this._filters.push({ column: "__or", op: "eq" as FilterOp, value: filterString }); return this; }
   in(column: string, values: any[]) { this._filters.push({ column, op: "in", value: values }); return this; }
 
   order(column: string, options?: { ascending?: boolean }) {
