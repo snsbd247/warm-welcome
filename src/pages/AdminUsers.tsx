@@ -121,17 +121,18 @@ export default function AdminUsers() {
       } else {
         if (!form.password) { toast.error("Password is required"); setLoading(false); return; }
         if (!form.username) { toast.error("Username is required"); setLoading(false); return; }
-        const { data, error } = await supabase.functions.invoke("admin-users/create", {
-          body: {
-            full_name: form.full_name,
-            username: form.username,
-            email: form.email,
-            password: form.password,
-            mobile: form.mobile,
-            address: form.address,
-            staff_id: form.staff_id,
-            role: form.role,
-          },
+          const { data, error } = await supabase.functions.invoke("admin-users/create", {
+              body: {
+                full_name: form.full_name,
+                username: form.username,
+                email: form.email,
+                password: form.password,
+                mobile: form.mobile,
+                address: form.address,
+                staff_id: form.staff_id,
+                role: form.role,
+                custom_role_id: form.custom_role_id || undefined,
+              },
           headers: { Authorization: `Bearer ${session?.access_token}` },
         });
         if (error) throw error;
