@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.nagad-payment]
 verify_jwt = false
+
+[functions.api]
+verify_jwt = false
+
+[functions.sms-receiver]
+verify_jwt = false

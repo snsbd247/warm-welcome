@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createBillLedgerEntry } from "../_shared/business-logic.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +20,6 @@ serve(async (req) => {
     const now = new Date();
     const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-    // Get all active customers
     const { data: customers, error: custErr } = await supabase
       .from("customers")
       .select("id, name, phone, monthly_bill, due_date_day")
@@ -32,7 +32,6 @@ serve(async (req) => {
       });
     }
 
-    // Check existing bills for this month
     const { data: existing } = await supabase
       .from("bills")
       .select("customer_id")
@@ -59,8 +58,13 @@ serve(async (req) => {
       });
     }
 
-    const { error: insertErr } = await supabase.from("bills").insert(newBills);
+    const { data: insertedBills, error: insertErr } = await supabase.from("bills").insert(newBills).select();
     if (insertErr) throw insertErr;
+
+    // Business logic: create ledger entries (previously done by trigger)
+    for (const bill of insertedBills || []) {
+      await createBillLedgerEntry(supabase, bill);
+    }
 
     // Send SMS notifications
     const smsToken = Deno.env.get("GREENWEB_SMS_TOKEN");
@@ -68,7 +72,7 @@ serve(async (req) => {
       for (const cust of customers.filter((c: any) => !existingIds.has(c.id))) {
         const dueDay = cust.due_date_day || 1;
         const msg = `Dear ${cust.name}, your internet bill for ${month} is ${cust.monthly_bill} BDT. Please pay before the ${dueDay}th. Thank you.`;
-        
+
         try {
           await fetch("http://api.greenweb.com.bd/api.php", {
             method: "POST",
