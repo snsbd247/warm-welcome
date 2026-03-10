@@ -2,12 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/apiDb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Users, UserCheck, UserX, DollarSign, AlertCircle, Loader2, Wifi, WifiOff, RefreshCw, Wallet, Target, AlertTriangle, Send, Mail, CreditCard, Router, Headphones, MessageSquare } from "lucide-react";
+import { DollarSign, Loader2, RefreshCw, Router, Target, Wallet, CreditCard } from "lucide-react";
 import { supabase as supabaseClient } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { format, subMonths } from "date-fns";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -50,8 +49,6 @@ function useMonthlyRevenue() {
 
 export default function Dashboard() {
   const [runningBillControl, setRunningBillControl] = useState(false);
-  const [sendingAlert, setSendingAlert] = useState<"sms" | "email" | null>(null);
-  const [alertShown, setAlertShown] = useState(false);
 
   // MikroTik real-time stats
   const [refreshingMikrotik, setRefreshingMikrotik] = useState(false);
@@ -260,44 +257,6 @@ export default function Dashboard() {
   const collectionRate = targetAmount > 0 ? Math.round((collectedAmount / targetAmount) * 100) : 0;
   const isLowCollection = targetAmount > 0 && collectionRate < 50;
 
-  // In-app toast notification for low collection
-  useEffect(() => {
-    if (isLowCollection && !alertShown && !isLoading) {
-      toast.warning(`⚠️ Collection rate is only ${collectionRate}% — below 50% threshold!`, { duration: 8000 });
-      setAlertShown(true);
-    }
-  }, [isLowCollection, collectionRate, alertShown, isLoading]);
-
-  const sendCollectionAlert = useCallback(async (channel: "sms" | "email") => {
-    setSendingAlert(channel);
-    try {
-      const { data: settings } = await supabase.from("general_settings").select("*").limit(1).single();
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", (await supabase.auth.getUser()).data.user?.id ?? "").single();
-      
-      const alertMessage = `⚠️ Low Collection Alert!\n\nMonth: ${format(new Date(), "MMMM yyyy")}\nCollection Rate: ${collectionRate}%\nCollected: Tk ${collectedAmount.toLocaleString()} / Target: Tk ${targetAmount.toLocaleString()}\nRemaining Due: Tk ${dueAmount.toLocaleString()}\n\n— ${settings?.site_name || "Smart ISP"}`;
-
-      if (channel === "sms") {
-        const adminPhone = profile?.mobile || settings?.mobile;
-        if (!adminPhone) { toast.error("No admin phone number configured in profile or general settings"); return; }
-        const { error } = await supabase.functions.invoke("send-sms", {
-          body: { to: adminPhone, message: alertMessage, sms_type: "collection_alert" },
-        });
-        if (error) throw error;
-        toast.success("SMS alert sent to " + adminPhone);
-      } else {
-        const adminEmail = profile?.email || settings?.email;
-        if (!adminEmail) { toast.error("No admin email configured in profile or general settings"); return; }
-        // Send email via send-sms edge function won't work for email, 
-        // so we'll use a simple notification approach
-        toast.info(`📧 Email alert would be sent to ${adminEmail}.\nTo enable email sending, set up a custom email domain in Cloud → Email settings.`);
-      }
-    } catch (e: any) {
-      toast.error(`Failed to send ${channel} alert: ${e.message}`);
-    } finally {
-      setSendingAlert(null);
-    }
-  }, [collectionRate, collectedAmount, targetAmount, dueAmount]);
-
   const runBillControl = async () => {
     setRunningBillControl(true);
     try {
@@ -334,41 +293,6 @@ export default function Dashboard() {
           Run Bill Control
         </Button>
       </div>
-
-      {/* Low Collection Rate Alert Banner */}
-      {isLowCollection && (
-        <Alert variant="destructive" className="mb-6 border-destructive/50 bg-destructive/5">
-          <AlertTriangle className="h-5 w-5" />
-          <AlertTitle className="text-base">Low Collection Rate Warning</AlertTitle>
-          <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2">
-            <span className="text-sm">
-              Collection is at <strong>{collectionRate}%</strong> — only ৳{collectedAmount.toLocaleString()} collected out of ৳{targetAmount.toLocaleString()} target for {format(new Date(), "MMMM yyyy")}.
-            </span>
-            <div className="flex gap-2 shrink-0">
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-destructive/30 hover:bg-destructive/10"
-                onClick={() => sendCollectionAlert("sms")}
-                disabled={sendingAlert !== null}
-              >
-                {sendingAlert === "sms" ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
-                SMS Alert
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-destructive/30 hover:bg-destructive/10"
-                onClick={() => sendCollectionAlert("email")}
-                disabled={sendingAlert !== null}
-              >
-                {sendingAlert === "email" ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Mail className="h-3 w-3 mr-1" />}
-                Email Alert
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Row 1: Customer & Online Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
