@@ -79,7 +79,7 @@ Deno.serve(async (req: Request) => {
 
     // ─── CREATE USER ────────────────────────────────────────────
     if (req.method === "POST" && path === "create") {
-      const { email, password, full_name, username, mobile, address, staff_id, role } = await req.json();
+      const { email, password, full_name, username, mobile, address, staff_id, role, custom_role_id } = await req.json();
 
       if (!email || !password || !username) {
         return new Response(JSON.stringify({ error: "Email, username and password required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
