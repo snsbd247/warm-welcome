@@ -175,7 +175,11 @@ Deno.serve(async (req: Request) => {
       // Update role
       if (role) {
         await supabase.from("user_roles").delete().eq("user_id", user_id);
-        await supabase.from("user_roles").insert({ user_id, role });
+        await supabase.from("user_roles").insert({ 
+          user_id, 
+          role,
+          custom_role_id: custom_role_id || null,
+        });
       }
 
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
