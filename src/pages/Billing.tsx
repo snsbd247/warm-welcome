@@ -109,9 +109,7 @@ export default function Billing() {
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
-      await supabase.from("customer_ledger").delete().eq("reference", `BILL-${deleteTarget.id.substring(0, 8)}`);
-      const { error } = await supabase.from("bills").delete().eq("id", deleteTarget.id);
-      if (error) throw error;
+      await billsApi.delete(deleteTarget.id);
       if (userId) await logAudit({ adminId: userId, adminName, action: "delete", tableName: "bills", recordId: deleteTarget.id, oldData: { month: deleteTarget.month, amount: deleteTarget.amount, status: deleteTarget.status, customer: deleteTarget.customers?.name } });
       toast.success("Bill deleted successfully");
       setDeleteTarget(null);
