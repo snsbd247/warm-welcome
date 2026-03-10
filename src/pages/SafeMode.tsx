@@ -96,7 +96,7 @@ export default function SafeMode({ onDismiss, errorMessage }: SafeModeProps) {
     const tables = ["customers", "bills", "payments", "packages"];
     for (const table of tables) {
       try {
-        const { error } = await supabase.from(table).select("id", { count: "exact", head: true });
+        const { error } = await supabase.from(table as any).select("id", { count: "exact", head: true });
         results.push({
           name: `Table: ${table}`,
           status: error ? "error" : "ok",
