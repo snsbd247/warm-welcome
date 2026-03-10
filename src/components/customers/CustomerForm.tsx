@@ -223,12 +223,8 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
           }
         }
       } else {
-        const { data, error } = await supabase
-          .from("customers")
-          .insert({ ...payload, customer_id: "" })
-          .select()
-          .single();
-        if (error) throw error;
+        const result = await customersApi.create(payload);
+        const data = result.customer;
 
         if (data && photoFile) {
           const photoUrl = await uploadPhoto(data.id);

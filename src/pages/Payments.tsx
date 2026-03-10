@@ -82,10 +82,7 @@ export default function Payments() {
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
-      const ref = deleteTarget.transaction_id ? `TXN-${deleteTarget.transaction_id}` : `PAY-${deleteTarget.id.substring(0, 8)}`;
-      await supabase.from("customer_ledger").delete().eq("reference", ref);
-      const { error } = await supabase.from("payments").delete().eq("id", deleteTarget.id);
-      if (error) throw error;
+      await paymentsApi.delete(deleteTarget.id, deleteTarget.transaction_id);
       if (userId) await logAudit({ adminId: userId, adminName, action: "delete", tableName: "payments", recordId: deleteTarget.id, oldData: { amount: deleteTarget.amount, payment_method: deleteTarget.payment_method, customer: deleteTarget.customers?.name } });
       toast.success("Payment deleted successfully");
       setDeleteTarget(null);

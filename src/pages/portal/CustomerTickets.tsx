@@ -81,24 +81,14 @@ export default function CustomerTickets() {
     if (!form.subject.trim() || !form.message.trim() || !customer) return;
     setLoading(true);
     try {
-      const { data: ticket, error } = await supabase
-        .from("support_tickets")
-        .insert({
-          customer_id: customer.id,
-          subject: form.subject.trim(),
-          category: form.category,
-          priority: form.priority,
-          ticket_id: "TKT-TEMP", // trigger will override
-        })
-        .select()
-        .single();
-      if (error) throw error;
-
-      await supabase.from("ticket_replies").insert({
-        ticket_id: ticket.id,
+      await ticketsApi.create({
+        customer_id: customer.id,
+        subject: form.subject.trim(),
+        category: form.category,
+        priority: form.priority,
+        message: form.message.trim(),
         sender_type: "customer",
         sender_name: customer.name,
-        message: form.message.trim(),
       });
 
       setForm({ subject: "", category: "general", priority: "medium", message: "" });

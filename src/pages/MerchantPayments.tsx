@@ -109,9 +109,7 @@ export default function MerchantPayments() {
     try {
       const bill = unpaidBills?.find((b) => b.id === matchBillId);
       if (!bill) throw new Error("Bill not found");
-      await supabase.from("bills").update({ status: "paid", paid_date: new Date().toISOString() }).eq("id", bill.id);
-      await supabase.from("payments").insert({ customer_id: bill.cust_uuid, bill_id: bill.id, amount: selectedPayment.amount, payment_method: "bkash_merchant", transaction_id: selectedPayment.transaction_id, status: "completed", paid_at: selectedPayment.payment_date, month: bill.month });
-      await supabase.from("merchant_payments").update({ status: "matched", matched_customer_id: bill.cust_uuid, matched_bill_id: bill.id, notes: "Manually matched by admin" }).eq("id", selectedPayment.id);
+      await merchantPaymentsApi.match(selectedPayment.id, bill.id, bill.cust_uuid);
       toast.success("Payment manually matched successfully");
       setMatchOpen(false); setSelectedPayment(null); setMatchCustomerId(""); setMatchBillId("");
       queryClient.invalidateQueries({ queryKey: ["merchant-payments"] });
