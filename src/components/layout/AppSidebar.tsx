@@ -29,6 +29,11 @@ const supportNav = [
   { to: "/sms-settings", icon: Settings, label: "SMS Settings" },
 ];
 
+const paymentGatewayNav = [
+  { to: "/settings/bkash", icon: Wallet, label: "bKash API" },
+  { to: "/settings/nagad", icon: Wallet, label: "Nagad API" },
+];
+
 const settingsNav = [
   { to: "/settings/general", icon: Settings, label: "General Settings" },
   { to: "/users", icon: Shield, label: "Users" },
@@ -36,8 +41,6 @@ const settingsNav = [
   { to: "/settings/packages", icon: Package, label: "Packages" },
   { to: "/settings/zones", icon: MapPin, label: "Zones" },
   { to: "/settings/mikrotik", icon: Router, label: "MikroTik Routers" },
-  { to: "/settings/bkash", icon: Wallet, label: "bKash API" },
-  { to: "/settings/nagad", icon: Wallet, label: "Nagad API" },
   { to: "/login-logs", icon: FileText, label: "Login Logs" },
   { to: "/audit-logs", icon: ClipboardList, label: "Audit Logs" },
 ];
