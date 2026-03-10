@@ -107,6 +107,21 @@ export default function Dashboard() {
     },
   });
 
+  // Nagad payment collection summary
+  const { data: nagadPayments, isLoading: loadingNagad } = useQuery({
+    queryKey: ["nagad-dashboard-stats"],
+    queryFn: async () => {
+      const thirtyDaysAgo = format(subMonths(new Date(), 1), "yyyy-MM-dd");
+      const { data, error } = await supabase
+        .from("payments")
+        .select("amount, status, paid_at, payment_method")
+        .eq("payment_method", "nagad")
+        .gte("paid_at", `${thirtyDaysAgo}T00:00:00`);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const bkashStats = useMemo(() => {
     if (!bkashPayments) return { todayAmount: 0, todayCount: 0, monthAmount: 0, monthCount: 0, completed: 0, pending: 0, failed: 0, refunded: 0, dailyData: [] as { day: string; amount: number }[] };
 
