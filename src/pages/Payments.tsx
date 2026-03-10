@@ -69,12 +69,13 @@ export default function Payments() {
   const handleEditSave = async () => {
     if (!editPayment) return;
     const newData = { amount: parseFloat(editAmount), payment_method: editMethod, transaction_id: editTrxId || null, status: editStatus, paid_at: new Date(editDate).toISOString() };
-    const { error } = await supabase.from("payments").update(newData).eq("id", editPayment.id);
-    if (error) { toast.error(error.message); return; }
-    if (userId) await logAudit({ adminId: userId, adminName, action: "edit", tableName: "payments", recordId: editPayment.id, oldData: { amount: editPayment.amount, payment_method: editPayment.payment_method, transaction_id: editPayment.transaction_id, status: editPayment.status }, newData });
-    toast.success("Payment updated successfully");
-    setEditOpen(false);
-    queryClient.invalidateQueries({ queryKey: ["admin-payments"] });
+    try {
+      await paymentsApi.update(editPayment.id, newData);
+      if (userId) await logAudit({ adminId: userId, adminName, action: "edit", tableName: "payments", recordId: editPayment.id, oldData: { amount: editPayment.amount, payment_method: editPayment.payment_method, transaction_id: editPayment.transaction_id, status: editPayment.status }, newData });
+      toast.success("Payment updated successfully");
+      setEditOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-payments"] });
+    } catch (err: any) { toast.error(err.message); }
   };
 
   const handleDelete = async () => {
