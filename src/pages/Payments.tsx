@@ -40,6 +40,9 @@ export default function Payments() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const queryClient = useQueryClient();
   const { canEdit, adminName, userId } = useAdminRole();
+  const { hasPermission, isSuperAdmin } = usePermissions();
+  const canEditPayment = isSuperAdmin || hasPermission("payments", "edit");
+  const canDeletePayment = isSuperAdmin || hasPermission("payments", "delete");
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ["admin-payments"],
