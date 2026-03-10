@@ -47,6 +47,15 @@ function normalizeHeader(h: string): string {
   return s;
 }
 
+function downloadTemplate() {
+  const headers = ["Date", "Transaction ID", "Sender Phone", "Amount", "Reference"];
+  const sample = ["2026-03-09", "TESTPAY001", "01712345678", "800", "ISP-00001"];
+  const ws = XLSX.utils.aoa_to_sheet([headers, sample]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Merchant Payments");
+  XLSX.writeFile(wb, "merchant-payment-template.xlsx");
+}
+
 export default function MerchantPaymentImport({ open, onOpenChange, onComplete }: Props) {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
