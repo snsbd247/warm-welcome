@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Eye, EyeOff, Wifi, WifiOff, TestTube, Save, RefreshCw, Search, Undo2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, Wifi, WifiOff, TestTube, Save, RefreshCw, Search, Undo2, Link, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { format } from "date-fns";
