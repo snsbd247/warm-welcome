@@ -382,128 +382,70 @@ export default function Dashboard() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <StatCard title="Total Customers" value={total} icon={Users} color="text-primary" bgColor="bg-primary/10" />
-        <StatCard title="Active Customers" value={active} icon={UserCheck} color="text-success" bgColor="bg-success/10" />
-        <StatCard title="Monthly Revenue" value={`৳${monthlyRevenue.toLocaleString()}`} icon={DollarSign} color="text-accent" bgColor="bg-accent/10" />
-        <StatCard title="Total Due" value={`৳${totalDue.toLocaleString()}`} icon={AlertCircle} color="text-warning" bgColor="bg-warning/10" />
+      {/* Row 1: Customer & Online Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <DashboardCard title="Total Customer" value={total} headerColor="bg-[hsl(var(--primary))]" link="/customers" />
+        <DashboardCard title="Active Customer" value={active} headerColor="bg-success" link="/customers" />
+        <DashboardCard title="Inactive Customer" value={suspended} headerColor="bg-destructive" link="/customers" />
+        <DashboardCard
+          title="Online Customer"
+          value={loadingMikrotik ? "..." : mikrotikStats?.total_online ?? 0}
+          headerColor="bg-[hsl(var(--primary))]"
+          link="/customers"
+        />
       </div>
 
-      {/* MikroTik Real-Time Stats */}
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <Router className="h-5 w-5 text-primary" /> MikroTik Live Stats
-        </h2>
-        <Button variant="outline" size="sm" onClick={handleRefreshMikrotik} disabled={refreshingMikrotik || loadingMikrotik}>
-          {refreshingMikrotik ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
-          Refresh
-        </Button>
+      {/* Row 2: Offline, MikroTik Suspended, Income */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <DashboardCard
+          title="Offline Customer"
+          value={loadingMikrotik ? "..." : (total - (mikrotikStats?.total_online ?? 0))}
+          headerColor="bg-success"
+          link="/customers"
+        />
+        <DashboardCard
+          title="MikroTik Suspended"
+          value={loadingMikrotik ? "..." : mikrotikStats?.total_suspended ?? 0}
+          headerColor="bg-destructive"
+          link="/customers"
+        />
+        <DashboardCard title="This Month Income" value={`৳${collectedAmount.toLocaleString()}`} headerColor="bg-[hsl(var(--primary))]" link="/payments" />
+        <DashboardCard title="This Month Due" value={`৳${dueAmount.toLocaleString()}`} headerColor="bg-destructive" link="/billing" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <Card className="glass-card animate-fade-in">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Online Users</p>
-                <p className="text-2xl sm:text-3xl font-bold mt-1 text-card-foreground">
-                  {loadingMikrotik ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground inline" /> : mikrotikStats?.total_online ?? "—"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Active PPPoE sessions</p>
-              </div>
-              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-success/10">
-                <Wifi className="h-6 w-6 text-success" />
-              </div>
+      {/* Row 3: Total Due, Support, Router Health */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <DashboardCard title="Total Due" value={`৳${totalDue.toLocaleString()}`} headerColor="bg-warning" link="/billing" />
+        <DashboardCard title="Support & Ticket" value={openTickets} headerColor="bg-muted-foreground" link="/tickets" />
+        <DashboardCard title="Monthly Revenue" value={`৳${monthlyRevenue.toLocaleString()}`} headerColor="bg-success" link="/payments" />
+        {/* Router Health */}
+        <Card className="overflow-hidden animate-fade-in shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-[hsl(var(--primary))] px-4 py-3 text-center flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-bold text-white">Router Health</p>
+              <p className="text-lg font-bold text-white mt-0.5">
+                {loadingMikrotik ? "..." : `${mikrotikStats?.routers?.filter(r => !r.error).length ?? 0}/${mikrotikStats?.routers?.length ?? 0} Online`}
+              </p>
             </div>
-            {mikrotikStats?.routers && mikrotikStats.routers.length > 1 && (
-              <div className="mt-3 pt-3 border-t border-border space-y-1">
-                {mikrotikStats.routers.map((r) => (
-                  <div key={r.name} className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Router className="h-3 w-3" /> {r.name}
-                    </span>
-                    {r.error ? (
-                      <span className="text-destructive">Offline</span>
-                    ) : (
-                      <span className="text-foreground font-medium">{r.online}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card animate-fade-in">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Suspended Users</p>
-                <p className="text-2xl sm:text-3xl font-bold mt-1 text-card-foreground">
-                  {loadingMikrotik ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground inline" /> : mikrotikStats?.total_suspended ?? "—"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Disabled PPP secrets</p>
-              </div>
-              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-destructive/10">
-                <WifiOff className="h-6 w-6 text-destructive" />
-              </div>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20" onClick={handleRefreshMikrotik} disabled={refreshingMikrotik || loadingMikrotik}>
+              {refreshingMikrotik ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
+          {mikrotikStats?.routers && mikrotikStats.routers.length > 0 && (
+            <div className="px-3 py-2 space-y-1.5">
+              {mikrotikStats.routers.map((r) => (
+                <div key={r.name} className="flex items-center justify-between text-xs">
+                  <span className="text-foreground flex items-center gap-1.5">
+                    <span className={`h-2 w-2 rounded-full ${r.error ? "bg-destructive animate-pulse" : "bg-success"}`} />
+                    {r.name}
+                  </span>
+                  <span className={r.error ? "text-destructive" : "text-success"}>{r.error ? "Offline" : "Online"}</span>
+                </div>
+              ))}
             </div>
-            {mikrotikStats?.routers && mikrotikStats.routers.length > 1 && (
-              <div className="mt-3 pt-3 border-t border-border space-y-1">
-                {mikrotikStats.routers.map((r) => (
-                  <div key={r.name} className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Router className="h-3 w-3" /> {r.name}
-                    </span>
-                    {r.error ? (
-                      <span className="text-destructive">Offline</span>
-                    ) : (
-                      <span className="text-foreground font-medium">{r.suspended}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Router Health Indicator */}
-        <Card className="glass-card animate-fade-in">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-muted-foreground">Router Health</p>
-              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-primary/10">
-                <Router className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            {loadingMikrotik ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : mikrotikStats?.routers && mikrotikStats.routers.length > 0 ? (
-              <div className="space-y-2.5">
-                {mikrotikStats.routers.map((r) => (
-                  <div key={r.name} className="flex items-center justify-between">
-                    <span className="text-sm text-foreground flex items-center gap-2">
-                      <span className={`h-2.5 w-2.5 rounded-full ${r.error ? "bg-destructive animate-pulse" : "bg-success"}`} />
-                      {r.name}
-                    </span>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${r.error ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
-                      {r.error ? "Offline" : "Online"}
-                    </span>
-                  </div>
-                ))}
-                <p className="text-xs text-muted-foreground pt-1 border-t border-border">
-                  {mikrotikStats.routers.filter(r => !r.error).length}/{mikrotikStats.routers.length} routers online
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No routers configured</p>
-            )}
-          </CardContent>
+          )}
         </Card>
       </div>
-
-      <Card className="glass-card animate-fade-in mb-6">
-        <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-primary" />
             Monthly Revenue Trend
