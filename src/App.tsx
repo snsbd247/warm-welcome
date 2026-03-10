@@ -47,6 +47,7 @@ import RoleManagement from "@/pages/settings/RoleManagement";
 import BackupRestore from "@/pages/settings/BackupRestore";
 import SafeMode from "@/pages/SafeMode";
 import NotFound from "@/pages/NotFound";
+import { useState } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
