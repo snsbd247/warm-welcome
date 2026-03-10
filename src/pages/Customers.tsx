@@ -15,19 +15,21 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Eye, Pencil, Printer, Search, Loader2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Eye, Pencil, Printer, Search, Loader2, RefreshCw, ChevronLeft, ChevronRight, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 import CustomerForm from "@/components/customers/CustomerForm";
 import CustomerView from "@/components/customers/CustomerView";
 import { generateCustomerPDF } from "@/lib/pdf";
+import CustomerImport from "@/components/CustomerImport";
 
 export default function Customers() {
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editCustomer, setEditCustomer] = useState<any>(null);
   const [bulkSyncing, setBulkSyncing] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const queryClient = useQueryClient();
@@ -119,6 +121,9 @@ export default function Customers() {
           <Button variant="outline" onClick={bulkSyncCustomers} disabled={bulkSyncing}>
             {bulkSyncing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
             Sync All to MikroTik
+          </Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="h-4 w-4 mr-2" /> Upload Excel
           </Button>
           <Button onClick={() => { setEditCustomer(null); setFormOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" /> Add Customer
@@ -261,6 +266,14 @@ export default function Customers() {
           />
         </DialogContent>
       </Dialog>
+
+      <CustomerImport
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onComplete={() => {
+          queryClient.invalidateQueries({ queryKey: ["customers"] });
+        }}
+      />
 
     </DashboardLayout>
   );
