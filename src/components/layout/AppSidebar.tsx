@@ -34,12 +34,15 @@ const paymentGatewayNav = [
   { to: "/settings/nagad", icon: Wallet, label: "Nagad API" },
 ];
 
-const settingsNav = [
-  { to: "/settings/general", icon: Settings, label: "General Settings" },
-  { to: "/users", icon: Shield, label: "Users" },
+const toolsNav = [
   { to: "/profile", icon: UserCircle, label: "Profile" },
+  { to: "/users", icon: Shield, label: "Users" },
   { to: "/settings/packages", icon: Package, label: "Packages" },
   { to: "/settings/zones", icon: MapPin, label: "Zones" },
+];
+
+const settingsNav = [
+  { to: "/settings/general", icon: Settings, label: "General Settings" },
   { to: "/settings/mikrotik", icon: Router, label: "MikroTik Routers" },
   { to: "/login-logs", icon: FileText, label: "Login Logs" },
   { to: "/audit-logs", icon: ClipboardList, label: "Audit Logs" },
