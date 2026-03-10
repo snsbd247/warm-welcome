@@ -62,15 +62,23 @@ export default function Dashboard() {
   const [alertShown, setAlertShown] = useState(false);
 
   // MikroTik real-time stats
-  const { data: mikrotikStats, isLoading: loadingMikrotik } = useQuery({
+  const [refreshingMikrotik, setRefreshingMikrotik] = useState(false);
+  const { data: mikrotikStats, isLoading: loadingMikrotik, refetch: refetchMikrotik } = useQuery({
     queryKey: ["mikrotik-router-stats"],
     queryFn: async () => {
       const { data, error } = await supabaseClient.functions.invoke("mikrotik-sync/router-stats", { body: {} });
       if (error) throw error;
       return data as { total_online: number; total_suspended: number; routers: { name: string; online: number; suspended: number; error?: string }[] };
     },
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    refetchInterval: 30000,
   });
+
+  const handleRefreshMikrotik = useCallback(async () => {
+    setRefreshingMikrotik(true);
+    await refetchMikrotik();
+    setRefreshingMikrotik(false);
+    toast.success("MikroTik stats refreshed");
+  }, [refetchMikrotik]);
 
   const { data: customers, isLoading: loadingCustomers } = useQuery({
     queryKey: ["customers-stats"],
@@ -373,7 +381,17 @@ export default function Dashboard() {
       </div>
 
       {/* MikroTik Real-Time Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Router className="h-5 w-5 text-primary" /> MikroTik Live Stats
+        </h2>
+        <Button variant="outline" size="sm" onClick={handleRefreshMikrotik} disabled={refreshingMikrotik || loadingMikrotik}>
+          {refreshingMikrotik ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
+          Refresh
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <Card className="glass-card animate-fade-in">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -382,7 +400,7 @@ export default function Dashboard() {
                 <p className="text-2xl sm:text-3xl font-bold mt-1 text-card-foreground">
                   {loadingMikrotik ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground inline" /> : mikrotikStats?.total_online ?? "—"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">Live from MikroTik • Auto-refresh 30s</p>
+                <p className="text-xs text-muted-foreground mt-1">Active PPPoE sessions</p>
               </div>
               <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-success/10">
                 <Wifi className="h-6 w-6 text-success" />
@@ -415,7 +433,7 @@ export default function Dashboard() {
                 <p className="text-2xl sm:text-3xl font-bold mt-1 text-card-foreground">
                   {loadingMikrotik ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground inline" /> : mikrotikStats?.total_suspended ?? "—"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">Disabled PPP secrets on MikroTik</p>
+                <p className="text-xs text-muted-foreground mt-1">Disabled PPP secrets</p>
               </div>
               <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-destructive/10">
                 <WifiOff className="h-6 w-6 text-destructive" />
@@ -439,8 +457,41 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
 
+        {/* Router Health Indicator */}
+        <Card className="glass-card animate-fade-in">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-muted-foreground">Router Health</p>
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-primary/10">
+                <Router className="h-6 w-6 text-primary" />
+              </div>
+            </div>
+            {loadingMikrotik ? (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            ) : mikrotikStats?.routers && mikrotikStats.routers.length > 0 ? (
+              <div className="space-y-2.5">
+                {mikrotikStats.routers.map((r) => (
+                  <div key={r.name} className="flex items-center justify-between">
+                    <span className="text-sm text-foreground flex items-center gap-2">
+                      <span className={`h-2.5 w-2.5 rounded-full ${r.error ? "bg-destructive animate-pulse" : "bg-success"}`} />
+                      {r.name}
+                    </span>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${r.error ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
+                      {r.error ? "Offline" : "Online"}
+                    </span>
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground pt-1 border-t border-border">
+                  {mikrotikStats.routers.filter(r => !r.error).length}/{mikrotikStats.routers.length} routers online
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No routers configured</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="glass-card animate-fade-in mb-6">
         <CardHeader className="pb-3">
