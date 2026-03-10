@@ -372,7 +372,76 @@ export default function Dashboard() {
         <StatCard title="Total Due" value={`৳${totalDue.toLocaleString()}`} icon={AlertCircle} color="text-warning" bgColor="bg-warning/10" />
       </div>
 
-      {/* Monthly Revenue Trend Chart */}
+      {/* MikroTik Real-Time Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <Card className="glass-card animate-fade-in">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Online Users</p>
+                <p className="text-2xl sm:text-3xl font-bold mt-1 text-card-foreground">
+                  {loadingMikrotik ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground inline" /> : mikrotikStats?.total_online ?? "—"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">Live from MikroTik • Auto-refresh 30s</p>
+              </div>
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-success/10">
+                <Wifi className="h-6 w-6 text-success" />
+              </div>
+            </div>
+            {mikrotikStats?.routers && mikrotikStats.routers.length > 1 && (
+              <div className="mt-3 pt-3 border-t border-border space-y-1">
+                {mikrotikStats.routers.map((r) => (
+                  <div key={r.name} className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Router className="h-3 w-3" /> {r.name}
+                    </span>
+                    {r.error ? (
+                      <span className="text-destructive">Offline</span>
+                    ) : (
+                      <span className="text-foreground font-medium">{r.online}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card animate-fade-in">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Suspended Users</p>
+                <p className="text-2xl sm:text-3xl font-bold mt-1 text-card-foreground">
+                  {loadingMikrotik ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground inline" /> : mikrotikStats?.total_suspended ?? "—"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">Disabled PPP secrets on MikroTik</p>
+              </div>
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-destructive/10">
+                <WifiOff className="h-6 w-6 text-destructive" />
+              </div>
+            </div>
+            {mikrotikStats?.routers && mikrotikStats.routers.length > 1 && (
+              <div className="mt-3 pt-3 border-t border-border space-y-1">
+                {mikrotikStats.routers.map((r) => (
+                  <div key={r.name} className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Router className="h-3 w-3" /> {r.name}
+                    </span>
+                    {r.error ? (
+                      <span className="text-destructive">Offline</span>
+                    ) : (
+                      <span className="text-foreground font-medium">{r.suspended}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+
       <Card className="glass-card animate-fade-in mb-6">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
