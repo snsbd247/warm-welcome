@@ -22,7 +22,7 @@ export default function SMSLogs() {
   const [sending, setSending] = useState(false);
   const [smsForm, setSmsForm] = useState({ phone: "", message: "" });
 
-  const { data: logs = [], isLoading } = useQuery({
+  const { data: logs = [], isLoading, refetch } = useQuery({
     queryKey: ["sms-logs"],
     queryFn: async () => {
       const { data, error } = await supabase
