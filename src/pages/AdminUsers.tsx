@@ -75,7 +75,7 @@ export default function AdminUsers() {
 
   const openAdd = () => {
     setEditUser(null);
-    setForm({ full_name: "", username: "", email: "", password: "", mobile: "", address: "", staff_id: "", role: "staff" });
+    setForm({ full_name: "", username: "", email: "", password: "", mobile: "", address: "", staff_id: "", role: "staff", custom_role_id: "" });
     setFormOpen(true);
   };
 
