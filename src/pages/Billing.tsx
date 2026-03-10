@@ -175,8 +175,8 @@ export default function Billing() {
           <p className="text-muted-foreground mt-1">Generate and manage customer bills</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-2" /> Upload Excel</Button>
-          <Button onClick={() => setGenerateOpen(true)}><FileText className="h-4 w-4 mr-2" /> Generate Bills</Button>
+          {canCreateBill && <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-2" /> Upload Excel</Button>}
+          {canCreateBill && <Button onClick={() => setGenerateOpen(true)}><FileText className="h-4 w-4 mr-2" /> Generate Bills</Button>}
         </div>
       </div>
 
