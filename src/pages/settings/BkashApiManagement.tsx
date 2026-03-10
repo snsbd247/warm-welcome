@@ -102,6 +102,21 @@ export default function BkashApiManagement() {
     },
   });
 
+  // Fetch refund history from audit logs
+  const { data: refundLogs, isLoading: loadingRefunds } = useQuery({
+    queryKey: ["bkash-refund-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .eq("action", "bkash_refund")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Save settings
   const saveMutation = useMutation({
     mutationFn: async () => {
