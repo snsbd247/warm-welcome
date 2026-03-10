@@ -232,6 +232,7 @@ export default function Dashboard() {
   const suspendedConn = customers?.filter((c) => c.connection_status === "suspended").length ?? 0;
   const monthlyRevenue = bills?.filter((b) => b.status === "paid").reduce((sum, b) => sum + Number(b.amount), 0) ?? 0;
   const totalDue = bills?.filter((b) => b.status === "unpaid").reduce((sum, b) => sum + Number(b.amount), 0) ?? 0;
+  const openTickets = tickets?.filter((t) => t.status === "open" || t.status === "in_progress").length ?? 0;
 
   const merchantTotal = merchantPayments?.length ?? 0;
   const merchantMatched = merchantPayments?.filter((p) => p.status === "matched").length ?? 0;
