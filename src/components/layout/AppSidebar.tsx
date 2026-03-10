@@ -195,6 +195,7 @@ export default function AppSidebar() {
         <NavGroup label="Accounts" icon={CreditCard} items={accountsNav} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />
         <NavGroup label="Support" icon={Ticket} items={supportNav} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />
         <NavGroup label="Payment Gateway" icon={Wallet} items={paymentGatewayNav} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />
+        <NavGroup label="Tools" icon={Wrench} items={toolsNav} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />
         <NavGroup label="Settings" icon={Settings} items={settingsNav} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />
       </nav>
 
