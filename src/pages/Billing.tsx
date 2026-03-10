@@ -39,6 +39,10 @@ export default function Billing() {
   const [importOpen, setImportOpen] = useState(false);
   const queryClient = useQueryClient();
   const { canEdit, adminName, userId } = useAdminRole();
+  const { hasPermission, isSuperAdmin } = usePermissions();
+  const canCreateBill = isSuperAdmin || hasPermission("billing", "create");
+  const canEditBill = isSuperAdmin || hasPermission("billing", "edit");
+  const canDeleteBill = isSuperAdmin || hasPermission("billing", "delete");
 
   const { data: bills, isLoading } = useQuery({
     queryKey: ["bills"],
