@@ -92,7 +92,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Ensure Supabase Auth password is in sync
-    await supabase.auth.admin.updateUser(profile.id, { password });
+    await supabase.auth.admin.updateUserById(profile.id, { password });
 
     return new Response(
       JSON.stringify({
