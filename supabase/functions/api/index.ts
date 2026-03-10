@@ -42,10 +42,16 @@ Deno.serve(async (req: Request) => {
   const resource = pathParts[pathParts.length - 2] || "";
   const action = pathParts[pathParts.length - 1] || "";
 
-  // Authenticate
-  const auth = await authenticateRequest(supabase, req.headers.get("Authorization"));
-  if (auth.error) return jsonResponse({ error: auth.error }, 401);
-  const userId = auth.userId!;
+  // Tickets can be created by customers (no auth required, customer_id in body)
+  const isPublicTicketCreate = resource === "tickets" && action === "create";
+
+  // Authenticate (skip for public ticket creation)
+  let userId: string | null = null;
+  if (!isPublicTicketCreate) {
+    const auth = await authenticateRequest(supabase, req.headers.get("Authorization"));
+    if (auth.error) return jsonResponse({ error: auth.error }, 401);
+    userId = auth.userId!;
+  }
 
   try {
     // ─── BILLS ──────────────────────────────────────────────────

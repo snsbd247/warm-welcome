@@ -95,5 +95,5 @@ export const ticketsApi = {
     message?: string;
     sender_type?: string;
     sender_name?: string;
-  }) => apiCall("tickets", "create", ticket),
+  }) => apiCall("tickets", "create", ticket, true),
 };
