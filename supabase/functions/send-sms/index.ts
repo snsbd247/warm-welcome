@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: false, reason: "SMS disabled for suspension" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    // "manual" and "group" types always allowed
 
     // Clean phone number
     const cleanPhone = to.replace(/[^0-9]/g, "");
