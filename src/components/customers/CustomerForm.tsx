@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, Upload, X } from "lucide-react";
 import { generateCustomerPDF } from "@/lib/pdf";
+import { customersApi } from "@/lib/api";
 
 interface CustomerFormProps {
   customer?: any;
