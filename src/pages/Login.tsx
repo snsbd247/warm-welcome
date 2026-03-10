@@ -12,7 +12,7 @@ import PendingLoginWaiting from "@/components/PendingLoginWaiting";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
@@ -24,19 +24,26 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { user, session } = await signIn(email, password);
+      // Step 1: Verify username + bcrypt password via edge function
+      const { data: loginData, error: loginError } = await supabase.functions.invoke("admin-login", {
+        body: { username, password },
+      });
 
-      // Check for existing active session
+      if (loginError) throw new Error(loginError.message || "Login failed");
+      if (loginData?.error) throw new Error(loginData.error);
+
+      // Step 2: Sign in with Supabase Auth using the resolved email
+      const { user, session } = await signIn(loginData.email, password);
+
+      // Step 3: Check for existing active session
       const existingSession = await checkExistingSession(user.id);
 
       if (existingSession) {
-        // Another device is active — create pending request
         const pending = await createPendingSession(user.id, session.access_token);
         setPendingSessionId(pending.id);
         setPendingUserId(user.id);
         toast.info("Waiting for approval from active device...");
       } else {
-        // No active session — login directly
         await createActiveSession(user.id, session.access_token);
         navigate("/");
         toast.success("Welcome back!");
@@ -50,11 +57,8 @@ export default function Login() {
 
   const handleApproved = useCallback(async () => {
     toast.success("Login approved!");
-    // Activate the session
     if (pendingUserId) {
       try {
-        // The session was already set to active by the approver via realtime
-        // Just log it
         await supabase.from("admin_login_logs").insert({
           admin_id: pendingUserId,
           action: "login_approved_completed",
@@ -69,14 +73,12 @@ export default function Login() {
 
   const handleRejected = useCallback(async () => {
     toast.error("Login request was rejected");
-    // Sign out since the login was rejected
     await supabase.auth.signOut();
     setPendingSessionId(null);
     setPendingUserId(null);
   }, []);
 
   const handleCancel = useCallback(async () => {
-    // Clean up the pending session
     if (pendingSessionId) {
       await supabase
         .from("admin_sessions")
@@ -88,7 +90,6 @@ export default function Login() {
     setPendingUserId(null);
   }, [pendingSessionId]);
 
-  // Show waiting screen if pending
   if (pendingSessionId) {
     return (
       <PendingLoginWaiting
@@ -123,14 +124,15 @@ export default function Login() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@smartisp.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="admin"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
+                  autoComplete="username"
                 />
               </div>
               <div className="space-y-2">
@@ -151,9 +153,6 @@ export default function Login() {
               </Button>
             </form>
             <div className="mt-4 text-center space-y-2">
-              <a href="/admin/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors block">
-                Forgot password?
-              </a>
               <a href="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors block">
                 ← Customer Login
               </a>

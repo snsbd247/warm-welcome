@@ -711,9 +711,11 @@ export type Database = {
           full_name: string
           id: string
           mobile: string | null
+          password_hash: string | null
           staff_id: string | null
           status: string
           updated_at: string
+          username: string | null
         }
         Insert: {
           address?: string | null
@@ -723,9 +725,11 @@ export type Database = {
           full_name?: string
           id: string
           mobile?: string | null
+          password_hash?: string | null
           staff_id?: string | null
           status?: string
           updated_at?: string
+          username?: string | null
         }
         Update: {
           address?: string | null
@@ -735,9 +739,11 @@ export type Database = {
           full_name?: string
           id?: string
           mobile?: string | null
+          password_hash?: string | null
           staff_id?: string | null
           status?: string
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
