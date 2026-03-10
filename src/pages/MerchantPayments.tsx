@@ -93,8 +93,7 @@ export default function MerchantPayments() {
     if (!form.transaction_id || !form.sender_phone || !form.amount) { toast.error("Transaction ID, Phone, and Amount are required"); return; }
     setLoading(true);
     try {
-      const { error } = await supabase.from("merchant_payments").insert({ transaction_id: form.transaction_id.trim(), sender_phone: form.sender_phone.trim(), amount: parseFloat(form.amount), reference: form.reference.trim() || null, payment_date: new Date(form.payment_date).toISOString() });
-      if (error) { toast.error(error.message.includes("duplicate") || error.message.includes("unique") ? "Duplicate Transaction ID" : error.message); return; }
+      await merchantPaymentsApi.create({ transaction_id: form.transaction_id.trim(), sender_phone: form.sender_phone.trim(), amount: parseFloat(form.amount), reference: form.reference.trim() || undefined, payment_date: new Date(form.payment_date).toISOString() });
       toast.success("Merchant payment recorded — auto-matching applied");
       setAddOpen(false);
       setForm({ transaction_id: "", sender_phone: "", amount: "", reference: "", payment_date: format(new Date(), "yyyy-MM-dd'T'HH:mm") });
