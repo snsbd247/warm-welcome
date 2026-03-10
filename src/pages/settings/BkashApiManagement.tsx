@@ -44,22 +44,6 @@ export default function BkashApiManagement() {
   });
   const [formLoaded, setFormLoaded] = useState(false);
 
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  const edgeFunctionBaseUrl = `https://${projectId}.supabase.co/functions/v1/bkash-payment`;
-
-  const webhookUrls = {
-    create: `${edgeFunctionBaseUrl}/create`,
-    execute: `${edgeFunctionBaseUrl}/execute`,
-    callback: `${window.location.origin}/portal/payment-callback`,
-  };
-
-  const copyToClipboard = (url: string, label: string) => {
-    navigator.clipboard.writeText(url);
-    setCopiedUrl(label);
-    toast.success(`${label} URL copied`);
-    setTimeout(() => setCopiedUrl(null), 2000);
-  };
-
   // Fetch gateway config
   const { data: gateway, isLoading: loadingGateway } = useQuery({
     queryKey: ["payment-gateway-bkash"],
