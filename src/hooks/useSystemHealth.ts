@@ -24,6 +24,25 @@ export function useSystemHealth() {
   });
   const failureCount = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const emergencyBackupTriggered = useRef(false);
+
+  const triggerEmergencyBackup = useCallback(async () => {
+    if (emergencyBackupTriggered.current) return;
+    emergencyBackupTriggered.current = true;
+    console.warn("[SafeMode] Triggering automatic emergency backup before safe mode activation...");
+    try {
+      const { error } = await supabase.functions.invoke("backup-restore", {
+        body: { action: "emergency" },
+      });
+      if (error) {
+        console.error("[SafeMode] Emergency backup failed:", error.message);
+      } else {
+        console.log("[SafeMode] Emergency backup created successfully.");
+      }
+    } catch (err: any) {
+      console.error("[SafeMode] Emergency backup error:", err.message);
+    }
+  }, []);
 
   const checkHealth = useCallback(async () => {
     setHealth((h) => ({ ...h, checking: true }));
@@ -35,17 +54,23 @@ export function useSystemHealth() {
 
       if (error) {
         failureCount.current += 1;
+        const willActivateSafeMode = failureCount.current >= FAILURE_THRESHOLD;
+        // Trigger emergency backup just before safe mode activates
+        if (failureCount.current === FAILURE_THRESHOLD - 1) {
+          triggerEmergencyBackup();
+        }
         setHealth((h) => ({
           ...h,
           dbConnected: false,
           lastCheck: new Date(),
           consecutiveFailures: failureCount.current,
-          safeModeActive: failureCount.current >= FAILURE_THRESHOLD,
+          safeModeActive: willActivateSafeMode,
           checking: false,
           error: error.message,
         }));
       } else {
         failureCount.current = 0;
+        emergencyBackupTriggered.current = false;
         setHealth((h) => ({
           ...h,
           dbConnected: true,
@@ -58,6 +83,9 @@ export function useSystemHealth() {
       }
     } catch (err: any) {
       failureCount.current += 1;
+      if (failureCount.current === FAILURE_THRESHOLD - 1) {
+        triggerEmergencyBackup();
+      }
       setHealth((h) => ({
         ...h,
         dbConnected: false,
@@ -68,10 +96,11 @@ export function useSystemHealth() {
         error: err.message || "Connection failed",
       }));
     }
-  }, []);
+  }, [triggerEmergencyBackup]);
 
   const dismissSafeMode = useCallback(() => {
     failureCount.current = 0;
+    emergencyBackupTriggered.current = false;
     setHealth((h) => ({
       ...h,
       safeModeActive: false,
