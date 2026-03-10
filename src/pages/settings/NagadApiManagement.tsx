@@ -30,7 +30,7 @@ export default function NagadApiManagement() {
   const [showSecret, setShowSecret] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedTxn, setSelectedTxn] = useState<any>(null);
-  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  
 
   const [queryPaymentId, setQueryPaymentId] = useState("");
   const [queryResult, setQueryResult] = useState<any>(null);
