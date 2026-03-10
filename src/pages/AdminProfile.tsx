@@ -117,17 +117,7 @@ export default function AdminProfile() {
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `${user.id}/avatar.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(path, file, { upsert: true });
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(path);
+      const publicUrl = await uploadAvatar(user.id, file);
 
       const { error: updateError } = await supabase
         .from("profiles")

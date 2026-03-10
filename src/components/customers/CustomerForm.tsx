@@ -171,14 +171,7 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
 
     const uploadPhoto = async (customerId: string) => {
       if (!photoFile) return null;
-      const ext = photoFile.name.split(".").pop();
-      const path = `customer-photos/${customerId}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(path, photoFile, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-      return urlData.publicUrl;
+      return await uploadCustomerPhoto(customerId, photoFile);
     };
 
     try {
