@@ -50,8 +50,6 @@ function useMonthlyRevenue() {
 
 export default function Dashboard() {
   const [runningBillControl, setRunningBillControl] = useState(false);
-  const [sendingAlert, setSendingAlert] = useState<"sms" | "email" | null>(null);
-  const [alertShown, setAlertShown] = useState(false);
 
   // MikroTik real-time stats
   const [refreshingMikrotik, setRefreshingMikrotik] = useState(false);
