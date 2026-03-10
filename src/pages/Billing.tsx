@@ -218,15 +218,15 @@ export default function Billing() {
                       <TableCell className="text-sm text-muted-foreground">{format(new Date(bill.created_at), "dd MMM yyyy")}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {canEdit && (
-                            <>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                                setEditBill(bill); setEditMonth(bill.month); setEditAmount(bill.amount.toString()); setEditStatus(bill.status); setEditOpen(true);
-                              }}><Pencil className="h-4 w-4" /></Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(bill)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </>
+                          {canEditBill && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                              setEditBill(bill); setEditMonth(bill.month); setEditAmount(bill.amount.toString()); setEditStatus(bill.status); setEditOpen(true);
+                            }}><Pencil className="h-4 w-4" /></Button>
+                          )}
+                          {canDeleteBill && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(bill)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           )}
                           {bill.status !== "paid" && (
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-success" onClick={() => handleMarkPaid(bill)}><CheckCircle className="h-4 w-4" /></Button>
