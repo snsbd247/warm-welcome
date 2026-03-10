@@ -157,6 +157,12 @@ export default function SMSLogs() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <GroupSmsDialog
+        open={groupSmsOpen}
+        onOpenChange={setGroupSmsOpen}
+        onSent={() => refetch()}
+      />
     </DashboardLayout>
   );
 }
