@@ -722,6 +722,50 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ success: true, results }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ─── ROUTER STATS (Online + Suspended from all routers) ────
+    if (req.method === "POST" && path === "router-stats") {
+      const supabase = getSupabaseAdmin();
+      const { data: routers } = await supabase
+        .from("mikrotik_routers")
+        .select("*")
+        .eq("status", "active");
+
+      let totalOnline = 0;
+      let totalSuspended = 0;
+      const routerDetails: { name: string; online: number; suspended: number; error?: string }[] = [];
+
+      if (routers && routers.length > 0) {
+        for (const router of routers) {
+          try {
+            const stats = await withRouter(router, async (mt) => {
+              // Count active PPPoE sessions
+              const activeRes = await mt.send(["/ppp/active/print"]);
+              const activeUsers = parseItems(activeRes.sentences);
+
+              // Count disabled PPP secrets
+              const secretRes = await mt.send(["/ppp/secret/print", "?disabled=yes"]);
+              const disabledSecrets = parseItems(secretRes.sentences);
+
+              return { online: activeUsers.length, suspended: disabledSecrets.length };
+            });
+            totalOnline += stats.online;
+            totalSuspended += stats.suspended;
+            routerDetails.push({ name: router.name, online: stats.online, suspended: stats.suspended });
+          } catch (e) {
+            console.error(`Router stats failed for ${router.name} (${router.ip_address}):`, e.message);
+            routerDetails.push({ name: router.name, online: 0, suspended: 0, error: e.message });
+          }
+        }
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        total_online: totalOnline,
+        total_suspended: totalSuspended,
+        routers: routerDetails,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("MikroTik edge function error:", err);
