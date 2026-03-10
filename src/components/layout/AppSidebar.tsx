@@ -60,7 +60,7 @@ const settingsNav: NavItem[] = [
 interface NavGroupProps {
   label: string;
   icon: React.ElementType;
-  items: { to: string; icon: React.ElementType; label: string }[];
+  items: NavItem[];
   collapsed: boolean;
   location: ReturnType<typeof useLocation>;
   defaultOpen?: boolean;
