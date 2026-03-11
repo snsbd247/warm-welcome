@@ -169,7 +169,7 @@ export default function Payments() {
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(payment)}><Trash2 className="h-4 w-4" /></Button>
                           )}
                           {payment.status === "completed" && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => generatePaymentReceiptPDF(payment, payment.customers)}><Download className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => generatePaymentReceiptPDF(payment, payment.customers, invoiceFooter)}><Download className="h-4 w-4" /></Button>
                           )}
                         </div>
                       </TableCell>

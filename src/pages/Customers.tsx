@@ -205,7 +205,7 @@ export default function Customers() {
                                 <Pencil className="h-4 w-4" />
                               </Button>
                             )}
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => generateCustomerPDF(customer)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => generateCustomerPDF(customer, invoiceFooter)}>
                               <Printer className="h-4 w-4" />
                             </Button>
                           </div>
