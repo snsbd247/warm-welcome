@@ -60,6 +60,35 @@ export default function BackupRestore() {
       toast({ title: "Backup Failed", description: err.message, variant: "destructive" });
     },
   });
+  const createSqlBackup = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("backup-restore", {
+        body: { action: "create_sql" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: async (data) => {
+      toast({ title: "SQL Backup Created", description: `File: ${data.file_name} (${formatFileSize(data.file_size)})` });
+      queryClient.invalidateQueries({ queryKey: ["backup-logs"] });
+      // Auto-download the SQL file
+      try {
+        const { data: fileData, error } = await supabase.storage.from("backups").download(data.file_name);
+        if (!error && fileData) {
+          const url = URL.createObjectURL(fileData);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = data.file_name;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      } catch {}
+    },
+    onError: (err: any) => {
+      toast({ title: "SQL Backup Failed", description: err.message, variant: "destructive" });
+    },
+  });
 
   const deleteBackup = useMutation({
     mutationFn: async (fileName: string) => {
