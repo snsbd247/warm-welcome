@@ -24,6 +24,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { logAudit } from "@/lib/auditLog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { paymentsApi } from "@/lib/api";
+import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
 
 export default function Payments() {
   const [search, setSearch] = useState("");
