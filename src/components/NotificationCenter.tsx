@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSystemHealth } from "@/hooks/useSystemHealth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,9 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bell, Database, Shield, Activity, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export default function NotificationCenter() {
   const health = useSystemHealth();
+  const queryClient = useQueryClient();
 
   const { data: backupLogs } = useQuery({
     queryKey: ["notification-backup-logs"],
@@ -23,6 +26,30 @@ export default function NotificationCenter() {
     },
     refetchInterval: 60_000,
   });
+
+  // Real-time subscription for backup_logs
+  useEffect(() => {
+    const channel = supabase
+      .channel("backup-logs-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "backup_logs" },
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: ["notification-backup-logs"] });
+          const log = payload.new as any;
+          if (log.status === "completed") {
+            toast.success(`Backup completed: ${log.file_name}`);
+          } else if (log.status === "failed") {
+            toast.error(`Backup failed: ${log.error_message || log.file_name}`);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const statusIcon = (status: string) => {
     if (status === "completed") return <CheckCircle className="h-3.5 w-3.5 text-success shrink-0" />;
