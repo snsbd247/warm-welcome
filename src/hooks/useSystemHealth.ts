@@ -92,6 +92,11 @@ export function useSystemHealth() {
         if (failureCount.current === FAILURE_THRESHOLD - 1) {
           triggerEmergencyBackup();
         }
+        // Send SMS when Safe Mode first activates
+        if (willActivateSafeMode && !safeModeNotified.current) {
+          safeModeNotified.current = true;
+          sendSafeModeNotification("safe_mode", error.message);
+        }
         setHealth((h) => ({
           ...h,
           dbConnected: false,
