@@ -91,6 +91,8 @@ Deno.serve(async (req) => {
       return await createBackup(adminClient, userId, "emergency", "emergency");
     } else if (action === "restore") {
       return await restoreBackup(adminClient, body.backup_data);
+    } else if (action === "restore_sql") {
+      return await restoreSqlBackup(adminClient, body.sql_content);
     } else if (action === "delete") {
       return await deleteBackup(adminClient, body.file_name);
     } else if (action === "manual_cleanup") {
@@ -260,6 +262,91 @@ async function restoreBackup(client: any, backupData: any) {
   return new Response(JSON.stringify({ success: true, errors }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+async function restoreSqlBackup(client: any, sqlContent: string) {
+  if (!sqlContent || typeof sqlContent !== "string") throw new Error("Invalid SQL content");
+
+  // Parse INSERT statements from SQL backup
+  const insertRegex = /INSERT INTO public\."(\w+)"\s*\(([^)]+)\)\s*VALUES\s*\((.+?)\);/gi;
+  const tableData: Record<string, any[]> = {};
+  let match;
+
+  while ((match = insertRegex.exec(sqlContent)) !== null) {
+    const tableName = match[1];
+    const columns = match[2].split(",").map(c => c.trim().replace(/"/g, ""));
+    const valuesStr = match[3];
+
+    // Parse values - handle quoted strings, NULLs, booleans, numbers, jsonb
+    const values: any[] = [];
+    let current = "";
+    let inString = false;
+    let depth = 0;
+
+    for (let i = 0; i < valuesStr.length; i++) {
+      const ch = valuesStr[i];
+      if (inString) {
+        if (ch === "'" && valuesStr[i + 1] === "'") {
+          current += "'";
+          i++;
+        } else if (ch === "'") {
+          inString = false;
+          // Check for ::jsonb cast
+          const rest = valuesStr.substring(i + 1).trimStart();
+          if (rest.startsWith("::jsonb")) {
+            try { values.push(JSON.parse(current)); } catch { values.push(current); }
+            i += valuesStr.substring(i + 1).indexOf("jsonb") + 5;
+            current = "";
+            continue;
+          }
+          values.push(current);
+          current = "";
+        } else {
+          current += ch;
+        }
+      } else {
+        if (ch === "'") {
+          inString = true;
+          current = "";
+        } else if (ch === "," && depth === 0) {
+          const trimmed = current.trim();
+          if (trimmed.length > 0) {
+            if (trimmed === "NULL") values.push(null);
+            else if (trimmed === "TRUE") values.push(true);
+            else if (trimmed === "FALSE") values.push(false);
+            else if (!isNaN(Number(trimmed))) values.push(Number(trimmed));
+            else values.push(trimmed);
+          }
+          current = "";
+        } else {
+          current += ch;
+        }
+      }
+    }
+    // Push last value
+    const lastTrimmed = current.trim();
+    if (lastTrimmed.length > 0 && !inString) {
+      if (lastTrimmed === "NULL") values.push(null);
+      else if (lastTrimmed === "TRUE") values.push(true);
+      else if (lastTrimmed === "FALSE") values.push(false);
+      else if (!isNaN(Number(lastTrimmed))) values.push(Number(lastTrimmed));
+      else values.push(lastTrimmed);
+    }
+
+    // Build row object
+    const row: Record<string, any> = {};
+    columns.forEach((col, idx) => { row[col] = idx < values.length ? values[idx] : null; });
+
+    if (!tableData[tableName]) tableData[tableName] = [];
+    tableData[tableName].push(row);
+  }
+
+  if (Object.keys(tableData).length === 0) {
+    throw new Error("No valid INSERT statements found in SQL file");
+  }
+
+  // Use the same restore logic
+  return await restoreBackup(client, { tables: tableData });
 }
 
 async function deleteBackup(client: any, fileName: string) {
