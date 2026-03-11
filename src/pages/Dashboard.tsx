@@ -616,6 +616,10 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+      {/* Notification Center */}
+      <div className="mt-6">
+        <NotificationCenter />
+      </div>
     </DashboardLayout>
   );
 }
