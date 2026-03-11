@@ -47,6 +47,7 @@ import RoleManagement from "@/pages/settings/RoleManagement";
 import BackupRestore from "@/pages/settings/BackupRestore";
 import SafeMode from "@/pages/SafeMode";
 import SafeModeWrapper from "@/components/SafeModeWrapper";
+import FooterSettings from "@/pages/settings/FooterSettings";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -111,6 +112,7 @@ function App() {
                 <Route path="/settings/bkash" element={<PermissionGuard module="settings"><BkashApiManagement /></PermissionGuard>} />
                 <Route path="/settings/nagad" element={<PermissionGuard module="settings"><NagadApiManagement /></PermissionGuard>} />
                 <Route path="/settings/roles" element={<PermissionGuard module="roles"><RoleManagement /></PermissionGuard>} />
+                <Route path="/settings/footer" element={<PermissionGuard module="settings" action="manage_footer"><FooterSettings /></PermissionGuard>} />
                 <Route path="/settings/backup" element={<PermissionGuard module="settings"><BackupRestore /></PermissionGuard>} />
                 <Route path="/safe-mode" element={<ProtectedRoute><SafeMode onDismiss={() => window.location.href = "/"} /></ProtectedRoute>} />
 

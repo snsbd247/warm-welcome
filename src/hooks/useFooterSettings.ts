@@ -1,0 +1,62 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface FooterSettings {
+  footer_text: string;
+  company_name: string;
+  footer_link: string;
+  footer_developer: string;
+  system_version: string;
+  auto_update_year: boolean;
+}
+
+const DEFAULTS: FooterSettings = {
+  footer_text: "© {year} ISP Billing System. All Rights Reserved.",
+  company_name: "ISP Billing System",
+  footer_link: "",
+  footer_developer: "",
+  system_version: "",
+  auto_update_year: true,
+};
+
+export function useFooterSettings() {
+  return useQuery({
+    queryKey: ["footer-settings"],
+    queryFn: async (): Promise<FooterSettings> => {
+      const { data, error } = await supabase
+        .from("system_settings" as any)
+        .select("setting_key, setting_value")
+        .in("setting_key", [
+          "footer_text", "company_name", "footer_link",
+          "footer_developer", "system_version", "auto_update_year",
+        ]);
+      if (error) throw error;
+
+      const map: Record<string, string> = {};
+      (data as any[])?.forEach((row: any) => {
+        map[row.setting_key] = row.setting_value || "";
+      });
+
+      return {
+        footer_text: map.footer_text || DEFAULTS.footer_text,
+        company_name: map.company_name || DEFAULTS.company_name,
+        footer_link: map.footer_link || DEFAULTS.footer_link,
+        footer_developer: map.footer_developer || DEFAULTS.footer_developer,
+        system_version: map.system_version || DEFAULTS.system_version,
+        auto_update_year: map.auto_update_year !== "false",
+      };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function renderFooterText(settings: FooterSettings): string {
+  const year = settings.auto_update_year
+    ? new Date().getFullYear().toString()
+    : "";
+  let text = settings.footer_text.replace("{year}", year);
+  if (settings.footer_developer) {
+    text += ` Developed by ${settings.footer_developer}.`;
+  }
+  return text;
+}
