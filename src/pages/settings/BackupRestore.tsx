@@ -133,19 +133,31 @@ export default function BackupRestore() {
   const restoreBackup = useMutation({
     mutationFn: async (file: File) => {
       const text = await file.text();
-      let backupData;
-      try {
-        backupData = JSON.parse(text);
-      } catch {
-        throw new Error("Invalid backup file format");
+      const isSql = file.name.endsWith(".sql");
+
+      if (isSql) {
+        // Send raw SQL text to the edge function for SQL restore
+        const { data, error } = await supabase.functions.invoke("backup-restore", {
+          body: { action: "restore_sql", sql_content: text },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        return data;
+      } else {
+        let backupData;
+        try {
+          backupData = JSON.parse(text);
+        } catch {
+          throw new Error("Invalid backup file format. Expected JSON or SQL.");
+        }
+        if (!backupData.tables) throw new Error("Invalid backup structure - missing tables");
+        const { data, error } = await supabase.functions.invoke("backup-restore", {
+          body: { action: "restore", backup_data: backupData },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        return data;
       }
-      if (!backupData.tables) throw new Error("Invalid backup structure - missing tables");
-      const { data, error } = await supabase.functions.invoke("backup-restore", {
-        body: { action: "restore", backup_data: backupData },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
     },
     onSuccess: (data) => {
       const msg = data.errors?.length
