@@ -109,6 +109,7 @@ export function useSystemHealth() {
       } else {
         failureCount.current = 0;
         emergencyBackupTriggered.current = false;
+        safeModeNotified.current = false;
         setHealth((h) => ({
           ...h,
           dbConnected: true,
