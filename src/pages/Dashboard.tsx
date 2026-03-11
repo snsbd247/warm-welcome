@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
+import NotificationCenter from "@/components/NotificationCenter";
 
 interface DashboardCardProps {
   title: string;
