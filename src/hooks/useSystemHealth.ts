@@ -31,28 +31,57 @@ export function useSystemHealth() {
     try {
       const { data: settings } = await supabase
         .from("general_settings")
-        .select("mobile, site_name")
+        .select("mobile, email, site_name")
         .limit(1)
         .single();
 
-      if (!settings?.mobile) {
-        console.warn("[SafeMode] No admin mobile number configured for notifications");
-        return;
-      }
-
-      const siteName = settings.site_name || "Smart ISP";
+      const siteName = settings?.site_name || "Smart ISP";
       const message = type === "safe_mode"
         ? `🚨 [${siteName}] CRITICAL: Safe Mode activated! Database connectivity lost after multiple failures. Immediate attention required. ${details || ""}`
         : `⚠️ [${siteName}] Emergency backup created automatically due to system instability. ${details || ""}`;
 
-      await supabase.functions.invoke("send-sms", {
-        body: {
-          to: settings.mobile,
-          message,
-          sms_type: "manual",
-        },
-      });
-      console.log(`[SafeMode] ${type} SMS notification sent to ${settings.mobile}`);
+      // Send SMS if mobile configured
+      if (settings?.mobile) {
+        await supabase.functions.invoke("send-sms", {
+          body: { to: settings.mobile, message, sms_type: "manual" },
+        });
+        console.log(`[SafeMode] ${type} SMS notification sent to ${settings.mobile}`);
+      }
+
+      // Send Email if email configured
+      if (settings?.email) {
+        const subject = type === "safe_mode"
+          ? `🚨 CRITICAL: ${siteName} Safe Mode Activated`
+          : `⚠️ ${siteName} Emergency Backup Created`;
+
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: ${type === "safe_mode" ? "#dc2626" : "#f59e0b"}; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+              <h2 style="margin: 0; font-size: 18px;">${subject}</h2>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e5e7eb; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
+              <p style="color: #374151; line-height: 1.6; margin: 0 0 16px;">${message}</p>
+              <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px;">
+                <strong>Time:</strong> ${new Date().toISOString()}
+              </p>
+              ${details ? `<p style="color: #6b7280; font-size: 14px; margin: 0;"><strong>Details:</strong> ${details}</p>` : ""}
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                This is an automated alert from ${siteName} system health monitor.
+              </p>
+            </div>
+          </div>
+        `;
+
+        await supabase.functions.invoke("send-email", {
+          body: { to: settings.email, subject, html, from_name: siteName },
+        });
+        console.log(`[SafeMode] ${type} email notification sent to ${settings.email}`);
+      }
+
+      if (!settings?.mobile && !settings?.email) {
+        console.warn("[SafeMode] No admin mobile or email configured for notifications");
+      }
     } catch (err: any) {
       console.error("[SafeMode] Failed to send notification:", err.message);
     }
