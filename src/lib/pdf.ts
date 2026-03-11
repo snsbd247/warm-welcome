@@ -104,11 +104,12 @@ export function generatePaymentReceiptPDF(payment: any, customer: any, invoiceFo
   doc.line(20, y, pageWidth - 20, y);
   y += 10;
 
-  // Thank you message
+  // Thank you message / Invoice footer
+  const footerText = invoiceFooter || "Thank you for your payment. This is a computer-generated receipt.";
   doc.setFontSize(10);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(100, 100, 100);
-  doc.text("Thank you for your payment. This is a computer-generated receipt.", pageWidth / 2, y, { align: "center" });
+  doc.text(footerText, pageWidth / 2, y, { align: "center" });
   doc.text("No signature required.", pageWidth / 2, y + 6, { align: "center" });
 
   // Footer
