@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import {
   Download, Trash2, Upload, Database, HardDrive, Loader2, AlertTriangle,
-  Clock, Calendar, CalendarDays, Recycle,
+  Clock, Calendar, CalendarDays, Recycle, FileCode,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -58,6 +58,35 @@ export default function BackupRestore() {
     },
     onError: (err: any) => {
       toast({ title: "Backup Failed", description: err.message, variant: "destructive" });
+    },
+  });
+  const createSqlBackup = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("backup-restore", {
+        body: { action: "create_sql" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: async (data) => {
+      toast({ title: "SQL Backup Created", description: `File: ${data.file_name} (${formatFileSize(data.file_size)})` });
+      queryClient.invalidateQueries({ queryKey: ["backup-logs"] });
+      // Auto-download the SQL file
+      try {
+        const { data: fileData, error } = await supabase.storage.from("backups").download(data.file_name);
+        if (!error && fileData) {
+          const url = URL.createObjectURL(fileData);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = data.file_name;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      } catch {}
+    },
+    onError: (err: any) => {
+      toast({ title: "SQL Backup Failed", description: err.message, variant: "destructive" });
     },
   });
 
@@ -173,7 +202,7 @@ export default function BackupRestore() {
         </div>
 
         {/* Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
@@ -192,6 +221,30 @@ export default function BackupRestore() {
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating...</>
                 ) : (
                   <><HardDrive className="h-4 w-4 mr-2" /> Create Backup</>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileCode className="h-5 w-5 text-primary" />
+                SQL Backup
+              </CardTitle>
+              <CardDescription>Export as SQL INSERT statements</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                onClick={() => createSqlBackup.mutate()}
+                disabled={createSqlBackup.isPending}
+                className="w-full"
+              >
+                {createSqlBackup.isPending ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating SQL...</>
+                ) : (
+                  <><FileCode className="h-4 w-4 mr-2" /> Download SQL Backup</>
                 )}
               </Button>
             </CardContent>

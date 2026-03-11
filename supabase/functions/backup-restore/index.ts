@@ -85,6 +85,8 @@ Deno.serve(async (req) => {
 
     if (action === "create") {
       return await createBackup(adminClient, userId, "backups", "manual");
+    } else if (action === "create_sql") {
+      return await createSqlBackup(adminClient, userId, "backups", "manual_sql");
     } else if (action === "emergency") {
       return await createBackup(adminClient, userId, "emergency", "emergency");
     } else if (action === "restore") {
@@ -269,6 +271,88 @@ async function deleteBackup(client: any, fileName: string) {
   await client.from("backup_logs").delete().eq("file_name", fileName);
 
   return new Response(JSON.stringify({ success: true }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function escapeSQL(val: any): string {
+  if (val === null || val === undefined) return "NULL";
+  if (typeof val === "number") return String(val);
+  if (typeof val === "boolean") return val ? "TRUE" : "FALSE";
+  if (typeof val === "object") return `'${JSON.stringify(val).replace(/'/g, "''")}'::jsonb`;
+  return `'${String(val).replace(/'/g, "''")}'`;
+}
+
+async function createSqlBackup(client: any, userId: string, bucket: string, backupType: string) {
+  const sqlParts: string[] = [
+    `-- Database Backup (SQL Format)`,
+    `-- Created: ${new Date().toISOString()}`,
+    `-- Tables: ${TABLES.length}`,
+    ``,
+    `BEGIN;`,
+    ``,
+  ];
+
+  for (const table of TABLES) {
+    let allRows: any[] = [];
+    let offset = 0;
+    const limit = 1000;
+    while (true) {
+      const { data, error } = await client.from(table).select("*").range(offset, offset + limit - 1);
+      if (error) { console.error(`Error backing up ${table}:`, error.message); break; }
+      if (!data || data.length === 0) break;
+      allRows = allRows.concat(data);
+      if (data.length < limit) break;
+      offset += limit;
+    }
+
+    if (allRows.length === 0) {
+      sqlParts.push(`-- Table: ${table} (0 rows)`);
+      sqlParts.push(``);
+      continue;
+    }
+
+    sqlParts.push(`-- Table: ${table} (${allRows.length} rows)`);
+    const columns = Object.keys(allRows[0]);
+    const colList = columns.map(c => `"${c}"`).join(", ");
+
+    for (const row of allRows) {
+      const values = columns.map(c => escapeSQL(row[c])).join(", ");
+      sqlParts.push(`INSERT INTO public."${table}" (${colList}) VALUES (${values});`);
+    }
+    sqlParts.push(``);
+  }
+
+  sqlParts.push(`COMMIT;`);
+  const sqlStr = sqlParts.join("\n");
+  const fileSize = new Blob([sqlStr]).size;
+
+  if (fileSize > MAX_BACKUP_SIZE_MB * 1024 * 1024) {
+    const msg = `SQL backup size (${(fileSize / 1024 / 1024).toFixed(1)}MB) exceeds limit (${MAX_BACKUP_SIZE_MB}MB)`;
+    throw new Error(msg);
+  }
+
+  const now = new Date();
+  const fileName = `backup_sql_${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, "0")}_${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}.sql`;
+
+  const { error: uploadError } = await client.storage
+    .from(bucket)
+    .upload(fileName, new Blob([sqlStr], { type: "application/sql" }), {
+      contentType: "application/sql",
+      upsert: false,
+    });
+
+  if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+
+  await client.from("backup_logs").insert({
+    file_name: fileName,
+    backup_type: backupType,
+    file_size: fileSize,
+    created_by: userId,
+    status: "completed",
+  });
+
+  return new Response(JSON.stringify({ success: true, file_name: fileName, file_size: fileSize }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
