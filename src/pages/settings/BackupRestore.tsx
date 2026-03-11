@@ -16,6 +16,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { BackupCompareDialog } from "@/components/BackupCompareDialog";
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
