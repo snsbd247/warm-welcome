@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
   { to: "/super-admin/plans", icon: Package, label: "Plans" },
   { to: "/super-admin/subscriptions", icon: CreditCard, label: "Subscriptions" },
   { to: "/super-admin/payments", icon: BarChart3, label: "Payments" },
+  { to: "/super-admin/integrations", icon: Globe, label: "Integrations" },
   { to: "/super-admin/settings", icon: Settings, label: "System Settings" },
   { to: "/super-admin/audit-logs", icon: ClipboardList, label: "Audit Logs" },
   { to: "/super-admin/backup", icon: HardDrive, label: "Backup & Restore" },

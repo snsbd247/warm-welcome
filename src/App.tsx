@@ -109,6 +109,7 @@ function App() {
                 <Route path="/super-admin/settings" element={<SuperAdminGuard><SuperAdminSystemSettings /></SuperAdminGuard>} />
                 <Route path="/super-admin/payments" element={<SuperAdminGuard><SuperAdminPayments /></SuperAdminGuard>} />
                 <Route path="/super-admin/audit-logs" element={<SuperAdminGuard><SuperAdminAuditLogs /></SuperAdminGuard>} />
+                <Route path="/super-admin/integrations" element={<SuperAdminGuard><SuperAdminIntegrations /></SuperAdminGuard>} />
                 <Route path="/super-admin/backup" element={<SuperAdminGuard><SuperAdminBackup /></SuperAdminGuard>} />
 
                 {/* Admin Routes */}
