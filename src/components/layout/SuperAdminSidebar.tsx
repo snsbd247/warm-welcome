@@ -24,6 +24,7 @@ const navItems: NavItem[] = [
   { to: "/super-admin/payments", icon: BarChart3, label: "Payments" },
   { to: "/super-admin/settings", icon: Settings, label: "System Settings" },
   { to: "/super-admin/audit-logs", icon: ClipboardList, label: "Audit Logs" },
+  { to: "/super-admin/backup", icon: HardDrive, label: "Backup & Restore" },
   { to: "/super-admin/monitoring", icon: Activity, label: "Monitoring" },
 ];
 
