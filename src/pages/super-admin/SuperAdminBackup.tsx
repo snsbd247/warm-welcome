@@ -48,9 +48,17 @@ export default function SuperAdminBackup() {
   const { data: backupLogs, isLoading: logsLoading } = useQuery({
     queryKey: ["sa-backup-logs"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("backup_logs").select("*").order("created_at", { ascending: false }).limit(50);
+      const { data, error } = await supabase.from("backup_logs").select("*").order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
-      return data as any[];
+      // Attach tenant names
+      const logs = (data || []) as any[];
+      const tenantIds = [...new Set(logs.filter(b => b.tenant_id).map(b => b.tenant_id))];
+      let tenantMap: Record<string, string> = {};
+      if (tenantIds.length) {
+        const { data: tData } = await supabase.from("tenants").select("id, company_name").in("id", tenantIds);
+        (tData || []).forEach((t: any) => { tenantMap[t.id] = t.company_name; });
+      }
+      return logs.map(b => ({ ...b, tenant_name: b.tenant_id ? tenantMap[b.tenant_id] || "Unknown" : "—" }));
     },
   });
 
