@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SuperAdminLayout from "@/components/layout/SuperAdminLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Database, Download, Loader2, HardDrive, Shield } from "lucide-react";
+import { Database, Download, Loader2, HardDrive, Shield, Trash2, RotateCcw, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -23,16 +24,22 @@ const ALL_TABLES = [
   "payment_gateways", "general_settings",
 ];
 
+const TENANT_TABLES = ALL_TABLES.filter(t => !["tenants", "subscription_plans", "platform_admins", "system_settings", "tenant_subscriptions"].includes(t));
+
 export default function SuperAdminBackup() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [scope, setScope] = useState("platform");
   const [selectedTenant, setSelectedTenant] = useState("");
+  const [deleteDialog, setDeleteDialog] = useState<any>(null);
+  const [restoreDialog, setRestoreDialog] = useState<any>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { data: tenants } = useQuery({
     queryKey: ["sa-backup-tenants"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("tenants" as any).select("id, company_name");
+      const { data, error } = await supabase.from("tenants").select("id, company_name");
       if (error) throw error;
       return data as any[];
     },
@@ -41,7 +48,7 @@ export default function SuperAdminBackup() {
   const { data: backupLogs, isLoading: logsLoading } = useQuery({
     queryKey: ["sa-backup-logs"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("backup_logs" as any).select("*").order("created_at", { ascending: false }).limit(50);
+      const { data, error } = await supabase.from("backup_logs").select("*").order("created_at", { ascending: false }).limit(50);
       if (error) throw error;
       return data as any[];
     },
@@ -50,13 +57,12 @@ export default function SuperAdminBackup() {
   const runBackup = useMutation({
     mutationFn: async () => {
       const backupData: Record<string, any[]> = {};
-      const tables = scope === "platform" ? ALL_TABLES : ALL_TABLES.filter(t => !["tenants", "subscription_plans", "platform_admins", "system_settings", "tenant_subscriptions"].includes(t));
+      const tables = scope === "platform" ? ALL_TABLES : TENANT_TABLES;
 
       for (const table of tables) {
-        let query = supabase.from(table as any).select("*");
+        let query = (supabase as any).from(table).select("*");
         if (scope === "tenant" && selectedTenant) {
-          // Only fetch tenant-scoped data
-          const { data } = await (query as any).eq("tenant_id", selectedTenant);
+          const { data } = await query.eq("tenant_id", selectedTenant);
           backupData[table] = data || [];
         } else {
           const { data } = await query;
@@ -68,12 +74,9 @@ export default function SuperAdminBackup() {
       const fileName = `backup_${tenantName.toLowerCase().replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd_HHmmss")}.json`;
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
 
-      // Upload to storage
-      const { error: uploadError } = await supabase.storage.from("backups").upload(fileName, blob);
-      if (uploadError) throw uploadError;
+      await supabase.storage.from("backups").upload(fileName, blob);
 
-      // Log the backup
-      await supabase.from("backup_logs" as any).insert({
+      await (supabase as any).from("backup_logs").insert({
         tenant_id: scope === "tenant" ? selectedTenant : null,
         backup_type: scope === "platform" ? "platform_full" : "tenant",
         file_name: fileName,
@@ -82,12 +85,9 @@ export default function SuperAdminBackup() {
         status: "completed",
       });
 
-      // Trigger download
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.click();
+      a.href = url; a.download = fileName; a.click();
       URL.revokeObjectURL(url);
     },
     onSuccess: () => {
@@ -96,6 +96,76 @@ export default function SuperAdminBackup() {
     },
     onError: (err: any) => toast.error(err.message),
   });
+
+  const handleDownload = async (backup: any) => {
+    try {
+      const { data, error } = await supabase.storage.from("backups").download(backup.file_name);
+      if (error) throw error;
+      const url = URL.createObjectURL(data);
+      const a = document.createElement("a");
+      a.href = url; a.download = backup.file_name; a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Download started");
+    } catch (err: any) {
+      toast.error(`Download failed: ${err.message}`);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!restoreDialog) return;
+    setRestoring(true);
+    try {
+      const { data: fileData, error } = await supabase.storage.from("backups").download(restoreDialog.file_name);
+      if (error) throw error;
+      const text = await fileData.text();
+      const backupData = JSON.parse(text);
+
+      const tables = restoreDialog.backup_type === "tenant" ? TENANT_TABLES : ALL_TABLES;
+      const tenantId = restoreDialog.tenant_id;
+
+      // Delete then re-insert in reverse dependency order
+      for (const table of [...tables].reverse()) {
+        if (tenantId) {
+          await (supabase as any).from(table).delete().eq("tenant_id", tenantId);
+        }
+      }
+
+      for (const table of tables) {
+        const rows = backupData[table];
+        if (rows?.length) {
+          // Insert in batches of 100
+          for (let i = 0; i < rows.length; i += 100) {
+            const batch = rows.slice(i, i + 100);
+            await (supabase as any).from(table).insert(batch);
+          }
+        }
+      }
+
+      toast.success("Restore completed successfully");
+      setRestoreDialog(null);
+      queryClient.invalidateQueries();
+    } catch (err: any) {
+      toast.error(`Restore failed: ${err.message}`);
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteDialog) return;
+    setDeleting(true);
+    try {
+      await supabase.storage.from("backups").remove([deleteDialog.file_name]);
+      await (supabase as any).from("backup_logs").delete().eq("id", deleteDialog.id);
+      toast.success("Backup deleted");
+      setDeleteDialog(null);
+      queryClient.invalidateQueries({ queryKey: ["sa-backup-logs"] });
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <SuperAdminLayout>
@@ -177,16 +247,30 @@ export default function SuperAdminBackup() {
                   <TableHead>Size</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {backupLogs.map((b: any) => (
                   <TableRow key={b.id}>
-                    <TableCell className="font-medium text-sm">{b.file_name}</TableCell>
+                    <TableCell className="font-medium text-sm max-w-[200px] truncate">{b.file_name}</TableCell>
                     <TableCell><Badge variant="secondary">{b.backup_type}</Badge></TableCell>
                     <TableCell>{(b.file_size / 1024).toFixed(1)} KB</TableCell>
                     <TableCell><Badge variant={b.status === "completed" ? "default" : "destructive"}>{b.status}</Badge></TableCell>
                     <TableCell>{format(new Date(b.created_at), "dd MMM yyyy HH:mm")}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => handleDownload(b)} title="Download">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setRestoreDialog(b)} title="Restore">
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteDialog(b)} title="Delete">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -194,6 +278,42 @@ export default function SuperAdminBackup() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation */}
+      <Dialog open={!!deleteDialog} onOpenChange={() => setDeleteDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" /> Delete Backup</DialogTitle>
+            <DialogDescription>Are you sure you want to permanently delete "{deleteDialog?.file_name}"? This action cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialog(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />} Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restore Confirmation */}
+      <Dialog open={!!restoreDialog} onOpenChange={() => setRestoreDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><RotateCcw className="h-5 w-5 text-primary" /> Restore Backup</DialogTitle>
+            <DialogDescription>
+              Restoring "{restoreDialog?.file_name}" will replace current data
+              {restoreDialog?.backup_type === "tenant" ? " for this tenant" : " across the entire platform"}.
+              This operation cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRestoreDialog(null)}>Cancel</Button>
+            <Button onClick={handleRestore} disabled={restoring}>
+              {restoring ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RotateCcw className="h-4 w-4 mr-2" />} Restore Now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SuperAdminLayout>
   );
 }
