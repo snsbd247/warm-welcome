@@ -43,7 +43,8 @@ Deno.serve(async (req) => {
 
       if (action === "auto") {
         const backupType = body.backup_type || "auto_daily";
-        return await createBackup(adminClient, "00000000-0000-0000-0000-000000000001", "backups", backupType);
+        // Auto backups always use SQL format
+        return await createSqlBackup(adminClient, "00000000-0000-0000-0000-000000000001", "backups", backupType);
       } else if (action === "cleanup") {
         return await cleanupOldBackups(adminClient);
       }
