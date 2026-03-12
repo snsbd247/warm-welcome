@@ -50,3 +50,9 @@ verify_jwt = false
 
 [functions.admin-users]
 verify_jwt = false
+
+[functions.subscription-check]
+verify_jwt = false
+
+[functions.demo-data]
+verify_jwt = false

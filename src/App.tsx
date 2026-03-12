@@ -164,6 +164,7 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </SafeModeWrapper>
+              </TenantBrandingProvider>
               </TenantProvider>
             </CustomerAuthProvider>
           </AuthProvider>
