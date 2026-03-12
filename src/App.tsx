@@ -63,6 +63,7 @@ import PlatformMonitoring from "@/pages/super-admin/PlatformMonitoring";
 import SuperAdminSystemSettings from "@/pages/super-admin/SuperAdminSystemSettings";
 import SuperAdminAuditLogs from "@/pages/super-admin/SuperAdminAuditLogs";
 import SuperAdminPayments from "@/pages/super-admin/SuperAdminPayments";
+import SuperAdminBackup from "@/pages/super-admin/SuperAdminBackup";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -107,6 +108,7 @@ function App() {
                 <Route path="/super-admin/settings" element={<SuperAdminGuard><SuperAdminSystemSettings /></SuperAdminGuard>} />
                 <Route path="/super-admin/payments" element={<SuperAdminGuard><SuperAdminPayments /></SuperAdminGuard>} />
                 <Route path="/super-admin/audit-logs" element={<SuperAdminGuard><SuperAdminAuditLogs /></SuperAdminGuard>} />
+                <Route path="/super-admin/backup" element={<SuperAdminGuard><SuperAdminBackup /></SuperAdminGuard>} />
 
                 {/* Admin Routes */}
                 <Route path="/admin/login" element={<Login />} />
