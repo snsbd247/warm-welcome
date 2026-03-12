@@ -46,9 +46,31 @@ async function logRequest(action: string, status: string, details?: string) {
   }
 }
 
-// ── Load credentials from DB ──────────────────────────────────────────
-async function getGatewayConfig() {
+// ── Load credentials from tenant_integrations or fallback to payment_gateways ──
+async function getGatewayConfig(tenantId?: string) {
   const supabase = getSupabaseAdmin();
+
+  // Try tenant-specific config first
+  if (tenantId) {
+    const { data: tenantConfig } = await supabase
+      .from("tenant_integrations")
+      .select("bkash_app_key, bkash_app_secret, bkash_username, bkash_password, bkash_base_url, bkash_environment")
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+
+    if (tenantConfig?.bkash_app_key && tenantConfig?.bkash_app_secret) {
+      return {
+        app_key: tenantConfig.bkash_app_key,
+        app_secret: tenantConfig.bkash_app_secret,
+        username: tenantConfig.bkash_username,
+        password: tenantConfig.bkash_password,
+        base_url: tenantConfig.bkash_base_url || "https://tokenized.sandbox.bka.sh/v1.2.0-beta",
+        environment: tenantConfig.bkash_environment || "sandbox",
+      };
+    }
+  }
+
+  // Fallback to payment_gateways table
   const { data: gw, error } = await supabase
     .from("payment_gateways")
     .select("*")
@@ -58,10 +80,10 @@ async function getGatewayConfig() {
   return gw;
 }
 
-async function requireGatewayConfig() {
-  const gw = await getGatewayConfig();
+async function requireGatewayConfig(tenantId?: string) {
+  const gw = await getGatewayConfig(tenantId);
   if (!gw || !gw.app_key || !gw.app_secret || !gw.username || !gw.password) {
-    throw new Error("bKash gateway not configured. Please save settings in the bKash API Management page first.");
+    throw new Error("bKash gateway not configured. Please save settings in Integration Settings first.");
   }
   return gw;
 }
@@ -134,7 +156,7 @@ async function sendRefundSms(customerId: string, amount: number, trxId: string) 
 }
 
 // ── Test Connection ───────────────────────────────────────────────────
-async function handleTestConnection(): Promise<Response> {
+async function handleTestConnection(tenantId?: string): Promise<Response> {
   if (!checkRateLimit("test_connection")) {
     await logRequest("test_connection", "rate_limited");
     return new Response(JSON.stringify({ error: "Rate limit exceeded. Please wait before trying again." }), {
@@ -143,13 +165,23 @@ async function handleTestConnection(): Promise<Response> {
   }
 
   try {
-    const gw = await requireGatewayConfig();
+    const gw = await requireGatewayConfig(tenantId);
     const token = await getTokenFromGateway(gw);
-    const supabase = getSupabaseAdmin();
-    await supabase
-      .from("payment_gateways")
-      .update({ status: "connected", last_connected_at: new Date().toISOString() })
-      .eq("gateway_name", "bkash");
+
+    // Update status in tenant_integrations if tenant-specific
+    if (tenantId) {
+      const supabase = getSupabaseAdmin();
+      await supabase
+        .from("tenant_integrations")
+        .update({ bkash_status: "connected", bkash_last_connected_at: new Date().toISOString() })
+        .eq("tenant_id", tenantId);
+    } else {
+      const supabase = getSupabaseAdmin();
+      await supabase
+        .from("payment_gateways")
+        .update({ status: "connected", last_connected_at: new Date().toISOString() })
+        .eq("gateway_name", "bkash");
+    }
 
     await logRequest("test_connection", "success");
     return new Response(JSON.stringify({ success: true, message: "Connection successful" }), {
@@ -171,7 +203,7 @@ async function handleQueryTransaction(body: any): Promise<Response> {
     });
   }
 
-  const { paymentID } = body;
+  const { paymentID, tenant_id } = body;
   if (!paymentID) {
     return new Response(JSON.stringify({ error: "Missing paymentID" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -179,7 +211,7 @@ async function handleQueryTransaction(body: any): Promise<Response> {
   }
 
   try {
-    const gw = await requireGatewayConfig();
+    const gw = await requireGatewayConfig(tenant_id);
     const token = await getTokenFromGateway(gw);
     const baseUrl = gw.base_url;
 
@@ -211,7 +243,7 @@ async function handleRefund(body: any): Promise<Response> {
     });
   }
 
-  const { paymentID, trxID, amount, reason } = body;
+  const { paymentID, trxID, amount, reason, tenant_id } = body;
   if (!paymentID || !trxID || !amount) {
     return new Response(JSON.stringify({ error: "Missing required fields: paymentID, trxID, amount" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -219,7 +251,7 @@ async function handleRefund(body: any): Promise<Response> {
   }
 
   try {
-    const gw = await requireGatewayConfig();
+    const gw = await requireGatewayConfig(tenant_id);
     const token = await getTokenFromGateway(gw);
     const baseUrl = gw.base_url;
 
@@ -240,7 +272,6 @@ async function handleRefund(body: any): Promise<Response> {
     const supabase = getSupabaseAdmin();
 
     if (data.transactionStatus === "Completed" || data.statusCode === "0000") {
-      // Update payment status
       const { data: payment } = await supabase
         .from("payments")
         .select("customer_id")
@@ -252,7 +283,6 @@ async function handleRefund(body: any): Promise<Response> {
         .update({ status: "refunded" })
         .eq("bkash_payment_id", paymentID);
 
-      // Send SMS notification
       if (payment?.customer_id) {
         await sendRefundSms(payment.customer_id, Number(amount), trxID);
       }
@@ -271,7 +301,7 @@ async function handleRefund(body: any): Promise<Response> {
 
 // ── Create Payment ────────────────────────────────────────────────────
 async function handleCreate(body: any): Promise<Response> {
-  const { bill_id, customer_id, callback_url } = body;
+  const { bill_id, customer_id, callback_url, tenant_id } = body;
 
   if (!bill_id || !customer_id) {
     return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -279,7 +309,7 @@ async function handleCreate(body: any): Promise<Response> {
     });
   }
 
-  const gw = await requireGatewayConfig();
+  const gw = await requireGatewayConfig(tenant_id);
   const supabase = getSupabaseAdmin();
 
   const { data: bill, error: billError } = await supabase
@@ -334,6 +364,7 @@ async function handleCreate(body: any): Promise<Response> {
       bkash_payment_id: data.paymentID,
       month: null,
       transaction_id: invoiceNumber,
+      tenant_id: tenant_id || null,
     });
 
     return new Response(JSON.stringify({ bkashURL: data.bkashURL, paymentID: data.paymentID }), {
@@ -348,7 +379,7 @@ async function handleCreate(body: any): Promise<Response> {
 
 // ── Execute Payment ───────────────────────────────────────────────────
 async function handleExecute(body: any): Promise<Response> {
-  const { paymentID } = body;
+  const { paymentID, tenant_id } = body;
 
   if (!paymentID) {
     return new Response(JSON.stringify({ error: "Missing paymentID" }), {
@@ -356,7 +387,7 @@ async function handleExecute(body: any): Promise<Response> {
     });
   }
 
-  const gw = await requireGatewayConfig();
+  const gw = await requireGatewayConfig(tenant_id);
   const token = await getTokenFromGateway(gw);
 
   const res = await fetch(`${gw.base_url}/tokenized/checkout/execute`, {
@@ -446,7 +477,7 @@ Deno.serve(async (req: Request) => {
       const body = await req.json();
 
       // Action-based routing
-      if (body.action === "test_connection") return await handleTestConnection();
+      if (body.action === "test_connection") return await handleTestConnection(body.tenant_id);
       if (body.action === "query_transaction") return await handleQueryTransaction(body);
       if (body.action === "refund") return await handleRefund(body);
 

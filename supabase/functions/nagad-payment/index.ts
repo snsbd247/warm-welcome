@@ -2,15 +2,40 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-);
+function getSupabaseAdmin() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+}
 
-async function getGatewayConfig() {
+// ── Load credentials from tenant_integrations or fallback to payment_gateways ──
+async function getGatewayConfig(tenantId?: string) {
+  const supabase = getSupabaseAdmin();
+
+  // Try tenant-specific config first
+  if (tenantId) {
+    const { data: tenantConfig } = await supabase
+      .from("tenant_integrations")
+      .select("nagad_api_key, nagad_api_secret, nagad_base_url")
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+
+    if (tenantConfig?.nagad_api_key && tenantConfig?.nagad_api_secret) {
+      return {
+        id: tenantId,
+        app_key: tenantConfig.nagad_api_key,
+        app_secret: tenantConfig.nagad_api_secret,
+        base_url: tenantConfig.nagad_base_url || "https://sandbox.mynagad.com:10061/remote-payment-gateway-1.0/api/dfs",
+      };
+    }
+  }
+
+  // Fallback to payment_gateways table
   const { data, error } = await supabase
     .from("payment_gateways")
     .select("*")
@@ -37,6 +62,7 @@ function checkRateLimit(key: string): boolean {
 
 async function logRequest(action: string, recordId: string, status: string, details: string) {
   try {
+    const supabase = getSupabaseAdmin();
     await supabase.from("audit_logs").insert({
       admin_id: "00000000-0000-0000-0000-000000000000",
       admin_name: "System",
@@ -54,7 +80,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { action, ...params } = await req.json();
+    const { action, tenant_id, ...params } = await req.json();
 
     if (!checkRateLimit(action || "unknown")) {
       return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again in 1 minute." }), {
@@ -64,32 +90,48 @@ Deno.serve(async (req) => {
     }
 
     if (action === "test_connection") {
-      const gw = await getGatewayConfig();
-      // Simple connectivity test – attempt to reach Nagad base URL
+      const gw = await getGatewayConfig(tenant_id);
       try {
         const testUrl = `${gw.base_url}/check/payment/verify`;
         const res = await fetch(testUrl, { method: "GET" });
-        // Nagad returns various codes; a non-network error means the endpoint is reachable
-        await supabase
-          .from("payment_gateways")
-          .update({ status: "connected", last_connected_at: new Date().toISOString() })
-          .eq("id", gw.id);
-        await logRequest("nagad_test_connection", gw.id, "success", `HTTP ${res.status}`);
+
+        const supabase = getSupabaseAdmin();
+        if (tenant_id) {
+          await supabase
+            .from("tenant_integrations")
+            .update({ nagad_status: "connected", nagad_last_connected_at: new Date().toISOString() })
+            .eq("tenant_id", tenant_id);
+        } else {
+          await supabase
+            .from("payment_gateways")
+            .update({ status: "connected", last_connected_at: new Date().toISOString() })
+            .eq("id", gw.id);
+        }
+
+        await logRequest("nagad_test_connection", gw.id || tenant_id, "success", `HTTP ${res.status}`);
         return new Response(JSON.stringify({ success: true, status: res.status }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       } catch (e: any) {
-        await supabase
-          .from("payment_gateways")
-          .update({ status: "disconnected" })
-          .eq("id", gw.id);
-        await logRequest("nagad_test_connection", gw.id, "failed", e.message);
+        const supabase = getSupabaseAdmin();
+        if (tenant_id) {
+          await supabase
+            .from("tenant_integrations")
+            .update({ nagad_status: "disconnected" })
+            .eq("tenant_id", tenant_id);
+        } else {
+          await supabase
+            .from("payment_gateways")
+            .update({ status: "disconnected" })
+            .eq("id", gw.id);
+        }
+        await logRequest("nagad_test_connection", gw.id || tenant_id, "failed", e.message);
         throw new Error("Cannot reach Nagad API: " + e.message);
       }
     }
 
     if (action === "query_transaction") {
-      const gw = await getGatewayConfig();
+      const gw = await getGatewayConfig(tenant_id);
       const { paymentRefId } = params;
       if (!paymentRefId) throw new Error("paymentRefId is required");
 
@@ -106,11 +148,10 @@ Deno.serve(async (req) => {
     }
 
     if (action === "refund") {
-      const gw = await getGatewayConfig();
+      const gw = await getGatewayConfig(tenant_id);
       const { paymentRefId, amount, reason } = params;
       if (!paymentRefId || !amount) throw new Error("paymentRefId and amount are required");
 
-      // Nagad refund API call placeholder
       const url = `${gw.base_url}/purchase/refund`;
       const refundBody = {
         paymentRefId,
@@ -126,16 +167,15 @@ Deno.serve(async (req) => {
       const data = await res.json();
 
       const isSuccess = data?.status === "Success" || data?.statusCode === "000";
+      const supabase = getSupabaseAdmin();
 
       if (isSuccess) {
-        // Update payment status
         await supabase
           .from("payments")
           .update({ status: "refunded" })
           .eq("transaction_id", paymentRefId)
           .eq("payment_method", "nagad");
 
-        // Send SMS notification
         try {
           const { data: payment } = await supabase
             .from("payments")

@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { to, message, sms_type, customer_id } = await req.json();
+    const { to, message, sms_type, customer_id, tenant_id } = await req.json();
 
     if (!to || !message || !sms_type) {
       return new Response(
@@ -25,39 +25,61 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get SMS settings
-    const { data: settings } = await supabase.from("sms_settings").select("*").limit(1).single();
-    
-    const token = settings?.api_token || Deno.env.get("GREENWEB_SMS_TOKEN");
-    if (!token) {
-      throw new Error("SMS API token not configured");
+    // Load tenant-specific SMS config if tenant_id provided
+    let gatewayUrl = "";
+    let token = "";
+    let senderId = "";
+
+    if (tenant_id) {
+      const { data: tenantConfig } = await supabase
+        .from("tenant_integrations")
+        .select("sms_gateway_url, sms_api_key, sms_sender_id")
+        .eq("tenant_id", tenant_id)
+        .maybeSingle();
+
+      if (tenantConfig?.sms_api_key) {
+        gatewayUrl = tenantConfig.sms_gateway_url || "http://api.greenweb.com.bd/api.php";
+        token = tenantConfig.sms_api_key;
+        senderId = tenantConfig.sms_sender_id || "";
+      }
     }
 
-    // Check if SMS is enabled for this type
-    if (sms_type === "bill_generate" && !settings?.sms_on_bill_generate) {
-      return new Response(JSON.stringify({ success: false, reason: "SMS disabled for bill generation" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Fallback to sms_settings table or env var
+    if (!token) {
+      const { data: settings } = await supabase.from("sms_settings").select("*").limit(1).single();
+      token = settings?.api_token || Deno.env.get("GREENWEB_SMS_TOKEN") || "";
+      senderId = settings?.sender_id || "";
+      gatewayUrl = "http://api.greenweb.com.bd/api.php";
+
+      if (!token) {
+        throw new Error("SMS API token not configured");
+      }
+
+      // Check if SMS is enabled for this type
+      if (sms_type === "bill_generate" && !settings?.sms_on_bill_generate) {
+        return new Response(JSON.stringify({ success: false, reason: "SMS disabled for bill generation" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (sms_type === "payment" && !settings?.sms_on_payment) {
+        return new Response(JSON.stringify({ success: false, reason: "SMS disabled for payments" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (sms_type === "registration" && !settings?.sms_on_registration) {
+        return new Response(JSON.stringify({ success: false, reason: "SMS disabled for registration" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (sms_type === "suspension" && !settings?.sms_on_suspension) {
+        return new Response(JSON.stringify({ success: false, reason: "SMS disabled for suspension" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
-    if (sms_type === "payment" && !settings?.sms_on_payment) {
-      return new Response(JSON.stringify({ success: false, reason: "SMS disabled for payments" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    if (sms_type === "registration" && !settings?.sms_on_registration) {
-      return new Response(JSON.stringify({ success: false, reason: "SMS disabled for registration" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    if (sms_type === "suspension" && !settings?.sms_on_suspension) {
-      return new Response(JSON.stringify({ success: false, reason: "SMS disabled for suspension" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    // "manual" and "group" types always allowed
 
     // Clean phone number
     const cleanPhone = to.replace(/[^0-9]/g, "");
     const phone = cleanPhone.startsWith("88") ? cleanPhone : `88${cleanPhone}`;
 
-    // GreenWeb SMS API
-    const smsUrl = `http://api.greenweb.com.bd/api.php?token=${token}&to=${phone}&message=${encodeURIComponent(message)}`;
+    // Send SMS via gateway
+    const smsUrl = `${gatewayUrl}?token=${token}&to=${phone}&message=${encodeURIComponent(message)}`;
     const smsResponse = await fetch(smsUrl);
     const responseText = await smsResponse.text();
 
@@ -71,6 +93,7 @@ Deno.serve(async (req) => {
       status,
       response: responseText,
       customer_id: customer_id || null,
+      tenant_id: tenant_id || null,
     });
 
     // Also log to reminder_logs if it's a reminder type
@@ -81,6 +104,7 @@ Deno.serve(async (req) => {
         channel: "sms",
         status,
         customer_id: customer_id || null,
+        tenant_id: tenant_id || null,
       });
     }
 
