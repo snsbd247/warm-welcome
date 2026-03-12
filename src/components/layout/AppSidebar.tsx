@@ -39,10 +39,7 @@ const supportNav: NavItem[] = [
   { to: "/sms-settings", icon: Settings, label: "SMS Settings", module: "sms" },
 ];
 
-const paymentGatewayNav: NavItem[] = [
-  { to: "/settings/bkash", icon: Wallet, label: "bKash API", module: "settings" },
-  { to: "/settings/nagad", icon: Wallet, label: "Nagad API", module: "settings" },
-];
+// Payment gateway settings removed - managed centrally by Super Admin
 
 const toolsNav: NavItem[] = [
   { to: "/profile", icon: UserCircle, label: "Profile" },
@@ -214,7 +211,7 @@ export default function AppSidebar() {
 
         {filterItems(accountsNav).length > 0 && <NavGroup label="Accounts" icon={CreditCard} items={filterItems(accountsNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
         {filterItems(supportNav).length > 0 && <NavGroup label="Support" icon={Ticket} items={filterItems(supportNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
-        {filterItems(paymentGatewayNav).length > 0 && <NavGroup label="Payment Gateway" icon={Wallet} items={filterItems(paymentGatewayNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
+        {/* Payment Gateway nav removed - managed by Super Admin */}
         {filterItems(toolsNav).length > 0 && <NavGroup label="Tools" icon={Wrench} items={filterItems(toolsNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
         {filterItems(settingsNav).length > 0 && <NavGroup label="Settings" icon={Settings} items={filterItems(settingsNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
       </nav>
