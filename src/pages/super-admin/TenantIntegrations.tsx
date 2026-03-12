@@ -209,7 +209,7 @@ function SmtpSection({ data, onSave, onUpdateStatus }: { data: any; onSave: (u: 
     setTesting(true);
     try {
       const { error } = await supabase.functions.invoke("send-email", {
-        body: { to: testEmail, subject: "SMTP Test - Tenant Integration", html: "<p>SMTP configuration is working correctly.</p>" },
+        body: { to: testEmail, subject: "SMTP Test - Tenant Integration", html: "<p>SMTP configuration is working correctly.</p>", tenant_id: data?.tenant_id },
       });
       if (error) throw error;
       toast.success("Test email sent successfully!");
