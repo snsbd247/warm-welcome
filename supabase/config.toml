@@ -1,1 +1,52 @@
 project_id = "udxrzqpivtzunnfenmyd"
+
+[functions.api]
+verify_jwt = false
+
+[functions.admin-login]
+verify_jwt = false
+
+[functions.customer-login]
+verify_jwt = false
+
+[functions.customer-verify]
+verify_jwt = false
+
+[functions.send-sms]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.send-whatsapp]
+verify_jwt = false
+
+[functions.sms-receiver]
+verify_jwt = false
+
+[functions.bkash-payment]
+verify_jwt = false
+
+[functions.nagad-payment]
+verify_jwt = false
+
+[functions.mikrotik-sync]
+verify_jwt = false
+
+[functions.backup-restore]
+verify_jwt = false
+
+[functions.auto-bill-generate]
+verify_jwt = false
+
+[functions.auto-suspend]
+verify_jwt = false
+
+[functions.bill-reminder]
+verify_jwt = false
+
+[functions.session-expiry]
+verify_jwt = false
+
+[functions.admin-users]
+verify_jwt = false
