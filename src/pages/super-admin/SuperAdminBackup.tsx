@@ -252,6 +252,7 @@ export default function SuperAdminBackup() {
                 <TableRow>
                   <TableHead>File</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Tenant</TableHead>
                   <TableHead>Size</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
@@ -263,6 +264,7 @@ export default function SuperAdminBackup() {
                   <TableRow key={b.id}>
                     <TableCell className="font-medium text-sm max-w-[200px] truncate">{b.file_name}</TableCell>
                     <TableCell><Badge variant="secondary">{b.backup_type}</Badge></TableCell>
+                    <TableCell className="text-sm">{b.tenant_name}</TableCell>
                     <TableCell>{(b.file_size / 1024).toFixed(1)} KB</TableCell>
                     <TableCell><Badge variant={b.status === "completed" ? "default" : "destructive"}>{b.status}</Badge></TableCell>
                     <TableCell>{format(new Date(b.created_at), "dd MMM yyyy HH:mm")}</TableCell>
