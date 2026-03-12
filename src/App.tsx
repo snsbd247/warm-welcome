@@ -54,11 +54,15 @@ import FooterSettings from "@/pages/settings/FooterSettings";
 import NotFound from "@/pages/NotFound";
 
 // Super Admin Pages
+import SuperAdminLogin from "@/pages/super-admin/SuperAdminLogin";
 import SuperAdminDashboard from "@/pages/super-admin/SuperAdminDashboard";
 import TenantsManagement from "@/pages/super-admin/TenantsManagement";
 import PlansManagement from "@/pages/super-admin/PlansManagement";
 import SubscriptionsManagement from "@/pages/super-admin/SubscriptionsManagement";
 import PlatformMonitoring from "@/pages/super-admin/PlatformMonitoring";
+import SuperAdminSystemSettings from "@/pages/super-admin/SuperAdminSystemSettings";
+import SuperAdminAuditLogs from "@/pages/super-admin/SuperAdminAuditLogs";
+import SuperAdminPayments from "@/pages/super-admin/SuperAdminPayments";
 
 const queryClient = new QueryClient({
   defaultOptions: {
