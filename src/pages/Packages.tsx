@@ -158,14 +158,10 @@ export default function Packages() {
     // If disabling, remove profile from MikroTik
     if (!newStatus && pkg.mikrotik_profile_name) {
       try {
-        await fetch(
-          `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/remove-profile`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ package_id: pkg.id, router_id: pkg.router_id }),
-          }
-        );
+        await api.post('/mikrotik/remove-profile', {
+          package_id: pkg.id,
+          router_id: pkg.router_id,
+        });
         toast.info("MikroTik profile removed");
       } catch { /* best effort */ }
     }
