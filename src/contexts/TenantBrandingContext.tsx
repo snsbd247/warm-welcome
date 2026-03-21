@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useTenant } from "@/contexts/TenantContext";
 
-interface TenantBranding {
+interface Branding {
   site_name: string;
   logo_url: string | null;
   login_logo_url: string | null;
@@ -15,7 +14,7 @@ interface TenantBranding {
   mobile: string | null;
 }
 
-const defaultBranding: TenantBranding = {
+const defaultBranding: Branding = {
   site_name: "Smart ISP",
   logo_url: null,
   login_logo_url: null,
@@ -28,39 +27,32 @@ const defaultBranding: TenantBranding = {
   mobile: null,
 };
 
-interface TenantBrandingContextType {
-  branding: TenantBranding;
+interface BrandingContextType {
+  branding: Branding;
   loading: boolean;
 }
 
-const TenantBrandingContext = createContext<TenantBrandingContextType>({
+const BrandingContext = createContext<BrandingContextType>({
   branding: defaultBranding,
   loading: true,
 });
 
-export function TenantBrandingProvider({ children }: { children: ReactNode }) {
-  const { tenantId } = useTenant();
-  const [branding, setBranding] = useState<TenantBranding>(defaultBranding);
+export function BrandingProvider({ children }: { children: ReactNode }) {
+  const [branding, setBranding] = useState<Branding>(defaultBranding);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!tenantId) {
-      setBranding(defaultBranding);
-      setLoading(false);
-      return;
-    }
-
     const load = async () => {
       try {
         const { data } = await supabase
-          .from("general_settings" as any)
+          .from("general_settings")
           .select("*")
-          .eq("tenant_id", tenantId)
+          .limit(1)
           .maybeSingle();
 
         if (data) {
           const d = data as any;
-          const b: TenantBranding = {
+          setBranding({
             site_name: d.site_name || "Smart ISP",
             logo_url: d.logo_url || null,
             login_logo_url: d.login_logo_url || null,
@@ -71,49 +63,45 @@ export function TenantBrandingProvider({ children }: { children: ReactNode }) {
             address: d.address || null,
             email: d.email || null,
             mobile: d.mobile || null,
-          };
-          setBranding(b);
+          });
 
-          // Apply primary color dynamically
           if (d.primary_color && d.primary_color !== "#2563eb") {
             applyPrimaryColor(d.primary_color);
           }
-
-          // Update favicon
           if (d.favicon_url) {
             const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
             if (link) link.href = d.favicon_url;
           }
-
-          // Update document title
           if (d.site_name) {
             document.title = d.site_name;
           }
         }
       } catch (err) {
-        console.error("Failed to load tenant branding:", err);
+        console.error("Failed to load branding:", err);
       } finally {
         setLoading(false);
       }
     };
 
     load();
-  }, [tenantId]);
+  }, []);
 
   return (
-    <TenantBrandingContext.Provider value={{ branding, loading }}>
+    <BrandingContext.Provider value={{ branding, loading }}>
       {children}
-    </TenantBrandingContext.Provider>
+    </BrandingContext.Provider>
   );
 }
 
+/** @deprecated Use useBranding instead */
 export function useTenantBranding() {
-  return useContext(TenantBrandingContext);
+  return useContext(BrandingContext);
 }
 
-/**
- * Convert hex color to HSL and apply to CSS variables
- */
+export function useBranding() {
+  return useContext(BrandingContext);
+}
+
 function applyPrimaryColor(hex: string) {
   const r = parseInt(hex.slice(1, 3), 16) / 255;
   const g = parseInt(hex.slice(3, 5), 16) / 255;

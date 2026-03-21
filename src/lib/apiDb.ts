@@ -4,17 +4,6 @@ import { toast } from "sonner";
 const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 const API_BASE = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/api`;
 
-// ─── Tenant ID Management ───────────────────────────────────────
-let currentTenantId: string | null = null;
-
-export function setApiTenantId(tenantId: string | null) {
-  currentTenantId = tenantId;
-}
-
-export function getApiTenantId(): string | null {
-  return currentTenantId;
-}
-
 // ─── Error Classification ───────────────────────────────────────
 type ErrorKind = "network" | "auth" | "permission" | "validation" | "server" | "timeout" | "unknown";
 
@@ -126,11 +115,6 @@ const BASE_DELAY_MS = 1000;
 
 async function dataApiCall(payload: any): Promise<any> {
   checkCircuit();
-
-  // Inject tenant_id into payload if available
-  if (currentTenantId) {
-    payload.tenant_id = currentTenantId;
-  }
 
   let lastError: ApiError | null = null;
 

@@ -46,31 +46,9 @@ async function logRequest(action: string, status: string, details?: string) {
   }
 }
 
-// ── Load credentials from tenant_integrations or fallback to payment_gateways ──
-async function getGatewayConfig(tenantId?: string) {
+// ── Load credentials from payment_gateways ──
+async function getGatewayConfig() {
   const supabase = getSupabaseAdmin();
-
-  // Try tenant-specific config first
-  if (tenantId) {
-    const { data: tenantConfig } = await supabase
-      .from("tenant_integrations")
-      .select("bkash_app_key, bkash_app_secret, bkash_username, bkash_password, bkash_base_url, bkash_environment")
-      .eq("tenant_id", tenantId)
-      .maybeSingle();
-
-    if (tenantConfig?.bkash_app_key && tenantConfig?.bkash_app_secret) {
-      return {
-        app_key: tenantConfig.bkash_app_key,
-        app_secret: tenantConfig.bkash_app_secret,
-        username: tenantConfig.bkash_username,
-        password: tenantConfig.bkash_password,
-        base_url: tenantConfig.bkash_base_url || "https://tokenized.sandbox.bka.sh/v1.2.0-beta",
-        environment: tenantConfig.bkash_environment || "sandbox",
-      };
-    }
-  }
-
-  // Fallback to payment_gateways table
   const { data: gw, error } = await supabase
     .from("payment_gateways")
     .select("*")
@@ -80,8 +58,8 @@ async function getGatewayConfig(tenantId?: string) {
   return gw;
 }
 
-async function requireGatewayConfig(tenantId?: string) {
-  const gw = await getGatewayConfig(tenantId);
+async function requireGatewayConfig() {
+  const gw = await getGatewayConfig();
   if (!gw || !gw.app_key || !gw.app_secret || !gw.username || !gw.password) {
     throw new Error("bKash gateway not configured. Please save settings in Integration Settings first.");
   }
