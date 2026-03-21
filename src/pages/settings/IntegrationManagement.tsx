@@ -383,6 +383,7 @@ function SmsTab() {
 
 // ─── bKash Tab ───────────────────────────────────────────────────
 function BkashTab() {
+  const navigate = useNavigate();
   const { canEdit } = useAdminRole();
   const queryClient = useQueryClient();
   const bkashTest = useBkashTest();
