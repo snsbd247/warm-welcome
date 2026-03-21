@@ -14,7 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import GroupSmsDialog from "@/components/GroupSmsDialog";
 
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+import api from "@/lib/api";
 
 export default function SMSLogs() {
   const [sendOpen, setSendOpen] = useState(false);
