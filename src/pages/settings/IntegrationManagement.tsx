@@ -504,6 +504,7 @@ function BkashTab() {
 
 // ─── Nagad Tab ───────────────────────────────────────────────────
 function NagadTab() {
+  const navigate = useNavigate();
   const { canEdit } = useAdminRole();
   const queryClient = useQueryClient();
   const nagadTest = useNagadTest();
