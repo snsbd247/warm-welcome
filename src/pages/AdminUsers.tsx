@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 
 export default function AdminUsers() {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);

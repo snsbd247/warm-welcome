@@ -273,11 +273,11 @@ export const apiDb = {
   auth: authCompat,
   storage: storageCompat,
   functions: functionsCompat,
-  channel: () => ({
-    on: () => ({ subscribe: () => ({}) }),
+  channel: (..._args: any[]) => ({
+    on: (..._a: any[]) => ({ subscribe: () => ({}) }),
     subscribe: () => ({}),
   }),
-  removeChannel: () => {},
+  removeChannel: (..._args: any[]) => {},
 };
 
 export { apiDb as supabase };
