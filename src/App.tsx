@@ -31,6 +31,7 @@ import PayBill from "@/pages/PayBill";
 import AdminProfile from "@/pages/AdminProfile";
 import GeneralSettings from "@/pages/settings/GeneralSettings";
 import SystemSettings from "@/pages/settings/SystemSettings";
+import IntegrationManagement from "@/pages/settings/IntegrationManagement";
 import ZoneManagement from "@/pages/settings/ZoneManagement";
 import MikroTikRouters from "@/pages/settings/MikroTikRouters";
 import CustomerLogin from "@/pages/portal/CustomerLogin";
@@ -112,6 +113,7 @@ function App() {
                 <Route path="/settings/mikrotik" element={<PermissionGuard module="settings"><MikroTikRouters /></PermissionGuard>} />
                 <Route path="/settings/roles" element={<PermissionGuard module="roles"><RoleManagement /></PermissionGuard>} />
                 <Route path="/settings/footer" element={<PermissionGuard module="settings"><FooterSettings /></PermissionGuard>} />
+                <Route path="/settings/integrations" element={<PermissionGuard module="settings"><IntegrationManagement /></PermissionGuard>} />
                 <Route path="/settings/backup" element={<PermissionGuard module="settings"><BackupRestore /></PermissionGuard>} />
                 <Route path="/safe-mode" element={<ProtectedRoute><SafeMode onDismiss={() => window.location.href = "/"} /></ProtectedRoute>} />
 
