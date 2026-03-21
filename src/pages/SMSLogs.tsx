@@ -43,11 +43,8 @@ export default function SMSLogs() {
         to: smsForm.phone,
         message: smsForm.message,
         sms_type: "manual",
-          }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      });
+      if (data?.error) throw new Error(data.error);
       toast.success("SMS sent successfully");
       setSmsForm({ phone: "", message: "" });
       setSendOpen(false);

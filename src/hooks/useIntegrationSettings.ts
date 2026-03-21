@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/apiDb";
+import api from "@/lib/api";
 import { toast } from "sonner";
 
 // Cache for integration settings with TTL
