@@ -22,7 +22,7 @@ import {
 import { Plus, Pencil, Trash2, Loader2, Search, Ban, CheckCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+import api from "@/lib/api";
 
 export default function Packages() {
   const queryClient = useQueryClient();
