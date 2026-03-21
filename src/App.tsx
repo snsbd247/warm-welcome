@@ -32,6 +32,8 @@ import AdminProfile from "@/pages/AdminProfile";
 import GeneralSettings from "@/pages/settings/GeneralSettings";
 import SystemSettings from "@/pages/settings/SystemSettings";
 import IntegrationManagement from "@/pages/settings/IntegrationManagement";
+import BkashApiManagement from "@/pages/settings/BkashApiManagement";
+import NagadApiManagement from "@/pages/settings/NagadApiManagement";
 import ZoneManagement from "@/pages/settings/ZoneManagement";
 import MikroTikRouters from "@/pages/settings/MikroTikRouters";
 import CustomerLogin from "@/pages/portal/CustomerLogin";
@@ -114,6 +116,8 @@ function App() {
                 <Route path="/settings/roles" element={<PermissionGuard module="roles"><RoleManagement /></PermissionGuard>} />
                 <Route path="/settings/footer" element={<PermissionGuard module="settings"><FooterSettings /></PermissionGuard>} />
                 <Route path="/settings/integrations" element={<PermissionGuard module="settings"><IntegrationManagement /></PermissionGuard>} />
+                <Route path="/settings/bkash" element={<PermissionGuard module="settings"><BkashApiManagement /></PermissionGuard>} />
+                <Route path="/settings/nagad" element={<PermissionGuard module="settings"><NagadApiManagement /></PermissionGuard>} />
                 <Route path="/settings/backup" element={<PermissionGuard module="settings"><BackupRestore /></PermissionGuard>} />
                 <Route path="/safe-mode" element={<ProtectedRoute><SafeMode onDismiss={() => window.location.href = "/"} /></ProtectedRoute>} />
 
