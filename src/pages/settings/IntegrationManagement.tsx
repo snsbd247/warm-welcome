@@ -139,6 +139,106 @@ function SmtpTab() {
   );
 }
 
+// ─── Email Templates (inside SMTP tab) ──────────────────────────
+const EMAIL_TEMPLATES = [
+  { key: "email_tpl_welcome", label: "Customer Welcome Email", desc: "Sent when a new customer registers" },
+  { key: "email_tpl_password_reset", label: "Password Reset Email", desc: "Sent for password recovery" },
+  { key: "email_tpl_payment_confirm", label: "Payment Confirmation Email", desc: "Sent after successful payment" },
+  { key: "email_tpl_ticket_reply", label: "Ticket Reply Email", desc: "Sent when a support ticket gets a reply" },
+  { key: "email_tpl_account_activation", label: "Account Activation Email", desc: "Sent when account is activated" },
+];
+const VARIABLE_HINTS = ["{CustomerName}", "{Amount}", "{Month}", "{PaymentDate}", "{TicketID}", "{CompanyName}"];
+
+function SmtpEmailTemplates() {
+  const queryClient = useQueryClient();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<Record<string, string>>({});
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["email-templates-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_settings" as any)
+        .select("setting_key, setting_value")
+        .in("setting_key", EMAIL_TEMPLATES.map((t) => t.key));
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data as any[])?.forEach((row: any) => { map[row.setting_key] = row.setting_value || ""; });
+      return map;
+    },
+  });
+
+  useEffect(() => {
+    if (data) setForm(data);
+  }, [data]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      for (const tpl of EMAIL_TEMPLATES) {
+        if (form[tpl.key] !== undefined) {
+          const { data: existing } = await supabase
+            .from("system_settings" as any)
+            .select("id")
+            .eq("setting_key", tpl.key)
+            .maybeSingle();
+          if (existing) {
+            const { error } = await (supabase as any).from("system_settings").update({ setting_value: form[tpl.key], updated_at: new Date().toISOString() }).eq("setting_key", tpl.key);
+            if (error) throw error;
+          } else {
+            const { error } = await (supabase as any).from("system_settings").insert({ setting_key: tpl.key, setting_value: form[tpl.key] });
+            if (error) throw error;
+          }
+        }
+      }
+      toast.success("Email templates saved");
+      queryClient.invalidateQueries({ queryKey: ["email-templates-settings"] });
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (isLoading) return <LoadingState />;
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2"><Mail className="h-4 w-4" /> Email Templates</CardTitle>
+            <CardDescription className="mt-1">Configure email notification templates with dynamic variables</CardDescription>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {VARIABLE_HINTS.map((v) => (
+                <Badge key={v} variant="secondary" className="text-xs font-mono">{v}</Badge>
+              ))}
+            </div>
+          </div>
+          <Button onClick={handleSave} disabled={saving} size="sm">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            Save Templates
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {EMAIL_TEMPLATES.map((tpl) => (
+          <div key={tpl.key} className="space-y-1.5">
+            <Label className="text-sm font-medium">{tpl.label}</Label>
+            <p className="text-xs text-muted-foreground">{tpl.desc}</p>
+            <Textarea
+              value={form[tpl.key] || ""}
+              onChange={(e) => setForm({ ...form, [tpl.key]: e.target.value })}
+              rows={3}
+              className="text-sm"
+            />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── SMS Tab ─────────────────────────────────────────────────────
 function SmsTab() {
   const { canEdit } = useAdminRole();
