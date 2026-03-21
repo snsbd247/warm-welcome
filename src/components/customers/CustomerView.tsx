@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { RefreshCw, Loader2, Ban, Play } from "lucide-react";
 import { toast } from "sonner";
 
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+import api from "@/lib/api";
 
 interface CustomerViewProps {
   customer: any;
@@ -48,11 +48,7 @@ export default function CustomerView({ customer }: CustomerViewProps) {
   const retrySyncHandler = async () => {
     setRetrying(true);
     try {
-      const res = await fetch(
-        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/retry-sync`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customer_id: customer.id }) }
-      );
-      const data = await res.json();
+      const { data } = await api.post('/mikrotik/sync', { customer_id: customer.id });
       if (data.success) toast.success("MikroTik sync successful");
       else toast.error(`Sync failed: ${data.error || "Unknown error"}`);
     } catch { toast.error("Could not connect to MikroTik"); } finally { setRetrying(false); }
@@ -62,11 +58,7 @@ export default function CustomerView({ customer }: CustomerViewProps) {
     if (!customer.pppoe_username) { toast.error("No PPPoE username"); return; }
     setSuspending(true);
     try {
-      const res = await fetch(
-        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/disable-pppoe`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pppoe_username: customer.pppoe_username, router_id: customer.router_id, customer_id: customer.id }) }
-      );
-      const data = await res.json();
+      const { data } = await api.post('/mikrotik/disable-pppoe', { pppoe_username: customer.pppoe_username, router_id: customer.router_id, customer_id: customer.id });
       if (data.success) toast.success("PPPoE suspended on MikroTik");
       else toast.error(`Suspend failed: ${data.error || "Unknown"}`);
     } catch { toast.error("Could not connect to MikroTik"); } finally { setSuspending(false); }
@@ -76,11 +68,7 @@ export default function CustomerView({ customer }: CustomerViewProps) {
     if (!customer.pppoe_username) { toast.error("No PPPoE username"); return; }
     setReactivating(true);
     try {
-      const res = await fetch(
-        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/enable-pppoe`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pppoe_username: customer.pppoe_username, router_id: customer.router_id, customer_id: customer.id }) }
-      );
-      const data = await res.json();
+      const { data } = await api.post('/mikrotik/enable-pppoe', { pppoe_username: customer.pppoe_username, router_id: customer.router_id, customer_id: customer.id });
       if (data.success) toast.success("PPPoE reactivated on MikroTik");
       else toast.error(`Reactivate failed: ${data.error || "Unknown"}`);
     } catch { toast.error("Could not connect to MikroTik"); } finally { setReactivating(false); }

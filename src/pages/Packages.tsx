@@ -22,7 +22,7 @@ import {
 import { Plus, Pencil, Trash2, Loader2, Search, Ban, CheckCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+import api from "@/lib/api";
 
 export default function Packages() {
   const queryClient = useQueryClient();
@@ -132,14 +132,10 @@ export default function Packages() {
       // Remove profile from MikroTik first
       if (deletePkg.mikrotik_profile_name) {
         try {
-          await fetch(
-            `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/remove-profile`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ package_id: deletePkg.id, router_id: deletePkg.router_id }),
-            }
-          );
+          await api.post('/mikrotik/remove-profile', {
+            package_id: deletePkg.id,
+            router_id: deletePkg.router_id,
+          });
         } catch { /* best effort */ }
       }
       const { error } = await supabase.from("packages").delete().eq("id", deletePkg.id);
@@ -162,14 +158,10 @@ export default function Packages() {
     // If disabling, remove profile from MikroTik
     if (!newStatus && pkg.mikrotik_profile_name) {
       try {
-        await fetch(
-          `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/remove-profile`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ package_id: pkg.id, router_id: pkg.router_id }),
-          }
-        );
+        await api.post('/mikrotik/remove-profile', {
+          package_id: pkg.id,
+          router_id: pkg.router_id,
+        });
         toast.info("MikroTik profile removed");
       } catch { /* best effort */ }
     }
@@ -182,15 +174,10 @@ export default function Packages() {
   const syncToMikrotik = async (packageId: string, routerId?: string) => {
     setSyncing(packageId);
     try {
-      const res = await fetch(
-        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/sync-profile`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ package_id: packageId, router_id: routerId || undefined }),
-        }
-      );
-      const data = await res.json();
+      const { data } = await api.post('/mikrotik/sync-profile', {
+        package_id: packageId,
+        router_id: routerId || undefined,
+      });
       if (data.success) {
         toast.success(`MikroTik profile synced: ${data.profile_name}`);
         queryClient.invalidateQueries({ queryKey: ["packages-all"] });
@@ -207,11 +194,7 @@ export default function Packages() {
   const bulkSyncPackages = async () => {
     setBulkSyncing(true);
     try {
-      const res = await fetch(
-        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/bulk-sync-packages`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }
-      );
-      const data = await res.json();
+      const { data } = await api.post('/mikrotik/bulk-sync-packages', {});
       if (data.success) {
         const r = data.results;
         toast.success(`Bulk sync complete: ${r.synced} synced, ${r.failed} failed`);

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/apiDb";
+import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -77,19 +78,16 @@ export default function SafeMode({ onDismiss, errorMessage }: SafeModeProps) {
       results.push({ name: "Storage Service", status: "error", message: err.message });
     }
 
-    // Check Edge Functions
+    // Check Edge Functions / Laravel API
     try {
-      const response = await fetch(
-        `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/backup-restore`,
-        { method: "OPTIONS" }
-      );
+      const response = await api.get('/health');
       results.push({
-        name: "Edge Functions",
-        status: response.ok ? "ok" : "error",
-        message: response.ok ? "Operational" : `Status ${response.status}`,
+        name: "API Backend",
+        status: response.status === 200 ? "ok" : "error",
+        message: response.status === 200 ? "Operational" : `Status ${response.status}`,
       });
     } catch (err: any) {
-      results.push({ name: "Edge Functions", status: "error", message: err.message });
+      results.push({ name: "API Backend", status: "error", message: err.message });
     }
 
     // Check tables accessibility

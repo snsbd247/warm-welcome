@@ -22,7 +22,7 @@ import {
 import { Loader2, CreditCard, Smartphone, Building2, Banknote } from "lucide-react";
 import { toast } from "sonner";
 
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+import api from "@/lib/api";
 
 export default function CustomerBills() {
   const { customer } = useCustomerAuth();
@@ -60,21 +60,12 @@ export default function CustomerBills() {
     try {
       const callbackUrl = `${window.location.origin}/portal/payment-callback`;
 
-      const res = await fetch(
-        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/bkash-payment/create`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bill_id: selectedBill.id,
-            customer_id: customer.id,
-            amount: Number(selectedBill.amount),
-            callback_url: callbackUrl,
-          }),
-        }
-      );
-
-      const data = await res.json();
+      const { data } = await api.post('/bkash/create-payment', {
+        bill_id: selectedBill.id,
+        customer_id: customer.id,
+        amount: Number(selectedBill.amount),
+        callback_url: callbackUrl,
+      });
 
       if (data.bkashURL) {
         // Store paymentID for callback

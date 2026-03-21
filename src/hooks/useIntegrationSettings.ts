@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/apiDb";
+import api from "@/lib/api";
 import { toast } from "sonner";
 
 // Cache for integration settings with TTL
@@ -115,16 +116,8 @@ export function useBkashTest() {
 export function useNagadTest() {
   return useMutation({
     mutationFn: async () => {
-      const res = await fetch(
-        `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/nagad-payment`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "test_connection" }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok || data?.error) throw new Error(data?.error || "Connection failed");
+      const { data } = await api.post('/nagad/create-payment', { action: "test_connection" });
+      if (data?.error) throw new Error(data.error);
       return data;
     },
     onSuccess: () => toast.success("Nagad API connection successful!"),

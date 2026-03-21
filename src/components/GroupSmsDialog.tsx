@@ -13,7 +13,7 @@ import { Loader2, Send, Users, FileText, Save, Trash2, Info } from "lucide-react
 import { toast } from "sonner";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+import api from "@/lib/api";
 
 type CustomerGroup = "all" | "due" | "paid" | "suspended" | "zone" | "package";
 
@@ -170,21 +170,13 @@ export default function GroupSmsDialog({ open, onOpenChange, onSent }: GroupSmsD
         const promises = batch.map(async (customer: any) => {
           const personalizedMsg = replacePlaceholders(message, customer);
           try {
-            const res = await fetch(
-              `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/send-sms`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  to: customer.phone,
-                  message: personalizedMsg,
-                  sms_type: "group",
-                  customer_id: customer.id,
-                }),
-              }
-            );
-            const data = await res.json();
-            if (res.ok && data.success) successCount++;
+            const { data } = await api.post('/sms/send', {
+              to: customer.phone,
+              message: personalizedMsg,
+              sms_type: "group",
+              customer_id: customer.id,
+            });
+            if (data?.success) successCount++;
             else failCount++;
           } catch {
             failCount++;

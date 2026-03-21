@@ -23,12 +23,16 @@ class QueryBuilder<T = any> {
   private _maybeSingleRow = false;
   private _data: any = null;
   private _returning?: string;
+  private _countMode?: string;
+  private _headMode = false;
 
   constructor(table: string) { this._table = table; }
 
-  select(columns = "*") {
+  select(columns = "*", options?: { count?: string; head?: boolean }) {
     if (this._data !== null) { this._returning = columns; }
     else { this._operation = "select"; this._selectCols = columns; }
+    if (options?.count) this._countMode = options.count;
+    if (options?.head) this._headMode = true;
     return this;
   }
 
@@ -95,6 +99,7 @@ class QueryBuilder<T = any> {
         let rows = response.data || response;
         if (!Array.isArray(rows)) rows = [rows];
 
+        if (this._headMode) return { data: null, error: null, count: rows.length };
         if (this._singleRow) return { data: rows[0] || null, error: null };
         if (this._maybeSingleRow) return { data: rows[0] || null, error: null };
         return { data: rows, error: null, count: rows.length };
@@ -182,7 +187,7 @@ const authCompat = {
     localStorage.removeItem('admin_user');
     return { error: null };
   },
-  resetPasswordForEmail: async (email: string) => {
+  resetPasswordForEmail: async (email: string, _options?: any) => {
     await api.post('/admin/forgot-password', { email });
     return { data: {}, error: null };
   },
@@ -201,13 +206,11 @@ const authCompat = {
     };
   },
   onAuthStateChange: (callback: (event: string, session: any) => void) => {
-    // Check current state immediately
     const token = localStorage.getItem('admin_token');
     const user = localStorage.getItem('admin_user');
     if (token && user) {
       setTimeout(() => callback('SIGNED_IN', { access_token: token, user: JSON.parse(user) }), 0);
     }
-    // Listen for storage changes (cross-tab)
     const handler = (e: StorageEvent) => {
       if (e.key === 'admin_token') {
         if (e.newValue) {
@@ -223,14 +226,15 @@ const authCompat = {
   },
 };
 
-// ─── Mock Storage for compatibility ──────────────────────────────
+// ─── Storage compatibility (uses Laravel API) ───────────────────
 const storageCompat = {
   from: (bucket: string) => ({
-    upload: async (path: string, file: File) => {
+    upload: async (path: string, file: File, options?: { upsert?: boolean }) => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('bucket', bucket);
       formData.append('path', path);
+      if (options?.upsert) formData.append('upsert', 'true');
       try {
         const { data } = await api.post('/storage/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -242,12 +246,31 @@ const storageCompat = {
     },
     getPublicUrl: (path: string) => {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      return { data: { publicUrl: `${baseUrl}/storage/${bucket}/${path}` } };
+      return { data: { publicUrl: `${baseUrl.replace('/api', '')}/storage/${bucket}/${path}` } };
     },
     remove: async (paths: string[]) => {
       try {
         await api.post('/storage/delete', { bucket, paths });
         return { data: null, error: null };
+      } catch (err: any) {
+        return { data: null, error: { message: err.message } };
+      }
+    },
+    list: async (prefix = '', _options?: any) => {
+      try {
+        const { data } = await api.get('/storage/list', { params: { bucket, prefix } });
+        return { data: data || [], error: null };
+      } catch (err: any) {
+        return { data: null, error: { message: err.message } };
+      }
+    },
+    download: async (path: string) => {
+      try {
+        const { data } = await api.get('/storage/download', {
+          params: { bucket, path },
+          responseType: 'blob',
+        });
+        return { data, error: null };
       } catch (err: any) {
         return { data: null, error: { message: err.message } };
       }

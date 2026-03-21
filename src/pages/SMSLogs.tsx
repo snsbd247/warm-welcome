@@ -14,7 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import GroupSmsDialog from "@/components/GroupSmsDialog";
 
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+import api from "@/lib/api";
 
 export default function SMSLogs() {
   const [sendOpen, setSendOpen] = useState(false);
@@ -39,20 +39,12 @@ export default function SMSLogs() {
     if (!smsForm.phone.trim() || !smsForm.message.trim()) return;
     setSending(true);
     try {
-      const res = await fetch(
-        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/send-sms`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: smsForm.phone,
-            message: smsForm.message,
-            sms_type: "manual",
-          }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const { data } = await api.post('/sms/send', {
+        to: smsForm.phone,
+        message: smsForm.message,
+        sms_type: "manual",
+      });
+      if (data?.error) throw new Error(data.error);
       toast.success("SMS sent successfully");
       setSmsForm({ phone: "", message: "" });
       setSendOpen(false);

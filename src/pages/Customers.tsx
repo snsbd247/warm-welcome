@@ -18,7 +18,7 @@ import {
 import { Plus, Eye, Pencil, Printer, Search, Loader2, RefreshCw, ChevronLeft, ChevronRight, Upload } from "lucide-react";
 import { toast } from "sonner";
 
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+import api from "@/lib/api";
 import CustomerForm from "@/components/customers/CustomerForm";
 import CustomerView from "@/components/customers/CustomerView";
 import { generateCustomerPDF } from "@/lib/pdf";
@@ -44,11 +44,7 @@ export default function Customers() {
   const bulkSyncCustomers = async () => {
     setBulkSyncing(true);
     try {
-      const res = await fetch(
-        `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/mikrotik-sync/bulk-sync-customers`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }
-      );
-      const data = await res.json();
+      const { data } = await api.post('/mikrotik/sync-all', {});
       if (data.success) {
         const r = data.results;
         toast.success(`Bulk sync complete: ${r.synced} synced, ${r.failed} failed`);

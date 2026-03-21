@@ -3,7 +3,7 @@ import { supabase } from "@/lib/apiDb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Loader2, RefreshCw, Router, Target, Wallet, CreditCard } from "lucide-react";
-import { supabase as supabaseClient } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
 import { useState, useMemo, useCallback } from "react";
@@ -56,8 +56,7 @@ export default function Dashboard() {
   const { data: mikrotikStats, isLoading: loadingMikrotik, refetch: refetchMikrotik } = useQuery({
     queryKey: ["mikrotik-router-stats"],
     queryFn: async () => {
-      const { data, error } = await supabaseClient.functions.invoke("mikrotik-sync/router-stats", { body: {} });
-      if (error) throw error;
+      const { data } = await api.post('/mikrotik/router-stats', {});
       return data as { total_online: number; total_suspended: number; routers: { name: string; online: number; suspended: number; error?: string }[] };
     },
     refetchInterval: 30000,
@@ -261,8 +260,7 @@ export default function Dashboard() {
   const runBillControl = async () => {
     setRunningBillControl(true);
     try {
-      const { data, error } = await supabase.functions.invoke("mikrotik-sync/bill-control", { body: {} });
-      if (error) throw error;
+      const { data } = await api.post('/mikrotik/bill-control', {});
       const r = data?.results;
       toast.success(`Bill control completed: ${r?.suspended || 0} suspended, ${r?.reactivated || 0} reactivated`);
     } catch (e: any) {
