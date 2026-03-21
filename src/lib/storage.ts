@@ -1,15 +1,11 @@
 /**
  * Storage Abstraction Layer
  * 
- * Currently backed by Supabase Storage.
- * Swap this implementation to use local filesystem, S3, or any other
- * storage provider when migrating away from Supabase.
- * 
- * All file operations go through this module — no direct supabase.storage
- * calls should exist elsewhere in the codebase.
+ * Backed by Laravel API backend.
+ * All file operations go through this module.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 
 export interface UploadResult {
   publicUrl: string;
@@ -20,35 +16,53 @@ export interface StorageProvider {
   upload(bucket: string, path: string, file: File, options?: { upsert?: boolean }): Promise<UploadResult>;
   getPublicUrl(bucket: string, path: string): string;
   delete(bucket: string, paths: string[]): Promise<void>;
+  list(bucket: string, prefix?: string): Promise<{ name: string }[]>;
+  download(bucket: string, path: string): Promise<Blob>;
 }
 
-// ─── Supabase Storage Provider ──────────────────────────────────
-const supabaseStorage: StorageProvider = {
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
+// ─── Laravel Storage Provider ──────────────────────────────────
+const laravelStorage: StorageProvider = {
   async upload(bucket, path, file, options = {}) {
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(path, file, { upsert: options.upsert ?? true });
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', bucket);
+    formData.append('path', path);
+    if (options.upsert) formData.append('upsert', 'true');
 
-    if (error) throw new Error(`Upload failed: ${error.message}`);
+    const { data } = await api.post('/storage/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
-    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
-    return { publicUrl, path };
+    const publicUrl = `${API_BASE_URL.replace('/api', '')}/storage/${bucket}/${data.path || path}`;
+    return { publicUrl, path: data.path || path };
   },
 
   getPublicUrl(bucket, path) {
-    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
-    return publicUrl;
+    return `${API_BASE_URL.replace('/api', '')}/storage/${bucket}/${path}`;
   },
 
   async delete(bucket, paths) {
-    const { error } = await supabase.storage.from(bucket).remove(paths);
-    if (error) throw new Error(`Delete failed: ${error.message}`);
+    await api.post('/storage/delete', { bucket, paths });
+  },
+
+  async list(bucket, prefix = '') {
+    const { data } = await api.get(`/storage/list`, { params: { bucket, prefix } });
+    return data || [];
+  },
+
+  async download(bucket, path) {
+    const { data } = await api.get(`/storage/download`, {
+      params: { bucket, path },
+      responseType: 'blob',
+    });
+    return data;
   },
 };
 
 // ─── Active Provider ────────────────────────────────────────────
-// Change this to swap storage backends (e.g., localStorageProvider, s3Provider)
-let activeProvider: StorageProvider = supabaseStorage;
+let activeProvider: StorageProvider = laravelStorage;
 
 export function setStorageProvider(provider: StorageProvider) {
   activeProvider = provider;
@@ -70,6 +84,14 @@ export function getPublicUrl(bucket: string, path: string): string {
 
 export async function deleteFiles(bucket: string, paths: string[]): Promise<void> {
   return activeProvider.delete(bucket, paths);
+}
+
+export async function listFiles(bucket: string, prefix?: string): Promise<{ name: string }[]> {
+  return activeProvider.list(bucket, prefix);
+}
+
+export async function downloadFile(bucket: string, path: string): Promise<Blob> {
+  return activeProvider.download(bucket, path);
 }
 
 // ─── Convenience helpers ────────────────────────────────────────

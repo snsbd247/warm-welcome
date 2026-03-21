@@ -260,8 +260,7 @@ export default function Dashboard() {
   const runBillControl = async () => {
     setRunningBillControl(true);
     try {
-      const { data, error } = await supabase.functions.invoke("mikrotik-sync/bill-control", { body: {} });
-      if (error) throw error;
+      const { data } = await api.post('/mikrotik/bill-control', {});
       const r = data?.results;
       toast.success(`Bill control completed: ${r?.suspended || 0} suspended, ${r?.reactivated || 0} reactivated`);
     } catch (e: any) {

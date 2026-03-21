@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Wifi, Loader2, Eye, EyeOff, Lock, User } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -22,14 +22,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data: loginData, error: loginError } = await supabase.functions.invoke("admin-login", {
-        body: { username, password },
-      });
-
-      if (loginError) throw new Error(loginError.message || "Login failed");
-      if (loginData?.error) throw new Error(loginData.error);
-
-      await signIn(loginData.email, password);
+      await signIn(username, password);
       navigate("/");
       toast.success("Welcome back!");
     } catch (error: any) {
