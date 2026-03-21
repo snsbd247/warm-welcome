@@ -5,14 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
-import { TenantProvider } from "@/contexts/TenantContext";
-import { TenantBrandingProvider } from "@/contexts/TenantBrandingContext";
+import { BrandingProvider } from "@/contexts/TenantBrandingContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider } from "next-themes";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PermissionGuard from "@/components/PermissionGuard";
 import CustomerProtectedRoute from "@/components/CustomerProtectedRoute";
-import SuperAdminGuard from "@/components/SuperAdminGuard";
+import SafeModeWrapper from "@/components/SafeModeWrapper";
 import Login from "@/pages/Login";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
@@ -34,7 +33,6 @@ import GeneralSettings from "@/pages/settings/GeneralSettings";
 import SystemSettings from "@/pages/settings/SystemSettings";
 import ZoneManagement from "@/pages/settings/ZoneManagement";
 import MikroTikRouters from "@/pages/settings/MikroTikRouters";
-// BkashApiManagement and NagadApiManagement removed - managed centrally by Super Admin
 import CustomerLogin from "@/pages/portal/CustomerLogin";
 import CustomerDashboard from "@/pages/portal/CustomerDashboard";
 import CustomerBills from "@/pages/portal/CustomerBills";
@@ -49,23 +47,8 @@ import AuditLogs from "@/pages/AuditLogs";
 import RoleManagement from "@/pages/settings/RoleManagement";
 import BackupRestore from "@/pages/settings/BackupRestore";
 import SafeMode from "@/pages/SafeMode";
-import SafeModeWrapper from "@/components/SafeModeWrapper";
 import FooterSettings from "@/pages/settings/FooterSettings";
 import NotFound from "@/pages/NotFound";
-
-// Super Admin Pages
-import SuperAdminLogin from "@/pages/super-admin/SuperAdminLogin";
-import SuperAdminDashboard from "@/pages/super-admin/SuperAdminDashboard";
-import TenantsManagement from "@/pages/super-admin/TenantsManagement";
-import PlansManagement from "@/pages/super-admin/PlansManagement";
-import SubscriptionsManagement from "@/pages/super-admin/SubscriptionsManagement";
-import PlatformMonitoring from "@/pages/super-admin/PlatformMonitoring";
-import SuperAdminSystemSettings from "@/pages/super-admin/SuperAdminSystemSettings";
-import SuperAdminAuditLogs from "@/pages/super-admin/SuperAdminAuditLogs";
-import SuperAdminPayments from "@/pages/super-admin/SuperAdminPayments";
-import SuperAdminBackup from "@/pages/super-admin/SuperAdminBackup";
-import SuperAdminIntegrations from "@/pages/super-admin/SuperAdminIntegrations";
-import TenantIntegrations from "@/pages/super-admin/TenantIntegrations";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -96,25 +79,9 @@ function App() {
         <BrowserRouter>
           <AuthProvider>
             <CustomerAuthProvider>
-              <TenantProvider>
-              <TenantBrandingProvider>
+              <BrandingProvider>
               <SafeModeWrapper>
               <Routes>
-                {/* Super Admin Routes */}
-                <Route path="/super-admin/login" element={<SuperAdminLogin />} />
-                <Route path="/super-admin" element={<SuperAdminGuard><SuperAdminDashboard /></SuperAdminGuard>} />
-                <Route path="/super-admin/dashboard" element={<SuperAdminGuard><SuperAdminDashboard /></SuperAdminGuard>} />
-                <Route path="/super-admin/tenants" element={<SuperAdminGuard><TenantsManagement /></SuperAdminGuard>} />
-                <Route path="/super-admin/tenants/:tenantId/integrations" element={<SuperAdminGuard><TenantIntegrations /></SuperAdminGuard>} />
-                <Route path="/super-admin/plans" element={<SuperAdminGuard><PlansManagement /></SuperAdminGuard>} />
-                <Route path="/super-admin/subscriptions" element={<SuperAdminGuard><SubscriptionsManagement /></SuperAdminGuard>} />
-                <Route path="/super-admin/monitoring" element={<SuperAdminGuard><PlatformMonitoring /></SuperAdminGuard>} />
-                <Route path="/super-admin/settings" element={<SuperAdminGuard><SuperAdminSystemSettings /></SuperAdminGuard>} />
-                <Route path="/super-admin/payments" element={<SuperAdminGuard><SuperAdminPayments /></SuperAdminGuard>} />
-                <Route path="/super-admin/audit-logs" element={<SuperAdminGuard><SuperAdminAuditLogs /></SuperAdminGuard>} />
-                <Route path="/super-admin/integrations" element={<SuperAdminGuard><SuperAdminIntegrations /></SuperAdminGuard>} />
-                <Route path="/super-admin/backup" element={<SuperAdminGuard><SuperAdminBackup /></SuperAdminGuard>} />
-
                 {/* Admin Routes */}
                 <Route path="/admin/login" element={<Login />} />
                 <Route path="/admin/forgot-password" element={<ForgotPassword />} />
@@ -143,7 +110,6 @@ function App() {
                 <Route path="/settings/packages" element={<PermissionGuard module="settings"><Packages /></PermissionGuard>} />
                 <Route path="/settings/zones" element={<PermissionGuard module="settings"><ZoneManagement /></PermissionGuard>} />
                 <Route path="/settings/mikrotik" element={<PermissionGuard module="settings"><MikroTikRouters /></PermissionGuard>} />
-                {/* bKash and Nagad settings removed - managed centrally by Super Admin */}
                 <Route path="/settings/roles" element={<PermissionGuard module="roles"><RoleManagement /></PermissionGuard>} />
                 <Route path="/settings/footer" element={<PermissionGuard module="settings"><FooterSettings /></PermissionGuard>} />
                 <Route path="/settings/backup" element={<PermissionGuard module="settings"><BackupRestore /></PermissionGuard>} />
@@ -164,8 +130,7 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </SafeModeWrapper>
-              </TenantBrandingProvider>
-              </TenantProvider>
+              </BrandingProvider>
             </CustomerAuthProvider>
           </AuthProvider>
         </BrowserRouter>
