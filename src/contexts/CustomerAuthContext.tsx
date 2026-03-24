@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import axios from "axios";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+import { API_BASE_URL } from "@/lib/apiBaseUrl";
 
 interface CustomerSession {
   id: string;

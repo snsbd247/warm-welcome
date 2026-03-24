@@ -6,6 +6,7 @@
  */
 
 import api from "@/lib/api";
+import { API_BASE_URL, API_PUBLIC_ROOT } from "@/lib/apiBaseUrl";
 
 export interface UploadResult {
   publicUrl: string;
@@ -20,8 +21,6 @@ export interface StorageProvider {
   download(bucket: string, path: string): Promise<Blob>;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-
 // ─── Laravel Storage Provider ──────────────────────────────────
 const laravelStorage: StorageProvider = {
   async upload(bucket, path, file, options = {}) {
@@ -35,12 +34,12 @@ const laravelStorage: StorageProvider = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    const publicUrl = `${API_BASE_URL.replace('/api', '')}/storage/${bucket}/${data.path || path}`;
+    const publicUrl = `${API_PUBLIC_ROOT}/storage/${bucket}/${data.path || path}`;
     return { publicUrl, path: data.path || path };
   },
 
   getPublicUrl(bucket, path) {
-    return `${API_BASE_URL.replace('/api', '')}/storage/${bucket}/${path}`;
+    return `${API_PUBLIC_ROOT}/storage/${bucket}/${path}`;
   },
 
   async delete(bucket, paths) {

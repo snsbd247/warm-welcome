@@ -4,6 +4,7 @@
  * This ensures all existing components work without modification.
  */
 import api from '@/lib/api';
+import { API_PUBLIC_ROOT } from '@/lib/apiBaseUrl';
 
 // ─── Query Builder (Supabase-compatible API) ────────────────────
 type FilterOp = "eq" | "neq" | "gt" | "gte" | "lt" | "lte" | "like" | "ilike" | "is" | "in";
@@ -245,8 +246,7 @@ const storageCompat = {
       }
     },
     getPublicUrl: (path: string) => {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      return { data: { publicUrl: `${baseUrl.replace('/api', '')}/storage/${bucket}/${path}` } };
+      return { data: { publicUrl: `${API_PUBLIC_ROOT}/storage/${bucket}/${path}` } };
     },
     remove: async (paths: string[]) => {
       try {
