@@ -39,6 +39,12 @@ const ALLOWED_TABLES = new Set([
   "admin_login_logs", "admin_sessions", "sms_logs", "reminder_logs",
   "customer_ledger", "customer_sessions", "sms_templates", "backup_logs",
   "system_settings",
+  // HR
+  "designations", "employees", "attendance", "loans", "salary_sheets",
+  // Accounting
+  "accounts", "income_heads", "expense_heads", "other_heads", "transactions",
+  // Supplier
+  "suppliers", "supplier_payments",
 ]);
 
 const PUBLIC_READ_TABLES = new Set([
