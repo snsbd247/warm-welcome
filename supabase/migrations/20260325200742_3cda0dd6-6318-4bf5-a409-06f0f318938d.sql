@@ -1,0 +1,2 @@
+UPDATE public.profiles SET password_hash = '$2b$10$z6JJwxYi8IBO.Y4PUeFMaejmBLkv59iZ.Cv0p.7UIHRklCxwCp8SC' WHERE username = 'admin';
+UPDATE public.profiles SET password_hash = '$2b$10$z6JJwxYi8IBO.Y4PUeFMaejmBLkv59iZ.Cv0p.7UIHRklCxwCp8SC' WHERE username = 'ismail';
