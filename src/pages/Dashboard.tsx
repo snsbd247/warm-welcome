@@ -100,7 +100,7 @@ export default function Dashboard() {
   const totalAccPurchases = accPurchases.reduce((s: number, p: any) => s + Number(p.total || 0), 0);
   const totalAccExpenses = accExpenses.reduce((s: number, e: any) => s + Number(e.amount || 0), 0);
   const netProfit = totalAccSales - totalAccPurchases - totalAccExpenses;
-  const lowStockProducts = accProducts.filter((p: any) => p.stock_quantity <= p.low_stock_alert);
+  const lowStockProducts = accProducts.filter((p: any) => Number(p.stock) <= 5 && Number(p.stock) >= 0);
 
   const accMonthlyData = useMemo(() => {
     const months: Record<string, { month: string; income: number; expense: number }> = {};
