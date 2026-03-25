@@ -25,18 +25,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    const savedUser = localStorage.getItem("admin_user");
+    let mounted = true;
 
-    if (token && savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem("admin_token");
+      const savedUser = localStorage.getItem("admin_user");
+
+      const clearLocalAuth = () => {
         localStorage.removeItem("admin_token");
         localStorage.removeItem("admin_user");
+      };
+
+      if (token && savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser) as AdminUser;
+
+          if (IS_LOVABLE_RUNTIME && token.split(".").length === 3) {
+            const { data: sessionData, error } = await supabase.auth.getSession();
+            const sessionToken = sessionData?.session?.access_token;
+
+            if (error?.code === "refresh_token_not_found" || !sessionToken) {
+              clearLocalAuth();
+              await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+            } else {
+              localStorage.setItem("admin_token", sessionToken);
+              if (mounted) setUser(parsedUser);
+            }
+          } else if (mounted) {
+            setUser(parsedUser);
+          }
+        } catch {
+          clearLocalAuth();
+          if (IS_LOVABLE_RUNTIME) {
+            await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+          }
+        }
       }
-    }
-    setLoading(false);
+
+      if (mounted) setLoading(false);
+    };
+
+    initializeAuth();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const signIn = async (username: string, password: string) => {
