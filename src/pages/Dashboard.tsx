@@ -69,19 +69,31 @@ export default function Dashboard() {
   // Accounting data
   const { data: accProducts = [] } = useQuery({
     queryKey: ["acc-products-dash"],
-    queryFn: () => api.get("/products").then(r => r.data?.data || r.data || []),
+    queryFn: async () => {
+      const { data } = await supabase.from("products").select("*");
+      return data || [];
+    },
   });
   const { data: accPurchases = [] } = useQuery({
     queryKey: ["acc-purchases-dash"],
-    queryFn: () => api.get("/purchases").then(r => r.data?.data || r.data || []),
+    queryFn: async () => {
+      const { data } = await supabase.from("purchases").select("*");
+      return data || [];
+    },
   });
   const { data: accSales = [] } = useQuery({
     queryKey: ["acc-sales-dash"],
-    queryFn: () => api.get("/sales").then(r => r.data?.data || r.data || []),
+    queryFn: async () => {
+      const { data } = await supabase.from("sales").select("*");
+      return data || [];
+    },
   });
   const { data: accExpenses = [] } = useQuery({
     queryKey: ["acc-expenses-dash"],
-    queryFn: () => api.get("/expenses").then(r => r.data?.data || r.data || []),
+    queryFn: async () => {
+      const { data } = await supabase.from("expenses").select("*");
+      return data || [];
+    },
   });
 
   const totalAccSales = accSales.reduce((s: number, sale: any) => s + Number(sale.total || 0), 0);
