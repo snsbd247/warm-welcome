@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import apiDb from "@/lib/apiDb";
+import { apiDb } from "@/lib/apiDb";
 
 function HeadPage({ title, table }: { title: string; table: string }) {
   const qc = useQueryClient();

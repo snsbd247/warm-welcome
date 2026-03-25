@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import apiDb from "@/lib/apiDb";
+import { apiDb } from "@/lib/apiDb";
 import { format } from "date-fns";
 
 export default function SupplierPayments() {

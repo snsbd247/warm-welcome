@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import apiDb from "@/lib/apiDb";
+import { apiDb } from "@/lib/apiDb";
 import { format } from "date-fns";
 
 export default function DailyReport() {

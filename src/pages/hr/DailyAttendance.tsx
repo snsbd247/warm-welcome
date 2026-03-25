@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
-import apiDb from "@/lib/apiDb";
+import { apiDb } from "@/lib/apiDb";
 import { format } from "date-fns";
 
 export default function DailyAttendance() {

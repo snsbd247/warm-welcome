@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import apiDb from "@/lib/apiDb";
+import { apiDb } from "@/lib/apiDb";
 
 export default function BtrcReport() {
   const { data: customers = [], isLoading } = useQuery({ queryKey: ["customers-btrc"], queryFn: async () => { const { data } = await apiDb.from("customers").select("*"); return data || []; } });
@@ -12,8 +12,8 @@ export default function BtrcReport() {
   const inactive = customers.filter((c: any) => c.status !== "active").length;
   const total = customers.length;
 
-  const byArea = customers.reduce((acc: Record<string, number>, c: any) => { acc[c.area] = (acc[c.area] || 0) + 1; return acc; }, {});
-  const byPackage = customers.reduce((acc: Record<string, number>, c: any) => { const pkg = packages.find((p: any) => p.id === c.package_id); const name = pkg?.name || "No Package"; acc[name] = (acc[name] || 0) + 1; return acc; }, {});
+  const byArea: Record<string, number> = customers.reduce((acc: Record<string, number>, c: any) => { acc[c.area] = (acc[c.area] || 0) + 1; return acc; }, {});
+  const byPackage: Record<string, number> = customers.reduce((acc: Record<string, number>, c: any) => { const pkg = packages.find((p: any) => p.id === c.package_id); const name = pkg?.name || "No Package"; acc[name] = (acc[name] || 0) + 1; return acc; }, {});
 
   return (
     <DashboardLayout>
@@ -42,8 +42,8 @@ export default function BtrcReport() {
           <CardContent>
             <Table>
               <TableHeader><TableRow><TableHead>Package</TableHead><TableHead className="text-right">Count</TableHead></TableRow></TableHeader>
-              <TableBody>{Object.entries(byPackage).sort((a, b) => b[1] - a[1]).map(([pkg, count]) => (
-                <TableRow key={pkg}><TableCell className="font-medium">{pkg}</TableCell><TableCell className="text-right font-semibold">{count}</TableCell></TableRow>
+              <TableBody>{Object.entries(byPackage).sort(([,a], [,b]) => (b as number) - (a as number)).map(([pkg, count]) => (
+                <TableRow key={pkg}><TableCell className="font-medium">{pkg}</TableCell><TableCell className="text-right font-semibold">{count as number}</TableCell></TableRow>
               ))}</TableBody>
             </Table>
           </CardContent>

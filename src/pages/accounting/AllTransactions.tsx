@@ -3,7 +3,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import apiDb from "@/lib/apiDb";
+import { apiDb } from "@/lib/apiDb";
 import { format } from "date-fns";
 
 export default function AllTransactions() {

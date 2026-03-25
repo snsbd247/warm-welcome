@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import apiDb from "@/lib/apiDb";
+import { apiDb } from "@/lib/apiDb";
 
 export default function FinancialStatement() {
   const { data: accounts = [], isLoading } = useQuery({ queryKey: ["accounts"], queryFn: async () => { const { data } = await apiDb.from("accounts").select("*").order("code"); return data || []; } });
