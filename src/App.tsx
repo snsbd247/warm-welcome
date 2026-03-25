@@ -52,6 +52,12 @@ import BackupRestore from "@/pages/settings/BackupRestore";
 import SafeMode from "@/pages/SafeMode";
 import FooterSettings from "@/pages/settings/FooterSettings";
 import NotFound from "@/pages/NotFound";
+import AccountingDashboard from "@/pages/accounting/AccountingDashboard";
+import AccProducts from "@/pages/accounting/Products";
+import AccVendors from "@/pages/accounting/Vendors";
+import AccPurchases from "@/pages/accounting/Purchases";
+import AccSales from "@/pages/accounting/Sales";
+import AccExpenses from "@/pages/accounting/Expenses";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -106,6 +112,14 @@ function App() {
                 <Route path="/users" element={<PermissionGuard module="users"><AdminUsers /></PermissionGuard>} />
                 <Route path="/login-logs" element={<PermissionGuard module="settings"><LoginLogs /></PermissionGuard>} />
                 <Route path="/audit-logs" element={<PermissionGuard module="settings"><AuditLogs /></PermissionGuard>} />
+
+                {/* Accounting Routes */}
+                <Route path="/accounting" element={<ProtectedRoute><AccountingDashboard /></ProtectedRoute>} />
+                <Route path="/accounting/products" element={<ProtectedRoute><AccProducts /></ProtectedRoute>} />
+                <Route path="/accounting/vendors" element={<ProtectedRoute><AccVendors /></ProtectedRoute>} />
+                <Route path="/accounting/purchases" element={<ProtectedRoute><AccPurchases /></ProtectedRoute>} />
+                <Route path="/accounting/sales" element={<ProtectedRoute><AccSales /></ProtectedRoute>} />
+                <Route path="/accounting/expenses" element={<ProtectedRoute><AccExpenses /></ProtectedRoute>} />
 
                 {/* Settings Routes */}
                 <Route path="/settings/general" element={<PermissionGuard module="settings"><GeneralSettings /></PermissionGuard>} />
