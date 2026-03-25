@@ -23,18 +23,18 @@ use Illuminate\Support\Facades\Route;
 | Admin Auth (public)
 |--------------------------------------------------------------------------
 */
-Route::post('/admin/login', [AuthController::class, 'login']);
+Route::post('/admin/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 /*
 |--------------------------------------------------------------------------
 | Customer Portal Auth (public)
 |--------------------------------------------------------------------------
 */
-Route::post('/portal/login', [CustomerAuthController::class, 'login']);
+Route::post('/portal/login', [CustomerAuthController::class, 'login'])->middleware('throttle:login');
 
 /*
 |--------------------------------------------------------------------------
-| Payment Callbacks (public)
+| Payment Callbacks (public — no auth required)
 |--------------------------------------------------------------------------
 */
 Route::any('/bkash/callback', [BkashController::class, 'callback']);
@@ -45,50 +45,50 @@ Route::any('/nagad/callback', [NagadController::class, 'callback']);
 | Admin Protected Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware('admin.auth')->group(function () {
-    // Auth
+Route::middleware(['admin.auth', 'tenant'])->group(function () {
+    // ── Auth ──────────────────────────────────────────────
     Route::post('/admin/logout', [AuthController::class, 'logout']);
     Route::get('/admin/me', [AuthController::class, 'me']);
 
-    // Dashboard
+    // ── Dashboard ────────────────────────────────────────
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
-    // Admin Users
+    // ── Admin Users (CRUD) ───────────────────────────────
     Route::get('/admin-users', [AdminUserController::class, 'index']);
     Route::post('/admin-users', [AdminUserController::class, 'store']);
     Route::put('/admin-users/{id}', [AdminUserController::class, 'update']);
     Route::delete('/admin-users/{id}', [AdminUserController::class, 'destroy']);
 
-    // Bills
+    // ── Bills ────────────────────────────────────────────
     Route::post('/bills', [BillController::class, 'store']);
     Route::post('/bills/generate', [BillController::class, 'generate']);
     Route::put('/bills/{id}', [BillController::class, 'update']);
     Route::delete('/bills/{id}', [BillController::class, 'destroy']);
 
-    // Payments
+    // ── Payments ─────────────────────────────────────────
     Route::post('/payments', [PaymentController::class, 'store']);
     Route::put('/payments/{id}', [PaymentController::class, 'update']);
     Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
 
-    // Merchant Payments
+    // ── Merchant Payments ────────────────────────────────
     Route::post('/merchant-payments', [MerchantPaymentController::class, 'store']);
     Route::post('/merchant-payments/{id}/match', [MerchantPaymentController::class, 'match']);
 
-    // SMS & Email
+    // ── SMS & Email ──────────────────────────────────────
     Route::post('/sms/send', [SmsController::class, 'send']);
     Route::post('/sms/send-bulk', [SmsController::class, 'sendBulk']);
     Route::post('/email/send', [EmailController::class, 'send']);
 
-    // bKash & Nagad
+    // ── bKash & Nagad ────────────────────────────────────
     Route::post('/bkash/create-payment', [BkashController::class, 'createPayment']);
     Route::post('/nagad/create-payment', [NagadController::class, 'createPayment']);
 
-    // MikroTik — core
+    // ── MikroTik — core ──────────────────────────────────
     Route::post('/mikrotik/sync', [MikrotikController::class, 'sync']);
     Route::post('/mikrotik/sync-all', [MikrotikController::class, 'syncAll']);
     Route::post('/mikrotik/test-connection', [MikrotikController::class, 'testConnection']);
 
-    // MikroTik — extended
+    // ── MikroTik — extended ──────────────────────────────
     Route::post('/mikrotik/bill-control', [MikrotikBillControlController::class, 'billControl']);
     Route::post('/mikrotik/disable-pppoe', [MikrotikBillControlController::class, 'disablePppoe']);
     Route::post('/mikrotik/enable-pppoe', [MikrotikBillControlController::class, 'enablePppoe']);
@@ -97,14 +97,14 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('/mikrotik/bulk-sync-packages', [MikrotikBillControlController::class, 'bulkSyncPackages']);
     Route::get('/mikrotik/router-stats/{routerId}', [MikrotikBillControlController::class, 'routerStats']);
 
-    // Storage
+    // ── Storage ──────────────────────────────────────────
     Route::post('/storage/upload', [StorageController::class, 'upload']);
     Route::get('/storage/list', [StorageController::class, 'list']);
     Route::get('/storage/download', [StorageController::class, 'download']);
     Route::post('/storage/delete', [StorageController::class, 'delete']);
     Route::get('/storage/serve/{bucket}/{path}', [StorageController::class, 'serve'])->where('path', '.*');
 
-    // Generic CRUD — catches all remaining tables
+    // ── Generic CRUD — catches all remaining tables ──────
     Route::get('/{table}', [GenericCrudController::class, 'index']);
     Route::get('/{table}/{id}', [GenericCrudController::class, 'show']);
     Route::post('/{table}', [GenericCrudController::class, 'store']);
