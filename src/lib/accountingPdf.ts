@@ -47,7 +47,7 @@ export function generateProfitLossPDF(
     doc.text(c.label, x + 5, y + 8);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(...c.color);
+    doc.setTextColor(c.color[0], c.color[1], c.color[2]);
     doc.text(`৳${c.value.toLocaleString()}`, x + 5, y + 18);
   });
 
