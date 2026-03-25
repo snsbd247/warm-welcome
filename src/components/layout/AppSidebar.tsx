@@ -31,6 +31,8 @@ const accountsNav: NavItem[] = [
   { to: "/payments", icon: CreditCard, label: "Payments", module: "payments" },
   { to: "/merchant-payments", icon: Wallet, label: "Merchant Pay", module: "merchant_payments" },
   { to: "/merchant-reports", icon: BarChart3, label: "Payment Reports", module: "reports" },
+  { to: "/accounting/expenses", icon: DollarSign, label: "Expenses", module: "accounting" },
+  { to: "/accounting/reports", icon: BarChart3, label: "Reports", module: "accounting" },
 ];
 
 const supportNav: NavItem[] = [
@@ -47,11 +49,6 @@ const inventoryNav: NavItem[] = [
   { to: "/accounting/vendors", icon: Building2, label: "Vendors", module: "accounting" },
   { to: "/accounting/purchases", icon: ShoppingCart, label: "Purchases", module: "accounting" },
   { to: "/accounting/sales", icon: DollarSign, label: "Sales", module: "accounting" },
-];
-
-const accountingNav: NavItem[] = [
-  { to: "/accounting/expenses", icon: Receipt, label: "Expenses", module: "accounting" },
-  { to: "/accounting/reports", icon: BarChart3, label: "Reports", module: "accounting" },
 ];
 
 const toolsNav: NavItem[] = [
