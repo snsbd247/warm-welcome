@@ -10,8 +10,8 @@ laravel-backend/
 │   ├── Console/Commands/          # Artisan commands (AutoSuspend, GenerateBills, CleanupSessions)
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   └── Api/               # All 12 API controllers
-│   │   ├── Middleware/             # AdminAuth, CustomerAuth, CheckPermission
+│   │   │   └── Api/               # All API controllers (Auth, Billing, HR, Accounting, Supplier, etc.)
+│   │   ├── Middleware/             # AdminAuth, CustomerAuth, CheckPermission, TenantMiddleware
 │   │   └── Requests/              # 18 Form Request validation classes
 │   ├── Models/                    # 29+ Eloquent models (all UUID-based)
 │   ├── Providers/                 # AppServiceProvider
