@@ -70,6 +70,7 @@ import SalarySheet from "@/pages/hr/SalarySheet";
 import SupplierList from "@/pages/supplier/SupplierList";
 import SupplierPayments from "@/pages/supplier/SupplierPayments";
 import SupplierProfile from "@/pages/supplier/SupplierProfile";
+import SupplierPurchases from "@/pages/supplier/SupplierPurchases";
 import DailyReport from "@/pages/reporting/DailyReport";
 import FinancialStatement from "@/pages/reporting/FinancialStatement";
 import BtrcReport from "@/pages/reporting/BtrcReport";
