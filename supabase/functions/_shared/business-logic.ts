@@ -303,19 +303,21 @@ export async function authenticateRequest(supabase: any, authHeader: string | nu
     if (!sessErr && session?.admin_id) {
       return { userId: session.admin_id };
     }
-  } catch {
-    // continue with JWT validation
+  } catch (err) {
+    console.error("[auth] admin session lookup failed", err);
   }
 
   // 2) Supabase JWT validation
   try {
-    // Try service-role auth verification first (most reliable for edge runtime)
     const { data: serviceUserData, error: serviceUserError } = await supabase.auth.getUser(token);
     if (!serviceUserError && serviceUserData?.user?.id) {
       return { userId: serviceUserData.user.id };
     }
 
-    // Fallback: user-scoped client with Authorization header
+    if (serviceUserError) {
+      console.error("[auth] service getUser failed", serviceUserError.message);
+    }
+
     const userClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -328,12 +330,20 @@ export async function authenticateRequest(supabase: any, authHeader: string | nu
       return { userId: sub };
     }
 
+    if (claimsError) {
+      console.error("[auth] getClaims failed", claimsError.message);
+    }
+
     const { data, error } = await userClient.auth.getUser();
     if (!error && data?.user?.id) {
       return { userId: data.user.id };
     }
-  } catch {
-    // JWT validation failed
+
+    if (error) {
+      console.error("[auth] userClient getUser failed", error.message);
+    }
+  } catch (err) {
+    console.error("[auth] JWT validation failed", err);
   }
 
   return { error: "Unauthorized" };
