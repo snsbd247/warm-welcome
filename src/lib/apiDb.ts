@@ -95,6 +95,12 @@ class QueryBuilder<T = any> {
   }
 
   private async _executeViaEdgeProxy(): Promise<{ data: any; error: any; count?: number }> {
+    const adminToken = localStorage.getItem('admin_token');
+    const headers: Record<string, string> = {};
+    if (adminToken) {
+      headers['Authorization'] = `Bearer ${adminToken}`;
+    }
+
     const { data: response, error } = await supabaseClient.functions.invoke('api/data/proxy', {
       body: {
         table: this._table,
@@ -108,6 +114,7 @@ class QueryBuilder<T = any> {
         data: this._data,
         returning: this._returning,
       },
+      headers,
     });
 
     if (error) {
