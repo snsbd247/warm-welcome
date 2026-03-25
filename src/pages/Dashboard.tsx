@@ -670,6 +670,115 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+      {/* Accounting Overview Section */}
+      <div className="mt-8 mb-6">
+        <h2 className="text-xl font-bold text-foreground mb-4">Accounting Overview</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-8 w-8 text-success" />
+                <div><p className="text-2xl font-bold">৳{totalAccSales.toLocaleString()}</p><p className="text-sm text-muted-foreground">Total Sales</p></div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="h-8 w-8 text-primary" />
+                <div><p className="text-2xl font-bold">৳{totalAccPurchases.toLocaleString()}</p><p className="text-sm text-muted-foreground">Total Purchases</p></div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <TrendingDown className="h-8 w-8 text-destructive" />
+                <div><p className="text-2xl font-bold">৳{totalAccExpenses.toLocaleString()}</p><p className="text-sm text-muted-foreground">Total Expenses</p></div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <DollarSign className={`h-8 w-8 ${netProfit >= 0 ? "text-success" : "text-destructive"}`} />
+                <div><p className={`text-2xl font-bold ${netProfit >= 0 ? "text-success" : "text-destructive"}`}>৳{netProfit.toLocaleString()}</p><p className="text-sm text-muted-foreground">Net Profit</p></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <Card>
+            <CardHeader><CardTitle>Income vs Expense (Monthly)</CardTitle></CardHeader>
+            <CardContent>
+              {accMonthlyData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={accMonthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(v: number) => `৳${v.toLocaleString()}`} />
+                    <Bar dataKey="income" fill="hsl(var(--primary))" name="Income" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="expense" fill="hsl(var(--destructive))" name="Expense" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-muted-foreground py-12">No data yet</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>Expenses by Category</CardTitle></CardHeader>
+            <CardContent>
+              {expenseByCategory.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={expenseByCategory} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                      {expenseByCategory.map((_, i) => <Cell key={i} fill={ACC_COLORS[i % ACC_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(v: number) => `৳${v.toLocaleString()}`} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-muted-foreground py-12">No expenses recorded</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {lowStockProducts.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" />Low Stock Alerts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead className="text-right">Stock</TableHead>
+                    <TableHead className="text-right">Alert Level</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {lowStockProducts.map((p: any) => (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell>{p.sku}</TableCell>
+                      <TableCell className="text-right text-destructive font-bold">{p.stock_quantity}</TableCell>
+                      <TableCell className="text-right">{p.low_stock_alert}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
       {/* Notification Center */}
       <div className="mt-6">
         <NotificationCenter />
