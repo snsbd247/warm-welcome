@@ -287,13 +287,15 @@ export async function userHasPermission(supabase: any, userId: string, module: s
 export async function authenticateRequest(supabase: any, authHeader: string | null): Promise<{ userId: string; error?: string } | { userId?: undefined; error: string }> {
   if (!authHeader) return { error: "Unauthorized" };
 
-  const token = authHeader.replace("Bearer ", "");
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match?.[1]) return { error: "Unauthorized" };
+  const token = match[1].trim();
 
-  // 1. Try custom admin session token (UUID format from Laravel-style auth)
+  // 1) Custom admin session token (Laravel-style UUID token)
   try {
     const { data: session, error: sessErr } = await supabase
       .from("admin_sessions")
-      .select("admin_id, status")
+      .select("admin_id")
       .eq("session_token", token)
       .eq("status", "active")
       .maybeSingle();
@@ -301,21 +303,27 @@ export async function authenticateRequest(supabase: any, authHeader: string | nu
     if (!sessErr && session?.admin_id) {
       return { userId: session.admin_id };
     }
-  } catch {
-    // Not a session token, try JWT next
+  } catch (err) {
+    console.error("[auth] admin session lookup failed", err);
   }
 
-  // 2. Try Supabase JWT via getClaims (preferred over getUser for edge functions)
+  // 2) Supabase JWT validation via Auth REST endpoint
   try {
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const authRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/auth/v1/user`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+      },
+    });
 
-    const { data, error } = await userClient.auth.getUser(token);
-    if (!error && data?.user) {
-      return { userId: data.user.id };
+    if (authRes.ok) {
+      const user = await authRes.json();
+      if (user?.id) {
+        return { userId: user.id };
+      }
+    } else {
+      await authRes.text();
     }
   } catch {
     // JWT validation failed
