@@ -93,17 +93,15 @@ export default class ErrorBoundary extends Component<Props, State> {
             )}
           </div>
 
-          {import.meta.env.DEV && this.state.error && (
-            <details className="mt-4 text-left border border-border rounded-lg p-3 bg-muted/30">
-              <summary className="text-xs font-medium text-muted-foreground cursor-pointer">
-                Error Details (dev only)
-              </summary>
-              <pre className="mt-2 text-xs text-destructive overflow-auto max-h-40 whitespace-pre-wrap">
-                {msg}
-                {this.state.errorInfo}
-              </pre>
-            </details>
-          )}
+          <details className="mt-4 text-left border border-border rounded-lg p-3 bg-muted/30">
+            <summary className="text-xs font-medium text-muted-foreground cursor-pointer">
+              Error Details
+            </summary>
+            <pre className="mt-2 text-xs text-destructive overflow-auto max-h-40 whitespace-pre-wrap">
+              {msg}
+              {this.state.errorInfo}
+            </pre>
+          </details>
         </div>
       </div>
     );
