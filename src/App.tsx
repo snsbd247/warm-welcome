@@ -115,7 +115,7 @@ function App() {
                 <Route path="/audit-logs" element={<PermissionGuard module="settings"><AuditLogs /></PermissionGuard>} />
 
                 {/* Accounting Routes */}
-                <Route path="/accounting" element={<PermissionGuard module="accounting"><AccountingDashboard /></PermissionGuard>} />
+                {/* Accounting Dashboard merged into main Dashboard */}
                 <Route path="/accounting/products" element={<PermissionGuard module="accounting"><AccProducts /></PermissionGuard>} />
                 <Route path="/accounting/vendors" element={<PermissionGuard module="accounting"><AccVendors /></PermissionGuard>} />
                 <Route path="/accounting/purchases" element={<PermissionGuard module="accounting"><AccPurchases /></PermissionGuard>} />
