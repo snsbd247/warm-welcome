@@ -158,6 +158,7 @@ Route::middleware(['admin.auth', 'tenant'])->group(function () {
     Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy']);
 
     // ── Accounting ───────────────────────────────────────
+    Route::get('/accounting/chart-of-accounts', [AccountingController::class, 'chartOfAccounts']);
     Route::get('/accounting/accounts', [AccountingController::class, 'accounts']);
     Route::post('/accounting/accounts', [AccountingController::class, 'createAccount']);
     Route::put('/accounting/accounts/{id}', [AccountingController::class, 'updateAccount']);
@@ -165,10 +166,12 @@ Route::middleware(['admin.auth', 'tenant'])->group(function () {
 
     Route::get('/accounting/transactions', [AccountingController::class, 'transactions']);
     Route::post('/accounting/transactions', [AccountingController::class, 'storeTransaction']);
+    Route::post('/accounting/journal-entries', [AccountingController::class, 'storeJournalEntry']);
 
     Route::get('/accounting/summary', [AccountingController::class, 'summary']);
     Route::get('/accounting/balances', [AccountingController::class, 'accountBalances']);
     Route::get('/accounting/profit-loss', [AccountingController::class, 'profitLoss']);
+    Route::get('/accounting/balance-sheet', [AccountingController::class, 'balanceSheet']);
 
     // ── Reports ──────────────────────────────────────────
     Route::get('/reports/dashboard', [ReportController::class, 'dashboard']);

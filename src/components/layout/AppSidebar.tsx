@@ -8,7 +8,7 @@ import {
   Package, MapPin, Router, Shield, Wallet, BarChart3, FileText, Menu, X, ClipboardList, Wrench, KeyRound,
   Sun, Moon, HardDrive, Plug, Building2, ShoppingCart, DollarSign, TrendingUp, BoxIcon,
   Briefcase, CalendarDays, CalendarCheck, Banknote, FileSpreadsheet, Truck, Activity,
-  UserPlus, UserCheck, UserX, WifiOff, UserMinus, Globe,
+  UserPlus, UserCheck, UserX, WifiOff, UserMinus, Globe, BookOpen, Scale,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -49,6 +49,9 @@ const hrNav: NavItem[] = [
 ];
 
 const accountsNav: NavItem[] = [
+  { to: "/accounting/chart-of-accounts", icon: FileText, label: "Chart of Accounts", module: "accounting" },
+  { to: "/accounting/journal-entries", icon: BookOpen, label: "Journal Entries", module: "accounting" },
+  { to: "/accounting/balance-sheet", icon: Scale, label: "Balance Sheet", module: "accounting" },
   { to: "/accounting/income-head", icon: TrendingUp, label: "Income Head", module: "accounting" },
   { to: "/accounting/expense-head", icon: DollarSign, label: "Expense Head", module: "accounting" },
   { to: "/accounting/others-head", icon: BoxIcon, label: "Others Head", module: "accounting" },

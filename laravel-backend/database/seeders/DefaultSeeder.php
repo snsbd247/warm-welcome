@@ -66,25 +66,38 @@ class DefaultSeeder extends Seeder
             Package::create($pkg);
         }
 
-        // ── Default Accounting Accounts ──────────────────
-        $accounts = [
-            ['name' => 'Cash',               'type' => 'asset',   'code' => '1001', 'is_system' => true],
-            ['name' => 'Bank Account',        'type' => 'asset',   'code' => '1002', 'is_system' => true],
-            ['name' => 'bKash',               'type' => 'asset',   'code' => '1003', 'is_system' => true],
-            ['name' => 'Nagad',               'type' => 'asset',   'code' => '1004', 'is_system' => true],
-            ['name' => 'Accounts Receivable', 'type' => 'asset',   'code' => '1100', 'is_system' => true],
-            ['name' => 'Inventory',           'type' => 'asset',   'code' => '1200', 'is_system' => true],
-            ['name' => 'Accounts Payable',    'type' => 'liability','code' => '2001', 'is_system' => true],
-            ['name' => 'ISP Billing Revenue', 'type' => 'income',  'code' => '4001', 'is_system' => true],
-            ['name' => 'Product Sales',       'type' => 'income',  'code' => '4002', 'is_system' => true],
-            ['name' => 'Cost of Goods Sold',  'type' => 'expense', 'code' => '5001', 'is_system' => true],
-            ['name' => 'Salary Expense',      'type' => 'expense', 'code' => '5002', 'is_system' => false],
-            ['name' => 'Utility Expense',     'type' => 'expense', 'code' => '5003', 'is_system' => false],
-            ['name' => 'Office Expense',      'type' => 'expense', 'code' => '5004', 'is_system' => false],
-        ];
-        foreach ($accounts as $acc) {
-            Account::create($acc);
-        }
+        // ── Default Chart of Accounts (with hierarchy) ────
+        // Root accounts
+        $assets = Account::create(['name' => 'Assets', 'type' => 'asset', 'code' => '1000', 'is_system' => true, 'level' => 0]);
+        $liabilities = Account::create(['name' => 'Liabilities', 'type' => 'liability', 'code' => '2000', 'is_system' => true, 'level' => 0]);
+        $income = Account::create(['name' => 'Income', 'type' => 'income', 'code' => '4000', 'is_system' => true, 'level' => 0]);
+        $expenses = Account::create(['name' => 'Expenses', 'type' => 'expense', 'code' => '5000', 'is_system' => true, 'level' => 0]);
+        $equity = Account::create(['name' => 'Equity', 'type' => 'equity', 'code' => '3000', 'is_system' => true, 'level' => 0]);
+
+        // Asset children
+        Account::create(['name' => 'Cash', 'type' => 'asset', 'code' => '1001', 'parent_id' => $assets->id, 'level' => 1, 'is_system' => true]);
+        Account::create(['name' => 'Bank Account', 'type' => 'asset', 'code' => '1002', 'parent_id' => $assets->id, 'level' => 1, 'is_system' => true]);
+        Account::create(['name' => 'bKash', 'type' => 'asset', 'code' => '1003', 'parent_id' => $assets->id, 'level' => 1, 'is_system' => true]);
+        Account::create(['name' => 'Nagad', 'type' => 'asset', 'code' => '1004', 'parent_id' => $assets->id, 'level' => 1, 'is_system' => true]);
+        Account::create(['name' => 'Accounts Receivable', 'type' => 'asset', 'code' => '1100', 'parent_id' => $assets->id, 'level' => 1, 'is_system' => true]);
+        Account::create(['name' => 'Inventory', 'type' => 'asset', 'code' => '1200', 'parent_id' => $assets->id, 'level' => 1, 'is_system' => true]);
+
+        // Liability children
+        Account::create(['name' => 'Accounts Payable', 'type' => 'liability', 'code' => '2001', 'parent_id' => $liabilities->id, 'level' => 1, 'is_system' => true]);
+
+        // Income children
+        Account::create(['name' => 'ISP Billing Revenue', 'type' => 'income', 'code' => '4001', 'parent_id' => $income->id, 'level' => 1, 'is_system' => true]);
+        Account::create(['name' => 'Product Sales', 'type' => 'income', 'code' => '4002', 'parent_id' => $income->id, 'level' => 1, 'is_system' => true]);
+
+        // Expense children
+        Account::create(['name' => 'Cost of Goods Sold', 'type' => 'expense', 'code' => '5001', 'parent_id' => $expenses->id, 'level' => 1, 'is_system' => true]);
+        Account::create(['name' => 'Salary Expense', 'type' => 'expense', 'code' => '5002', 'parent_id' => $expenses->id, 'level' => 1]);
+        Account::create(['name' => 'Utility Expense', 'type' => 'expense', 'code' => '5003', 'parent_id' => $expenses->id, 'level' => 1]);
+        Account::create(['name' => 'Office Expense', 'type' => 'expense', 'code' => '5004', 'parent_id' => $expenses->id, 'level' => 1]);
+
+        // Equity children
+        Account::create(['name' => 'Owner Equity', 'type' => 'equity', 'code' => '3001', 'parent_id' => $equity->id, 'level' => 1]);
+        Account::create(['name' => 'Retained Earnings', 'type' => 'equity', 'code' => '3002', 'parent_id' => $equity->id, 'level' => 1]);
 
         // ── Default Permissions ──────────────────────────
         $modules = [
@@ -113,7 +126,7 @@ class DefaultSeeder extends Seeder
         $this->command->info('Default data seeded!');
         $this->command->info('Admin #1 → username: admin / password: admin123');
         $this->command->info('Admin #2 → username: ismail / password: Admin@123');
-        $this->command->info('13 default accounting accounts created.');
+        $this->command->info('Chart of Accounts with hierarchy created (5 root + children).');
         $this->command->info('All module permissions seeded.');
     }
 }
