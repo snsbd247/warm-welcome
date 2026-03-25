@@ -289,4 +289,66 @@ class ReportController extends Controller
             'grand_total'       => $expenses->sum('total') + (float) $purchases,
         ]);
     }
+
+    /**
+     * Financial Statement
+     */
+    public function financialStatement(Request $request)
+    {
+        $from = $request->get('from', now()->startOfMonth()->toDateString());
+        $to   = $request->get('to', now()->toDateString());
+
+        $totalIncome   = Payment::whereBetween('paid_at', [$from, $to])->where('status', 'completed')->sum('amount');
+        $totalExpenses = Expense::whereBetween('expense_date', [$from, $to])->sum('amount');
+        $totalSales    = Sale::whereBetween('sale_date', [$from, $to])->sum('total');
+        $totalPurchases = Purchase::whereBetween('purchase_date', [$from, $to])->sum('total');
+
+        return response()->json([
+            'from'            => $from,
+            'to'              => $to,
+            'total_income'    => (float) $totalIncome,
+            'total_expenses'  => (float) $totalExpenses,
+            'total_sales'     => (float) $totalSales,
+            'total_purchases' => (float) $totalPurchases,
+            'net_profit'      => (float) ($totalIncome + $totalSales - $totalExpenses - $totalPurchases),
+        ]);
+    }
+
+    /**
+     * BTRC Report - Customer and connection statistics
+     */
+    public function btrcReport(Request $request)
+    {
+        $totalCustomers   = Customer::count();
+        $activeCustomers  = Customer::where('status', 'active')->count();
+        $inactiveCustomers = Customer::where('status', 'inactive')->count();
+        $onlineCustomers  = Customer::where('connection_status', 'online')->count();
+        $offlineCustomers = Customer::where('connection_status', 'offline')->count();
+
+        return response()->json([
+            'total_customers'    => $totalCustomers,
+            'active_customers'   => $activeCustomers,
+            'inactive_customers' => $inactiveCustomers,
+            'online_customers'   => $onlineCustomers,
+            'offline_customers'  => $offlineCustomers,
+            'generated_at'       => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Traffic Monitor - placeholder for network stats
+     */
+    public function trafficMonitor(Request $request)
+    {
+        $totalCustomers  = Customer::where('status', 'active')->count();
+        $onlineCustomers = Customer::where('connection_status', 'online')->count();
+
+        return response()->json([
+            'total_active'  => $totalCustomers,
+            'online'        => $onlineCustomers,
+            'offline'       => $totalCustomers - $onlineCustomers,
+            'bandwidth'     => null, // placeholder - requires MikroTik integration
+            'generated_at'  => now()->toIso8601String(),
+        ]);
+    }
 }

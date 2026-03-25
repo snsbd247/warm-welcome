@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccountingController;
+use App\Http\Controllers\Api\AccountingHeadController;
 use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\GenericCrudController;
+use App\Http\Controllers\Api\HrController;
 use App\Http\Controllers\Api\MerchantPaymentController;
 use App\Http\Controllers\Api\MikrotikBillControlController;
 use App\Http\Controllers\Api\MikrotikController;
@@ -22,6 +24,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SalesController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\StorageController;
+use App\Http\Controllers\Api\SupplierController2;
 use App\Http\Controllers\Api\VendorController;
 use Illuminate\Support\Facades\Route;
 
@@ -177,6 +180,76 @@ Route::middleware(['admin.auth', 'tenant'])->group(function () {
     Route::get('/reports/customer-dues', [ReportController::class, 'customerDues']);
     Route::get('/reports/stock', [ReportController::class, 'stockReport']);
     Route::get('/reports/expense-breakdown', [ReportController::class, 'expenseBreakdown']);
+    Route::get('/reports/financial-statement', [ReportController::class, 'financialStatement']);
+    Route::get('/reports/btrc', [ReportController::class, 'btrcReport']);
+    Route::get('/reports/traffic', [ReportController::class, 'trafficMonitor']);
+
+    // ══════════════════════════════════════════════════════
+    // ── HUMAN RESOURCE MODULE ────────────────────────────
+    // ══════════════════════════════════════════════════════
+
+    // ── Designations ─────────────────────────────────────
+    Route::get('/hr/designations', [HrController::class, 'designations']);
+    Route::post('/hr/designations', [HrController::class, 'storeDesignation']);
+    Route::put('/hr/designations/{id}', [HrController::class, 'updateDesignation']);
+    Route::delete('/hr/designations/{id}', [HrController::class, 'deleteDesignation']);
+
+    // ── Employees ────────────────────────────────────────
+    Route::get('/hr/employees', [HrController::class, 'employees']);
+    Route::post('/hr/employees', [HrController::class, 'storeEmployee']);
+    Route::put('/hr/employees/{id}', [HrController::class, 'updateEmployee']);
+    Route::delete('/hr/employees/{id}', [HrController::class, 'deleteEmployee']);
+
+    // ── Attendance ────────────────────────────────────────
+    Route::get('/hr/attendance/daily', [HrController::class, 'dailyAttendance']);
+    Route::get('/hr/attendance/monthly', [HrController::class, 'monthlyAttendance']);
+    Route::post('/hr/attendance', [HrController::class, 'storeAttendance']);
+    Route::post('/hr/attendance/bulk', [HrController::class, 'bulkAttendance']);
+
+    // ── Loans ────────────────────────────────────────────
+    Route::get('/hr/loans', [HrController::class, 'loans']);
+    Route::post('/hr/loans', [HrController::class, 'storeLoan']);
+    Route::put('/hr/loans/{id}', [HrController::class, 'updateLoan']);
+    Route::delete('/hr/loans/{id}', [HrController::class, 'deleteLoan']);
+
+    // ── Salary Sheet ─────────────────────────────────────
+    Route::get('/hr/salary', [HrController::class, 'salarySheets']);
+    Route::post('/hr/salary/generate', [HrController::class, 'generateSalary']);
+    Route::put('/hr/salary/{id}', [HrController::class, 'updateSalarySheet']);
+    Route::post('/hr/salary/{id}/pay', [HrController::class, 'paySalary']);
+
+    // ══════════════════════════════════════════════════════
+    // ── SUPPLIER MODULE ──────────────────────────────────
+    // ══════════════════════════════════════════════════════
+
+    Route::get('/suppliers', [SupplierController2::class, 'index']);
+    Route::get('/suppliers/{id}', [SupplierController2::class, 'show']);
+    Route::post('/suppliers', [SupplierController2::class, 'store']);
+    Route::put('/suppliers/{id}', [SupplierController2::class, 'update']);
+    Route::delete('/suppliers/{id}', [SupplierController2::class, 'destroy']);
+
+    Route::get('/supplier-payments', [SupplierController2::class, 'payments']);
+    Route::post('/supplier-payments', [SupplierController2::class, 'storePayment']);
+    Route::delete('/supplier-payments/{id}', [SupplierController2::class, 'deletePayment']);
+
+    // ══════════════════════════════════════════════════════
+    // ── ACCOUNTING HEADS MODULE ──────────────────────────
+    // ══════════════════════════════════════════════════════
+
+    Route::get('/accounting/income-heads', [AccountingHeadController::class, 'incomeHeads']);
+    Route::post('/accounting/income-heads', [AccountingHeadController::class, 'storeIncomeHead']);
+    Route::put('/accounting/income-heads/{id}', [AccountingHeadController::class, 'updateIncomeHead']);
+    Route::delete('/accounting/income-heads/{id}', [AccountingHeadController::class, 'deleteIncomeHead']);
+
+    Route::get('/accounting/expense-heads', [AccountingHeadController::class, 'expenseHeads']);
+    Route::post('/accounting/expense-heads', [AccountingHeadController::class, 'storeExpenseHead']);
+    Route::put('/accounting/expense-heads/{id}', [AccountingHeadController::class, 'updateExpenseHead']);
+    Route::delete('/accounting/expense-heads/{id}', [AccountingHeadController::class, 'deleteExpenseHead']);
+
+    Route::get('/accounting/other-heads', [AccountingHeadController::class, 'otherHeads']);
+    Route::post('/accounting/other-heads', [AccountingHeadController::class, 'storeOtherHead']);
+    Route::put('/accounting/other-heads/{id}', [AccountingHeadController::class, 'updateOtherHead']);
+    Route::delete('/accounting/other-heads/{id}', [AccountingHeadController::class, 'deleteOtherHead']);
 
     // ── Storage ──────────────────────────────────────────
     Route::post('/storage/upload', [StorageController::class, 'upload']);

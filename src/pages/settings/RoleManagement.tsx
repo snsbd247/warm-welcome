@@ -44,6 +44,8 @@ const MODULE_LABELS: Record<string, string> = {
   tickets: "Tickets",
   sms: "SMS",
   accounting: "Accounting & Inventory",
+  hr: "Human Resource",
+  supplier: "Supplier",
   settings: "Settings",
   users: "Users",
   roles: "Roles",
