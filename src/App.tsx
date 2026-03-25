@@ -52,6 +52,12 @@ import BackupRestore from "@/pages/settings/BackupRestore";
 import SafeMode from "@/pages/SafeMode";
 import FooterSettings from "@/pages/settings/FooterSettings";
 import NotFound from "@/pages/NotFound";
+import AccountingDashboard from "@/pages/accounting/AccountingDashboard";
+import AccProducts from "@/pages/accounting/Products";
+import AccVendors from "@/pages/accounting/Vendors";
+import AccPurchases from "@/pages/accounting/Purchases";
+import AccSales from "@/pages/accounting/Sales";
+import AccExpenses from "@/pages/accounting/Expenses";
 
 const queryClient = new QueryClient({
   defaultOptions: {
