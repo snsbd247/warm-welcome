@@ -15,6 +15,41 @@ interface QueryOrder { column: string; ascending: boolean; }
 
 const isNetworkError = (err: any) => !err?.response && (err?.message === 'Network Error' || err?.code === 'ERR_NETWORK');
 const shouldUseEdgeFallback = IS_LOVABLE_RUNTIME;
+const isJwtLike = (token: string) => token.split('.').length === 3;
+
+const isJwtExpired = (token: string) => {
+  if (!isJwtLike(token)) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const exp = Number(payload?.exp || 0);
+    if (!exp) return false;
+    return exp * 1000 <= Date.now();
+  } catch {
+    return false;
+  }
+};
+
+const clearLocalAdminAuth = () => {
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+};
+
+const handleAuthFailure = async () => {
+  clearLocalAdminAuth();
+  try {
+    await supabaseClient.auth.signOut({ scope: 'local' });
+  } catch {
+    // Ignore local sign-out errors
+  }
+
+  if (typeof window !== 'undefined') {
+    const onAdminLogin = window.location.pathname.startsWith('/admin/login');
+    const onCustomerPortal = window.location.pathname.startsWith('/portal') || window.location.pathname.startsWith('/login');
+    if (!onAdminLogin && !onCustomerPortal) {
+      window.location.href = '/admin/login';
+    }
+  }
+};
 
 class QueryBuilder<T = any> {
   private _table: string;
@@ -108,40 +143,54 @@ class QueryBuilder<T = any> {
       returning: this._returning,
     };
 
-    const invokeProxy = async (token: string) => {
+    const invokeProxy = async (token?: string) => {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api/data/proxy`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(payloadBody),
       });
 
       const responseJson = await res.json().catch(() => null);
       if (!res.ok) {
         const message = responseJson?.error || `Edge function returned ${res.status}`;
-        throw new Error(message);
+        const error = new Error(message) as Error & { status?: number };
+        error.status = res.status;
+        throw error;
       }
 
       return responseJson;
     };
 
     // Prioritize admin_token (Laravel session) over Supabase JWT
-    const adminToken = localStorage.getItem('admin_token');
-    let accessToken = adminToken || '';
-    
+    const adminToken = localStorage.getItem('admin_token') || '';
+    let accessToken = adminToken;
+
+    if (accessToken && isJwtExpired(accessToken)) {
+      localStorage.removeItem('admin_token');
+      accessToken = '';
+    }
+
     if (!accessToken) {
-      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+      if (sessionError?.code === 'refresh_token_not_found') {
+        await handleAuthFailure();
+      }
       accessToken = sessionData?.session?.access_token || '';
+      if (accessToken) {
+        localStorage.setItem('admin_token', accessToken);
+      }
     }
 
-    if (!accessToken) {
-      throw new Error('No active session. Please sign in again.');
-    }
-
-    const response = await invokeProxy(accessToken);
+    const response = await invokeProxy(accessToken || undefined);
     const payload = response?.data ?? null;
 
     if (this._operation === 'select') {
@@ -214,13 +263,38 @@ class QueryBuilder<T = any> {
         try {
           return await this._executeViaEdgeProxy();
         } catch (edgeErr: any) {
+          if (edgeErr?.status === 401) {
+            await handleAuthFailure();
+            const emptyData = this._operation === 'select'
+              ? (this._singleRow || this._maybeSingleRow ? null : [])
+              : null;
+            return {
+              data: emptyData,
+              error: { message: 'Session expired. Please sign in again.', status: 401, kind: 'auth' },
+            };
+          }
           console.error(`[apiDb] edge fallback ${this._operation} ${this._table} failed:`, edgeErr.message);
-          return { data: null, error: { message: edgeErr.message || 'Network fallback failed' } };
+          return {
+            data: null,
+            error: { message: edgeErr.message || 'Network fallback failed', status: edgeErr?.status },
+          };
         }
       }
 
+      const status = err?.response?.status;
+      if (status === 401 && shouldUseEdgeFallback) {
+        await handleAuthFailure();
+      }
+
       console.error(`[apiDb] ${this._operation} ${this._table} failed:`, err.message);
-      return { data: null, error: { message: err.response?.data?.error || err.message } };
+      return {
+        data: null,
+        error: {
+          message: err.response?.data?.error || err.message,
+          status,
+          kind: status === 401 ? 'auth' : undefined,
+        },
+      };
     }
   }
 }
