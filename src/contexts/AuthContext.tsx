@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { user: adminUser, token: data.token };
     } catch (error: any) {
       const isNetworkError = !error?.response && (error?.message === "Network Error" || error?.code === "ERR_NETWORK");
-      if (!IS_LOVABLE_RUNTIME || !isNetworkError) {
+      if (!isNetworkError) {
         throw new Error(error?.response?.data?.error || error?.message || "Login failed");
       }
 
