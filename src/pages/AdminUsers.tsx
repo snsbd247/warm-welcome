@@ -62,6 +62,8 @@ export default function AdminUsers() {
   });
 
   const filtered = users?.filter((u: any) => {
+    // Non-super_admin users cannot see super_admin users
+    if (!isSuperAdmin && u.roles?.includes("super_admin")) return false;
     const matchesSearch =
       u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       u.username?.toLowerCase().includes(search.toLowerCase()) ||
