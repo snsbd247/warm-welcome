@@ -309,7 +309,6 @@ export async function authenticateRequest(supabase: any, authHeader: string | nu
 
   // 2) Supabase JWT validation
   try {
-    // Validate token directly
     const tokenClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!
@@ -320,19 +319,25 @@ export async function authenticateRequest(supabase: any, authHeader: string | nu
       return { userId: tokenUserData.user.id };
     }
 
-    // Fallback: user-scoped client with Authorization header
     const userClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: `Bearer ${token}` } } }
     );
 
-    const { data, error } = await userClient.auth.getUser();
-    if (!error && data?.user?.id) {
-      return { userId: data.user.id };
+    const { data: headerUserData, error: headerUserError } = await userClient.auth.getUser(token);
+    if (!headerUserError && headerUserData?.user?.id) {
+      return { userId: headerUserData.user.id };
     }
-  } catch {
-    // JWT validation failed
+
+    if (tokenUserError || headerUserError) {
+      console.error("[auth] JWT validation failed", {
+        tokenClient: tokenUserError?.message,
+        headerClient: headerUserError?.message,
+      });
+    }
+  } catch (err) {
+    console.error("[auth] JWT validation exception", err);
   }
 
   return { error: "Unauthorized" };
