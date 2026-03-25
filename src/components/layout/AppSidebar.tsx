@@ -60,6 +60,7 @@ const accountsNav: NavItem[] = [
 
 const supplierNav: NavItem[] = [
   { to: "/supplier/list", icon: Truck, label: "Supplier List", module: "supplier" },
+  { to: "/supplier/purchases", icon: ShoppingCart, label: "Purchases", module: "supplier" },
   { to: "/supplier/payments", icon: Wallet, label: "Supplier Payments", module: "supplier" },
 ];
 
