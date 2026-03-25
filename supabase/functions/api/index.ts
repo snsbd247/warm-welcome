@@ -47,6 +47,8 @@ const ALLOWED_TABLES = new Set([
   "products", "purchases", "purchase_items",
   // Supplier
   "suppliers", "supplier_payments",
+  // Sales & Expenses
+  "sales", "sale_items", "expenses", "daily_reports",
 ]);
 
 const PUBLIC_READ_TABLES = new Set([
