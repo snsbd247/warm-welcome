@@ -307,8 +307,15 @@ export async function authenticateRequest(supabase: any, authHeader: string | nu
     // continue with JWT validation
   }
 
-  // 2) Supabase JWT validation (signing-keys friendly)
+  // 2) Supabase JWT validation
   try {
+    // Try service-role auth verification first (most reliable for edge runtime)
+    const { data: serviceUserData, error: serviceUserError } = await supabase.auth.getUser(token);
+    if (!serviceUserError && serviceUserData?.user?.id) {
+      return { userId: serviceUserData.user.id };
+    }
+
+    // Fallback: user-scoped client with Authorization header
     const userClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -321,8 +328,7 @@ export async function authenticateRequest(supabase: any, authHeader: string | nu
       return { userId: sub };
     }
 
-    // Fallback for older tokens/environments
-    const { data, error } = await userClient.auth.getUser(token);
+    const { data, error } = await userClient.auth.getUser();
     if (!error && data?.user?.id) {
       return { userId: data.user.id };
     }
