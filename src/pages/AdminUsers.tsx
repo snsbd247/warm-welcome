@@ -49,11 +49,17 @@ export default function AdminUsers() {
     },
   });
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("admin_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("admin-users/list", {
         body: {},
+        headers: getAuthHeaders(),
       });
       if (error) throw error;
       return data?.users || [];
@@ -117,6 +123,7 @@ export default function AdminUsers() {
               role: form.role,
               custom_role_id: form.custom_role_id || undefined,
             },
+            headers: getAuthHeaders(),
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
@@ -136,6 +143,7 @@ export default function AdminUsers() {
               role: form.role,
               custom_role_id: form.custom_role_id || undefined,
             },
+            headers: getAuthHeaders(),
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
@@ -155,6 +163,7 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase.functions.invoke("admin-users/delete", {
         body: { user_id: deleteUser.id },
+        headers: getAuthHeaders(),
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -172,6 +181,7 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase.functions.invoke("admin-users/update", {
         body: { user_id: u.id, disabled: newDisabled, full_name: u.full_name, username: u.username, mobile: u.mobile, address: u.address, staff_id: u.staff_id, role: u.roles?.[0] || "staff" },
+        headers: getAuthHeaders(),
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
