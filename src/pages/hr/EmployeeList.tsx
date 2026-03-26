@@ -79,6 +79,7 @@ export default function EmployeeList() {
                     <TableCell>৳{Number(e.salary).toLocaleString()}</TableCell>
                     <TableCell><Badge variant={e.status === "active" ? "default" : "secondary"}>{e.status}</Badge></TableCell>
                     <TableCell><div className="flex gap-1">
+                      <Button size="icon" variant="ghost" onClick={() => navigate(`/hr/employees/${e.id}`)}><Eye className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => { setEditId(e.id); setForm({ employee_id: e.employee_id, name: e.name, phone: e.phone||"", email: e.email||"", designation_id: e.designation_id||"", joining_date: e.joining_date||"", salary: String(e.salary||0), address: e.address||"" }); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" className="text-destructive" onClick={() => del.mutate(e.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div></TableCell>
