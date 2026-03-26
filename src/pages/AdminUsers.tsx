@@ -28,6 +28,7 @@ import { format } from "date-fns";
 export default function AdminUsers() {
   const { user } = useAuth();
   const { isSuperAdmin } = usePermissions();
+  const canViewSuperAdmins = isSuperAdmin || user?.role === "super_admin";
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
@@ -69,7 +70,7 @@ export default function AdminUsers() {
 
   const filtered = users?.filter((u: any) => {
     // Non-super_admin users cannot see super_admin users
-    if (!isSuperAdmin && u.roles?.includes("super_admin")) return false;
+    if (!canViewSuperAdmins && u.roles?.includes("super_admin")) return false;
     const matchesSearch =
       u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       u.username?.toLowerCase().includes(search.toLowerCase()) ||
@@ -353,13 +354,13 @@ export default function AdminUsers() {
               }}>
                 <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                 <SelectContent>
-                {customRoles?.filter((cr: any) => isSuperAdmin || cr.db_role !== "super_admin").map((cr: any) => (
+                {customRoles?.filter((cr: any) => canViewSuperAdmins || cr.db_role !== "super_admin").map((cr: any) => (
                     <SelectItem key={cr.id} value={cr.id}>{cr.name}</SelectItem>
                   )) || (
                     <>
                       <SelectItem value="staff">Staff</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
-                      {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
+                      {canViewSuperAdmins && <SelectItem value="super_admin">Super Admin</SelectItem>}
                     </>
                   )}
                 </SelectContent>
