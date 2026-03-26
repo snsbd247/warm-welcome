@@ -354,13 +354,13 @@ export default function AdminUsers() {
               }}>
                 <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                 <SelectContent>
-                {customRoles?.filter((cr: any) => isSuperAdmin || cr.db_role !== "super_admin").map((cr: any) => (
+                {customRoles?.filter((cr: any) => canViewSuperAdmins || cr.db_role !== "super_admin").map((cr: any) => (
                     <SelectItem key={cr.id} value={cr.id}>{cr.name}</SelectItem>
                   )) || (
                     <>
                       <SelectItem value="staff">Staff</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
-                      {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
+                      {canViewSuperAdmins && <SelectItem value="super_admin">Super Admin</SelectItem>}
                     </>
                   )}
                 </SelectContent>
