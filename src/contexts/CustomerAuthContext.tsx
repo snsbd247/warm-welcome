@@ -182,8 +182,15 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const fallbackCustomerAuth: CustomerAuthContextType = {
+  customer: null,
+  loading: true,
+  signIn: async () => { throw new Error("CustomerAuthProvider not mounted"); },
+  signOut: () => {},
+  fetchProfile: async () => null,
+};
+
 export const useCustomerAuth = () => {
   const ctx = useContext(CustomerAuthContext);
-  if (!ctx) throw new Error("useCustomerAuth must be used within CustomerAuthProvider");
-  return ctx;
+  return ctx ?? fallbackCustomerAuth;
 };
