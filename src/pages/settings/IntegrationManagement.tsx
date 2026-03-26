@@ -147,7 +147,62 @@ const EMAIL_TEMPLATES = [
   { key: "email_tpl_ticket_reply", label: "Ticket Reply Email", desc: "Sent when a support ticket gets a reply" },
   { key: "email_tpl_account_activation", label: "Account Activation Email", desc: "Sent when account is activated" },
 ];
-const VARIABLE_HINTS = ["{CustomerName}", "{Amount}", "{Month}", "{PaymentDate}", "{TicketID}", "{CompanyName}"];
+const VARIABLE_HINTS = ["{CustomerName}", "{Amount}", "{Month}", "{PaymentDate}", "{TicketID}", "{CompanyName}", "{ResetLink}", "{ActivationLink}", "{PortalLink}"];
+
+const DEMO_TEMPLATES: Record<string, string> = {
+  email_tpl_welcome: `প্রিয় {CustomerName},
+
+{CompanyName}-এ আপনাকে স্বাগতম! আপনার ইন্টারনেট সংযোগ সফলভাবে চালু করা হয়েছে।
+
+আপনার একাউন্ট সংক্রান্ত যেকোনো তথ্যের জন্য আমাদের কাস্টমার পোর্টালে লগইন করুন:
+🔗 {PortalLink}
+
+ধন্যবাদ,
+{CompanyName} টিম`,
+
+  email_tpl_password_reset: `প্রিয় {CustomerName},
+
+আপনার পাসওয়ার্ড রিসেট করার অনুরোধ পাওয়া গেছে। নিচের লিংকে ক্লিক করে নতুন পাসওয়ার্ড সেট করুন:
+
+🔗 {ResetLink}
+
+এই লিংকটি ৩০ মিনিট পর্যন্ত কার্যকর থাকবে। আপনি যদি এই অনুরোধ না করে থাকেন, তাহলে এই ইমেইলটি উপেক্ষা করুন।
+
+ধন্যবাদ,
+{CompanyName} টিম`,
+
+  email_tpl_payment_confirm: `প্রিয় {CustomerName},
+
+আপনার {Month} মাসের বিলের পেমেন্ট সফলভাবে গ্রহণ করা হয়েছে।
+
+পেমেন্টের পরিমাণ: ৳{Amount}
+পেমেন্টের তারিখ: {PaymentDate}
+
+ধন্যবাদ,
+{CompanyName} টিম`,
+
+  email_tpl_ticket_reply: `প্রিয় {CustomerName},
+
+আপনার সাপোর্ট টিকেট #{TicketID}-এ নতুন রিপ্লাই এসেছে।
+
+বিস্তারিত দেখতে কাস্টমার পোর্টালে লগইন করুন:
+🔗 {PortalLink}
+
+ধন্যবাদ,
+{CompanyName} সাপোর্ট টিম`,
+
+  email_tpl_account_activation: `প্রিয় {CustomerName},
+
+আপনার একাউন্ট সফলভাবে সক্রিয় করা হয়েছে! এখন থেকে আপনি আমাদের ইন্টারনেট সেবা উপভোগ করতে পারবেন।
+
+একাউন্ট অ্যাক্টিভেশন লিংক:
+🔗 {ActivationLink}
+
+কোনো সমস্যা হলে আমাদের সাপোর্ট টিমে যোগাযোগ করুন।
+
+ধন্যবাদ,
+{CompanyName} টিম`,
+};
 
 function SmtpEmailTemplates() {
   const queryClient = useQueryClient();
@@ -215,10 +270,23 @@ function SmtpEmailTemplates() {
               ))}
             </div>
           </div>
-          <Button onClick={handleSave} disabled={saving} size="sm">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-            Save Templates
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setForm((prev) => ({ ...prev, ...DEMO_TEMPLATES }));
+                toast.success("ডেমো টেমপ্লেট লোড হয়েছে। Save Templates চাপুন।");
+              }}
+            >
+              <Settings2 className="h-4 w-4 mr-2" />
+              Load Demo
+            </Button>
+            <Button onClick={handleSave} disabled={saving} size="sm">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              Save Templates
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
