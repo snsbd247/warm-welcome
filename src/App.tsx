@@ -57,6 +57,7 @@ import AccReports from "@/pages/accounting/Reports";
 import ChartOfAccounts from "@/pages/accounting/ChartOfAccounts";
 import BalanceSheet from "@/pages/accounting/BalanceSheet";
 import JournalEntries from "@/pages/accounting/JournalEntries";
+import LedgerStatement from "@/pages/accounting/LedgerStatement";
 import IncomeHead from "@/pages/accounting/IncomeHead";
 import ExpenseHead from "@/pages/accounting/ExpenseHead";
 import OthersHead from "@/pages/accounting/OthersHead";
