@@ -282,7 +282,7 @@ export default function Dashboard() {
       failed: nagadPayments.filter(p => p.status === "failed").length,
       refunded: nagadPayments.filter(p => p.status === "refunded").length,
       dailyData: Object.entries(dailyMap).map(([day, amount]) => ({
-        day: format(new Date(day), "dd MMM"),
+        day: safeFormat(day, "dd MMM", day),
         amount,
       })),
     };
