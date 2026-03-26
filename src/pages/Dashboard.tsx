@@ -247,7 +247,7 @@ export default function Dashboard() {
       failed: bkashPayments.filter(p => p.status === "failed").length,
       refunded: bkashPayments.filter(p => p.status === "refunded").length,
       dailyData: Object.entries(dailyMap).map(([day, amount]) => ({
-        day: format(new Date(day), "dd MMM"),
+        day: safeFormat(day, "dd MMM", day),
         amount,
       })),
     };
