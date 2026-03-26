@@ -9,7 +9,15 @@ import api from "@/lib/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
 import { useState, useMemo, useCallback } from "react";
-import { format, subMonths } from "date-fns";
+import { format, subMonths, isValid, parseISO } from "date-fns";
+
+function safeFormat(dateInput: string | Date | undefined | null, fmt: string, fallback = "—"): string {
+  if (!dateInput) return fallback;
+  try {
+    const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+    return isValid(d) ? format(d, fmt) : fallback;
+  } catch { return fallback; }
+}
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
@@ -219,7 +227,9 @@ export default function Dashboard() {
     // Daily breakdown for last 7 days
     const dailyMap: Record<string, number> = {};
     for (let i = 6; i >= 0; i--) {
-      const d = format(subMonths(new Date(), 0).setDate(new Date().getDate() - i) ? new Date(new Date().setDate(new Date().getDate() - i)) : new Date(), "yyyy-MM-dd");
+      const dt = new Date();
+      dt.setDate(dt.getDate() - i);
+      const d = format(dt, "yyyy-MM-dd");
       dailyMap[d] = 0;
     }
     completedAll.forEach(p => {
@@ -237,7 +247,7 @@ export default function Dashboard() {
       failed: bkashPayments.filter(p => p.status === "failed").length,
       refunded: bkashPayments.filter(p => p.status === "refunded").length,
       dailyData: Object.entries(dailyMap).map(([day, amount]) => ({
-        day: format(new Date(day), "dd MMM"),
+        day: safeFormat(day, "dd MMM", day),
         amount,
       })),
     };
@@ -252,7 +262,9 @@ export default function Dashboard() {
 
     const dailyMap: Record<string, number> = {};
     for (let i = 6; i >= 0; i--) {
-      const d = format(new Date(new Date().setDate(new Date().getDate() - i)), "yyyy-MM-dd");
+      const dt = new Date();
+      dt.setDate(dt.getDate() - i);
+      const d = format(dt, "yyyy-MM-dd");
       dailyMap[d] = 0;
     }
     completedAll.forEach(p => {
@@ -270,7 +282,7 @@ export default function Dashboard() {
       failed: nagadPayments.filter(p => p.status === "failed").length,
       refunded: nagadPayments.filter(p => p.status === "refunded").length,
       dailyData: Object.entries(dailyMap).map(([day, amount]) => ({
-        day: format(new Date(day), "dd MMM"),
+        day: safeFormat(day, "dd MMM", day),
         amount,
       })),
     };
@@ -311,7 +323,7 @@ export default function Dashboard() {
       }
     });
     return Object.entries(months).map(([month, vals]) => ({
-      month: format(new Date(month + "-01"), "MMM yy"),
+      month: safeFormat(month + "-01", "MMM yy", month),
       paid: vals.paid,
       due: vals.due,
     }));
