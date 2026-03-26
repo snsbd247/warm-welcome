@@ -63,16 +63,12 @@ export default function EmployeeProfile() {
           <TabsTrigger value="education"><GraduationCap className="h-4 w-4 mr-1" />Education</TabsTrigger>
           <TabsTrigger value="experience"><Briefcase className="h-4 w-4 mr-1" />Experience</TabsTrigger>
           <TabsTrigger value="salary"><DollarSign className="h-4 w-4 mr-1" />Salary Structure</TabsTrigger>
-          <TabsTrigger value="pf"><Shield className="h-4 w-4 mr-1" />Provident Fund</TabsTrigger>
-          <TabsTrigger value="savings"><PiggyBank className="h-4 w-4 mr-1" />Savings Fund</TabsTrigger>
           <TabsTrigger value="emergency"><Phone className="h-4 w-4 mr-1" />Emergency Contact</TabsTrigger>
         </TabsList>
 
         <TabsContent value="education"><EducationTab employeeId={id!} /></TabsContent>
         <TabsContent value="experience"><ExperienceTab employeeId={id!} /></TabsContent>
         <TabsContent value="salary"><SalaryStructureTab employeeId={id!} currentSalary={Number(employee.salary)} /></TabsContent>
-        <TabsContent value="pf"><ProvidentFundTab employeeId={id!} employeeName={employee.name} /></TabsContent>
-        <TabsContent value="savings"><SavingsFundTab employeeId={id!} employeeName={employee.name} /></TabsContent>
         <TabsContent value="emergency"><EmergencyContactTab employeeId={id!} /></TabsContent>
       </Tabs>
     </DashboardLayout>
