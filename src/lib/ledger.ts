@@ -5,9 +5,35 @@ interface LedgerEntry {
   account_id?: string;
   debit: number;
   credit: number;
-  type: string; // 'income' | 'expense' | 'journal'
+  type: string;
   reference?: string;
   date?: string;
+}
+
+// Cache for account lookups within a session
+const accountCache = new Map<string, string | null>();
+
+/**
+ * Find an account by code (exact match).
+ */
+export async function findAccountByCode(code: string): Promise<string | null> {
+  if (accountCache.has(code)) return accountCache.get(code)!;
+  const { data } = await apiDb.from("accounts").select("id").eq("code", code).maybeSingle();
+  const id = data?.id || null;
+  accountCache.set(code, id);
+  return id;
+}
+
+/**
+ * Find an account by name (case-insensitive).
+ */
+export async function findAccountByName(name: string): Promise<string | null> {
+  const cacheKey = `name:${name}`;
+  if (accountCache.has(cacheKey)) return accountCache.get(cacheKey)!;
+  const { data } = await apiDb.from("accounts").select("id").ilike("name", name).maybeSingle();
+  const id = data?.id || null;
+  accountCache.set(cacheKey, id);
+  return id;
 }
 
 /**
@@ -39,20 +65,20 @@ export async function postToLedger(entry: LedgerEntry) {
 }
 
 /**
- * Find an account by code or name (case-insensitive partial match).
- */
-export async function findAccount(codeOrName: string): Promise<string | null> {
-  const { data } = await apiDb.from("accounts").select("id").or(`code.eq.${codeOrName},name.ilike.%${codeOrName}%`).limit(1).maybeSingle();
-  return data?.id || null;
-}
-
-/**
- * Post a sale to the ledger: Debit Cash/Bank, Credit Sales Income
+ * Post a sale to the ledger with proper account linking.
+ * Debit: Cash in Hand / Bank (asset)
+ * Credit: Sales Income (income)
  */
 export async function postSaleToLedger(saleNo: string, total: number, paidAmount: number, paymentMethod: string, date: string) {
-  // Income entry (credit side)
+  const salesIncomeId = await findAccountByCode("4100") || await findAccountByName("Sales Income");
+  const cashId = paymentMethod === "bank"
+    ? (await findAccountByCode("1102") || await findAccountByName("Bank Account"))
+    : (await findAccountByCode("1101") || await findAccountByName("Cash in Hand"));
+
+  // Credit Sales Income
   await postToLedger({
     description: `Sale ${saleNo}`,
+    account_id: salesIncomeId || undefined,
     debit: 0,
     credit: total,
     type: "income",
@@ -60,10 +86,11 @@ export async function postSaleToLedger(saleNo: string, total: number, paidAmount
     date,
   });
 
-  // If paid, debit cash/bank
+  // Debit Cash/Bank for paid amount
   if (paidAmount > 0) {
     await postToLedger({
       description: `Payment received for ${saleNo}`,
+      account_id: cashId || undefined,
       debit: paidAmount,
       credit: 0,
       type: "income",
@@ -74,12 +101,19 @@ export async function postSaleToLedger(saleNo: string, total: number, paidAmount
 }
 
 /**
- * Post a purchase to the ledger: Debit Purchase/COGS, Credit Cash/Accounts Payable
+ * Post a purchase to the ledger with proper account linking.
+ * Debit: Cost of Goods Sold / Purchase (expense)
+ * Credit: Cash / Accounts Payable
  */
 export async function postPurchaseToLedger(purchaseNo: string, total: number, paidAmount: number, date: string) {
-  // Expense entry (debit side - purchase cost)
+  const cogsId = await findAccountByCode("5100") || await findAccountByName("Cost of Goods Sold");
+  const cashId = await findAccountByCode("1101") || await findAccountByName("Cash in Hand");
+  const payableId = await findAccountByCode("2100") || await findAccountByName("Accounts Payable");
+
+  // Debit COGS/Purchase expense
   await postToLedger({
     description: `Purchase ${purchaseNo}`,
+    account_id: cogsId || undefined,
     debit: total,
     credit: 0,
     type: "expense",
@@ -87,10 +121,11 @@ export async function postPurchaseToLedger(purchaseNo: string, total: number, pa
     date,
   });
 
-  // If paid, credit cash
+  // Credit Cash for paid amount
   if (paidAmount > 0) {
     await postToLedger({
       description: `Payment for purchase ${purchaseNo}`,
+      account_id: cashId || undefined,
       debit: 0,
       credit: paidAmount,
       type: "expense",
@@ -98,32 +133,124 @@ export async function postPurchaseToLedger(purchaseNo: string, total: number, pa
       date,
     });
   }
+
+  // Credit Accounts Payable for unpaid amount
+  const unpaid = total - paidAmount;
+  if (unpaid > 0 && payableId) {
+    await postToLedger({
+      description: `Payable for ${purchaseNo}`,
+      account_id: payableId,
+      debit: 0,
+      credit: unpaid,
+      type: "journal",
+      reference: purchaseNo,
+      date,
+    });
+  }
 }
 
 /**
- * Post a customer bill payment to the ledger
+ * Post a customer bill payment to the ledger.
+ * Debit: Cash / bKash / Bank (asset)
+ * Credit: Accounts Receivable / Service Income
  */
 export async function postPaymentToLedger(customerName: string, amount: number, method: string, trxId?: string, date?: string) {
+  let cashId: string | null = null;
+  if (method === "bkash") {
+    cashId = await findAccountByCode("1103") || await findAccountByName("bKash");
+  } else if (method === "nagad") {
+    cashId = await findAccountByCode("1104") || await findAccountByName("Nagad");
+  } else if (method === "bank") {
+    cashId = await findAccountByCode("1102") || await findAccountByName("Bank Account");
+  } else {
+    cashId = await findAccountByCode("1101") || await findAccountByName("Cash in Hand");
+  }
+
+  const serviceIncomeId = await findAccountByCode("4000") || await findAccountByName("Service Income");
+
+  // Debit Cash/Bank
   await postToLedger({
     description: `Bill payment from ${customerName} via ${method}${trxId ? ` (${trxId})` : ""}`,
+    account_id: cashId || undefined,
     debit: amount,
     credit: 0,
     type: "income",
     reference: trxId || `payment-${method}`,
     date: date || new Date().toISOString(),
   });
+
+  // Credit Service Income
+  if (serviceIncomeId) {
+    await postToLedger({
+      description: `Service income from ${customerName}`,
+      account_id: serviceIncomeId,
+      debit: 0,
+      credit: amount,
+      type: "income",
+      reference: trxId || `payment-${method}`,
+      date: date || new Date().toISOString(),
+    });
+  }
 }
 
 /**
- * Post a bill generation to the ledger (Accounts Receivable)
+ * Post a bill generation to the ledger (Accounts Receivable).
+ * Debit: Accounts Receivable
+ * Credit: Service Income (accrual)
  */
 export async function postBillToLedger(customerName: string, amount: number, month: string, date?: string) {
+  const arId = await findAccountByCode("1200") || await findAccountByName("Accounts Receivable");
+
   await postToLedger({
     description: `Bill generated for ${customerName} - ${month}`,
+    account_id: arId || undefined,
     debit: amount,
     credit: 0,
     type: "journal",
     reference: `bill-${month}`,
     date: date || new Date().toISOString(),
   });
+}
+
+/**
+ * Post an expense to the ledger.
+ * Debit: Expense account (by category mapping)
+ * Credit: Cash/Bank
+ */
+export async function postExpenseToLedger(category: string, amount: number, description: string, paymentMethod: string, date: string) {
+  // Map expense categories to account codes
+  const categoryMap: Record<string, string> = {
+    salary: "5200", utility: "5201", rent: "5202", maintenance: "5203",
+    transport: "5204", internet: "5205", office: "5206", other: "5299",
+  };
+  const expCode = categoryMap[category] || "5299";
+  const expenseAccountId = await findAccountByCode(expCode) || await findAccountByName(category);
+
+  const cashId = paymentMethod === "bank"
+    ? (await findAccountByCode("1102") || await findAccountByName("Bank Account"))
+    : (await findAccountByCode("1101") || await findAccountByName("Cash in Hand"));
+
+  // Debit expense account
+  await postToLedger({
+    description: description || `${category} expense`,
+    account_id: expenseAccountId || undefined,
+    debit: amount,
+    credit: 0,
+    type: "expense",
+    reference: `exp-${category}`,
+    date,
+  });
+
+  // Credit cash/bank
+  if (cashId) {
+    await postToLedger({
+      description: `Payment for ${category} expense`,
+      account_id: cashId,
+      debit: 0,
+      credit: amount,
+      type: "expense",
+      reference: `exp-${category}`,
+      date,
+    });
+  }
 }
