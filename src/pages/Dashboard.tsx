@@ -9,7 +9,15 @@ import api from "@/lib/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
 import { useState, useMemo, useCallback } from "react";
-import { format, subMonths } from "date-fns";
+import { format, subMonths, isValid, parseISO } from "date-fns";
+
+function safeFormat(dateInput: string | Date | undefined | null, fmt: string, fallback = "—"): string {
+  if (!dateInput) return fallback;
+  try {
+    const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+    return isValid(d) ? format(d, fmt) : fallback;
+  } catch { return fallback; }
+}
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
