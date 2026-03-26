@@ -56,7 +56,7 @@ export default function ChequeRegister() {
   });
 
   const filtered = cheques.filter((c: any) => {
-    if (search && !c.description.toLowerCase().includes(search.toLowerCase()) && !c.reference?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !(c.description || "").toLowerCase().includes(search.toLowerCase()) && !(c.reference || "").toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
