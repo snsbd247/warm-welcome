@@ -391,8 +391,6 @@ function EmergencyContactTab({ employeeId }: { employeeId: string }) {
   );
 }
 
-/* ── Provident Fund Tab ── */
-function ProvidentFundTab({ employeeId, employeeName }: { employeeId: string; employeeName: string }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
