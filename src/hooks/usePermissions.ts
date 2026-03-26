@@ -9,7 +9,8 @@ export interface UserPermission {
 
 export function usePermissions() {
   const { user } = useAuth();
-  const isSuperAdminFromAuth = user?.role === "super_admin";
+  const normalizedAuthRole = (user?.role || "").toLowerCase().replace(/[\s-]+/g, "_");
+  const isSuperAdminFromAuth = normalizedAuthRole === "super_admin" || normalizedAuthRole === "superadmin";
 
   const { data, isLoading } = useQuery({
     queryKey: ["user-permissions", user?.id, user?.role],

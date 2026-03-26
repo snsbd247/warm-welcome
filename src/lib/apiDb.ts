@@ -511,11 +511,49 @@ const storageCompat = {
 // ─── Mock Functions for compatibility ────────────────────────────
 const functionsCompat = {
   invoke: async (name: string, options?: { body?: any; headers?: Record<string, string> }) => {
+    const invokeApi = async () => {
+      const { data } = await api.post(`/functions/${name}`, options?.body || {}, {
+        headers: options?.headers,
+      });
+      return data;
+    };
+
+    const invokeEdge = async () => {
+      const { data, error } = await supabaseClient.functions.invoke(name, {
+        body: options?.body || {},
+        headers: options?.headers,
+      });
+      if (error) throw new Error(error.message || `Failed to invoke edge function: ${name}`);
+      return data;
+    };
+
+    if (shouldUseEdgeFallback) {
+      try {
+        const data = await invokeEdge();
+        return { data, error: null };
+      } catch (edgeErr: any) {
+        try {
+          const data = await invokeApi();
+          return { data, error: null };
+        } catch (apiErr: any) {
+          return { data: null, error: { message: apiErr.response?.data?.error || edgeErr.message || apiErr.message } };
+        }
+      }
+    }
+
     try {
-      const { data } = await api.post(`/functions/${name}`, options?.body || {});
+      const data = await invokeApi();
       return { data, error: null };
-    } catch (err: any) {
-      return { data: null, error: { message: err.response?.data?.error || err.message } };
+    } catch (apiErr: any) {
+      if (isNetworkError(apiErr)) {
+        try {
+          const data = await invokeEdge();
+          return { data, error: null };
+        } catch (edgeErr: any) {
+          return { data: null, error: { message: edgeErr.message || apiErr.message } };
+        }
+      }
+      return { data: null, error: { message: apiErr.response?.data?.error || apiErr.message } };
     }
   },
 };

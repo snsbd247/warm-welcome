@@ -28,7 +28,8 @@ import { format } from "date-fns";
 export default function AdminUsers() {
   const { user } = useAuth();
   const { isSuperAdmin } = usePermissions();
-  const canViewSuperAdmins = isSuperAdmin || user?.role === "super_admin";
+  const normalizedUserRole = (user?.role || "").toLowerCase().replace(/[\s-]+/g, "_");
+  const canViewSuperAdmins = isSuperAdmin || normalizedUserRole === "super_admin" || normalizedUserRole === "superadmin";
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
