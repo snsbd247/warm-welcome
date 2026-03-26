@@ -94,7 +94,7 @@ export default function NotificationCenter() {
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] text-muted-foreground">
-                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                          {safeRelativeTime(log.created_at)}
                         </span>
                         {log.file_size > 0 && (
                           <span className="text-[10px] text-muted-foreground">
