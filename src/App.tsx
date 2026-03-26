@@ -77,6 +77,7 @@ import DailyAttendance from "@/pages/hr/DailyAttendance";
 import MonthlyAttendance from "@/pages/hr/MonthlyAttendance";
 import LoanManagement from "@/pages/hr/LoanManagement";
 import SalarySheet from "@/pages/hr/SalarySheet";
+import EmployeeProfile from "@/pages/hr/EmployeeProfile";
 import SupplierList from "@/pages/supplier/SupplierList";
 import SupplierPayments from "@/pages/supplier/SupplierPayments";
 import SupplierProfile from "@/pages/supplier/SupplierProfile";
