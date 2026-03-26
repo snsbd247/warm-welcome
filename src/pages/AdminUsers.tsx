@@ -181,6 +181,7 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase.functions.invoke("admin-users/update", {
         body: { user_id: u.id, disabled: newDisabled, full_name: u.full_name, username: u.username, mobile: u.mobile, address: u.address, staff_id: u.staff_id, role: u.roles?.[0] || "staff" },
+        headers: getAuthHeaders(),
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
