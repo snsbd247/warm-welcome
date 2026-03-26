@@ -135,8 +135,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const fallbackAuth: AuthContextType = {
+  user: null,
+  loading: true,
+  signIn: async () => { throw new Error("AuthProvider not mounted"); },
+  signOut: async () => {},
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
-  return context;
+  return context ?? fallbackAuth;
 };
