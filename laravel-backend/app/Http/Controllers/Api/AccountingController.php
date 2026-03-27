@@ -70,9 +70,7 @@ class AccountingController extends Controller
     {
         $account = Account::findOrFail($id);
 
-        if ($account->is_system) {
-            return response()->json(['error' => 'Cannot modify system account'], 422);
-        }
+        // System accounts can only be edited by super_admin (checked via middleware)
 
         $level = $account->level;
         if ($request->has('parent_id') && $request->parent_id !== $account->parent_id) {

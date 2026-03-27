@@ -100,7 +100,7 @@ function AccountRow({ account, expanded, onToggle, onEdit, onDelete, onAddChild,
             <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => onAddChild(account.id, account.type)} title="Add Sub-Account">
               <Plus className="h-3.5 w-3.5" />
             </Button>
-            {canEdit && !account.is_system && (
+            {canEdit && (
               <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => onEdit(account)} title="Edit">
                 <Edit2 className="h-3.5 w-3.5" />
               </Button>
