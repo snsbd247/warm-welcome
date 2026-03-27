@@ -7,7 +7,7 @@ use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use Illuminate\Http\Request;
 
-class SupplierController extends Controller
+class SupplierController2 extends Controller
 {
     public function index(Request $request)
     {
