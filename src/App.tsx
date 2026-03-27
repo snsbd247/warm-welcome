@@ -125,7 +125,7 @@ function App() {
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/customers" element={<PermissionGuard module="customers"><Customers /></PermissionGuard>} />
                 <Route path="/customers/:id" element={<PermissionGuard module="customers"><CustomerProfilePage /></PermissionGuard>} />
-                <Route path="/packages" element={<ProtectedRoute><Packages /></ProtectedRoute>} />
+                <Route path="/packages" element={<PermissionGuard module="settings"><Packages /></PermissionGuard>} />
                 <Route path="/billing" element={<PermissionGuard module="billing"><Billing /></PermissionGuard>} />
                 <Route path="/billing/cycle" element={<PermissionGuard module="billing"><BillingCycleOverview /></PermissionGuard>} />
                 <Route path="/payments" element={<PermissionGuard module="payments"><Payments /></PermissionGuard>} />
