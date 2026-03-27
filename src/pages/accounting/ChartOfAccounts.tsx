@@ -106,7 +106,7 @@ function AccountRow({ account, expanded, onToggle, onEdit, onDelete, onAddChild,
                 <Edit2 className="h-3.5 w-3.5" />
               </Button>
             )}
-            {canDelete && !account.is_system && (
+            {canDelete && (isSuperAdmin || !account.is_system) && (
               <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => onDelete(account.id)} title="Delete">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
