@@ -13,30 +13,29 @@ class InventoryService
     public function increaseStock(string $productId, int $quantity): Product
     {
         $product = Product::findOrFail($productId);
-        $product->increment('stock_quantity', $quantity);
+        $product->increment('stock', $quantity);
         $product->refresh();
 
-        Log::info("Stock increased: {$product->name} +{$quantity} = {$product->stock_quantity}");
+        Log::info("Stock increased: {$product->name} +{$quantity} = {$product->stock}");
 
         return $product;
     }
 
     /**
      * Decrease stock when products are sold.
-     * Throws exception if insufficient stock.
      */
     public function decreaseStock(string $productId, int $quantity): Product
     {
         $product = Product::findOrFail($productId);
 
-        if ($product->stock_quantity < $quantity) {
-            throw new \Exception("Insufficient stock for '{$product->name}'. Available: {$product->stock_quantity}, Requested: {$quantity}");
+        if ($product->stock < $quantity) {
+            throw new \Exception("Insufficient stock for '{$product->name}'. Available: {$product->stock}, Requested: {$quantity}");
         }
 
-        $product->decrement('stock_quantity', $quantity);
+        $product->decrement('stock', $quantity);
         $product->refresh();
 
-        Log::info("Stock decreased: {$product->name} -{$quantity} = {$product->stock_quantity}");
+        Log::info("Stock decreased: {$product->name} -{$quantity} = {$product->stock}");
 
         return $product;
     }
@@ -50,25 +49,12 @@ class InventoryService
     }
 
     /**
-     * Reverse a purchase (reduce stock).
-     */
-    public function reversePurchaseStock(string $productId, int $quantity): Product
-    {
-        $product = Product::findOrFail($productId);
-        $newQty = max(0, $product->stock_quantity - $quantity);
-        $product->update(['stock_quantity' => $newQty]);
-        $product->refresh();
-
-        return $product;
-    }
-
-    /**
      * Get low stock products.
      */
     public function getLowStockProducts()
     {
-        return Product::where('is_active', true)
-            ->whereColumn('stock_quantity', '<=', 'low_stock_alert')
+        return Product::where('status', 'active')
+            ->where('stock', '<=', 5)
             ->get();
     }
 
@@ -77,14 +63,14 @@ class InventoryService
      */
     public function getStockSummary(): array
     {
-        $products = Product::where('is_active', true)->get();
+        $products = Product::where('status', 'active')->get();
 
         return [
-            'total_products'    => $products->count(),
-            'total_stock_value' => $products->sum(fn($p) => $p->stock_quantity * $p->cost_price),
-            'total_retail_value'=> $products->sum(fn($p) => $p->stock_quantity * $p->selling_price),
-            'low_stock_count'   => $products->filter(fn($p) => $p->isLowStock())->count(),
-            'out_of_stock'      => $products->where('stock_quantity', 0)->count(),
+            'total_products'     => $products->count(),
+            'total_stock_value'  => $products->sum(fn($p) => $p->stock * $p->buy_price),
+            'total_retail_value' => $products->sum(fn($p) => $p->stock * $p->sell_price),
+            'low_stock_count'    => $products->where('stock', '<=', 5)->count(),
+            'out_of_stock'       => $products->where('stock', 0)->count(),
         ];
     }
 }

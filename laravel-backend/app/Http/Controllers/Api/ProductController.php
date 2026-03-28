@@ -28,7 +28,7 @@ class ProductController extends Controller
         }
 
         if ($request->boolean('low_stock')) {
-            $query->whereColumn('stock_quantity', '<=', 'low_stock_alert');
+            $query->where('stock', '<=', 5);
         }
 
         return response()->json(
@@ -44,20 +44,18 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'           => 'required|string|max:255',
-            'sku'            => 'required|string|max:100|unique:products,sku',
-            'category'       => 'nullable|string|max:100',
-            'cost_price'     => 'required|numeric|min:0',
-            'selling_price'  => 'required|numeric|min:0',
-            'stock_quantity' => 'nullable|integer|min:0',
-            'low_stock_alert'=> 'nullable|integer|min:0',
-            'unit'           => 'nullable|string|max:20',
+            'name'       => 'required|string|max:255',
+            'sku'        => 'nullable|string|max:100|unique:products,sku',
+            'category'   => 'nullable|string|max:100',
+            'buy_price'  => 'required|numeric|min:0',
+            'sell_price' => 'required|numeric|min:0',
+            'stock'      => 'nullable|numeric|min:0',
+            'unit'       => 'nullable|string|max:20',
         ]);
 
         $product = Product::create($request->only([
             'name', 'sku', 'category', 'description',
-            'cost_price', 'selling_price', 'stock_quantity',
-            'low_stock_alert', 'unit',
+            'buy_price', 'sell_price', 'stock', 'unit',
         ]));
 
         return response()->json($product, 201);
@@ -73,8 +71,7 @@ class ProductController extends Controller
 
         $product->update($request->only([
             'name', 'sku', 'category', 'description',
-            'cost_price', 'selling_price', 'stock_quantity',
-            'low_stock_alert', 'unit', 'is_active',
+            'buy_price', 'sell_price', 'stock', 'unit', 'status',
         ]));
 
         return response()->json($product);
@@ -90,17 +87,11 @@ class ProductController extends Controller
         return response()->json(['success' => true]);
     }
 
-    /**
-     * GET /api/products/stock-summary
-     */
     public function stockSummary()
     {
         return response()->json($this->inventoryService->getStockSummary());
     }
 
-    /**
-     * GET /api/products/low-stock
-     */
     public function lowStock()
     {
         return response()->json($this->inventoryService->getLowStockProducts());
