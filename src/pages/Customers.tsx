@@ -51,14 +51,22 @@ export default function Customers() {
       const { data } = await api.post('/mikrotik/sync-all', {});
       if (data.success) {
         const r = data.results;
-        toast.success(`Bulk sync complete: ${r.synced} synced, ${r.failed} failed`);
+        const parts = [];
+        if (r.pushed > 0) parts.push(`${r.pushed} pushed`);
+        if (r.imported > 0) parts.push(`${r.imported} imported`);
+        if (r.updated > 0) parts.push(`${r.updated} updated`);
+        if (r.failed > 0) parts.push(`${r.failed} failed`);
+        // Backward compat
+        if (r.synced !== undefined) parts.push(`${r.synced} synced`);
+        toast.success(`Sync complete: ${parts.join(", ")}`);
         if (r.errors?.length > 0) toast.warning(`Errors: ${r.errors.slice(0, 3).join("; ")}`);
         queryClient.invalidateQueries({ queryKey: ["customers"] });
       } else {
         toast.error(data.error || "Bulk sync failed");
       }
-    } catch {
-      toast.error("Could not connect to MikroTik");
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || err?.message || "Could not connect to MikroTik";
+      toast.error(msg);
     } finally {
       setBulkSyncing(false);
     }
