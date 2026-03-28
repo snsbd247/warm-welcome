@@ -12,11 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Plus, Printer, Loader2, Phone, Mail, Building2, MapPin, Receipt, Wallet, ShoppingCart } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Plus, Printer, Loader2, Phone, Mail, MapPin, Receipt, Wallet, ShoppingCart, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { generatePaymentAdvicePDF } from "@/lib/accountingPdf";
+import { generateSupplierPurchaseInvoicePDF } from "@/lib/supplierPurchasePdf";
 
 export default function SupplierProfile() {
   const { id } = useParams<{ id: string }>();
