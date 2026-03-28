@@ -252,6 +252,8 @@ Deno.serve(async (req: Request) => {
 
       if (action === "delete" && req.method === "POST") {
         const { id } = await req.json();
+        await supabase.from("merchant_payments").update({ matched_bill_id: null, status: "unmatched" }).eq("matched_bill_id", id);
+        await supabase.from("payments").delete().eq("bill_id", id);
         await supabase.from("customer_ledger").delete().like("reference", `BILL-${id.substring(0, 8)}`);
         const { error } = await supabase.from("bills").delete().eq("id", id);
         if (error) throw error;
