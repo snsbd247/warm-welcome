@@ -10,6 +10,27 @@ interface LedgerEntry {
   date?: string;
 }
 
+// Cache for ledger settings
+const settingsCache = new Map<string, string | null>();
+
+/**
+ * Get a ledger setting value (account ID) by key.
+ */
+export async function getLedgerSetting(key: string): Promise<string | null> {
+  if (settingsCache.has(key)) return settingsCache.get(key)!;
+  const { data } = await (supabase as any).from("system_settings").select("setting_value").eq("setting_key", key).maybeSingle();
+  const val = data?.setting_value || null;
+  settingsCache.set(key, val);
+  return val;
+}
+
+/**
+ * Clear ledger settings cache (call after settings update).
+ */
+export function clearLedgerSettingsCache() {
+  settingsCache.clear();
+}
+
 // Cache for account lookups within a session
 const accountCache = new Map<string, string | null>();
 
