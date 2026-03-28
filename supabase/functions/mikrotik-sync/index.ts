@@ -670,18 +670,20 @@ Deno.serve(async (req: Request) => {
       const { data: packages } = await supabase
         .from("packages")
         .select("*")
-        .eq("is_active", true)
-        .or("download_speed.gt.0,upload_speed.gt.0");
+        .eq("is_active", true);
 
-      if (!packages || packages.length === 0) {
-        return new Response(JSON.stringify({ success: true, results: { synced: 0, failed: 0, errors: [] } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
+      const results = { synced: 0, imported: 0, failed: 0, errors: [] as string[] };
 
-      const results = { synced: 0, failed: 0, errors: [] as string[] };
+      // Get all active routers
+      const { data: routers } = await supabase.from("mikrotik_routers").select("*").eq("status", "active");
+      const allRouters = routers?.length ? routers : [{ ...getEnvRouter(), id: "env-default", name: "Default Router" }];
 
-      // Group by router_id
+      // Build a set of existing mikrotik_profile_names for dedup
+      const existingProfileNames = new Set((packages || []).map((p: any) => p.mikrotik_profile_name).filter(Boolean));
+
+      // Step 1: Push existing DB packages to MikroTik
       const byRouter: Record<string, any[]> = {};
-      for (const pkg of packages) {
+      for (const pkg of (packages || []).filter((p: any) => p.download_speed > 0 || p.upload_speed > 0)) {
         const rid = pkg.router_id || "env";
         if (!byRouter[rid]) byRouter[rid] = [];
         byRouter[rid].push(pkg);
@@ -704,6 +706,7 @@ Deno.serve(async (req: Request) => {
                   await mt.send(["/ppp/profile/add", `=name=${profileName}`, `=rate-limit=${rateLimit}`, "=local-address=10.10.10.1"]);
                 }
                 await supabase.from("packages").update({ mikrotik_profile_name: profileName }).eq("id", pkg.id);
+                existingProfileNames.add(profileName);
                 results.synced++;
               } catch (e) {
                 console.error(`Bulk profile sync failed for ${pkg.name}:`, e.message);
@@ -716,6 +719,68 @@ Deno.serve(async (req: Request) => {
           console.error(`Router connection failed for ${routerId}:`, e.message);
           results.failed += pkgs.length;
           results.errors.push(`Router ${routerId}: ${e.message}`);
+        }
+      }
+
+      // Step 2: Import PPP profiles FROM MikroTik that don't exist in DB
+      for (const router of allRouters) {
+        const routerConfig = { ip_address: router.ip_address, username: router.username, password: router.password, api_port: router.api_port || 8728 };
+        const routerId = router.id !== "env-default" ? router.id : null;
+        try {
+          await withRouter(routerConfig, async (mt) => {
+            const profileRes = await mt.send(["/ppp/profile/print"]);
+            const mkProfiles = parseItems(profileRes.sentences);
+
+            for (const profile of mkProfiles) {
+              const pName = profile.name;
+              if (!pName || pName === "default" || existingProfileNames.has(pName)) continue;
+
+              try {
+                // Parse rate-limit (format: "uploadM/downloadM" or "upload/download")
+                let downloadSpeed = 0;
+                let uploadSpeed = 0;
+                const rateLimit = profile["rate-limit"] || "";
+                if (rateLimit) {
+                  const parts = rateLimit.split("/");
+                  if (parts.length >= 2) {
+                    uploadSpeed = parseInt(parts[0]) || 0;
+                    downloadSpeed = parseInt(parts[1]) || 0;
+                    // Convert from bps to Mbps if needed (values > 1000 likely in kbps or bps)
+                    if (uploadSpeed > 1000) uploadSpeed = Math.round(uploadSpeed / 1000000);
+                    if (downloadSpeed > 1000) downloadSpeed = Math.round(downloadSpeed / 1000000);
+                  }
+                }
+
+                const speedLabel = downloadSpeed > 0 ? `${downloadSpeed} Mbps` : pName;
+
+                const { error: insertErr } = await supabase.from("packages").insert({
+                  name: pName,
+                  speed: speedLabel,
+                  monthly_price: 0,
+                  download_speed: downloadSpeed,
+                  upload_speed: uploadSpeed,
+                  mikrotik_profile_name: pName,
+                  router_id: routerId,
+                  is_active: true,
+                });
+
+                if (insertErr) {
+                  if (insertErr.message?.includes("duplicate")) continue;
+                  throw new Error(insertErr.message);
+                }
+
+                existingProfileNames.add(pName);
+                results.imported++;
+              } catch (e) {
+                console.error(`Import profile ${pName} failed:`, e.message);
+                results.failed++;
+                results.errors.push(`Import ${pName}: ${e.message}`);
+              }
+            }
+          });
+        } catch (e) {
+          console.error(`Router connection failed for import:`, e.message);
+          results.errors.push(`Import from ${router.name || router.ip_address}: ${e.message}`);
         }
       }
 
