@@ -168,7 +168,7 @@ export default function Sales() {
         status: newPaid >= total ? "completed" : "partial",
       }).eq("id", sale.id);
 
-      await postSaleToLedger(`${sale.sale_no}-PAY`, 0, amount, method, new Date().toISOString().split("T")[0]);
+      await postSalePaymentToLedger(sale.sale_no, amount, method, new Date().toISOString().split("T")[0]);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sales"] });
