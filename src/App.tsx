@@ -50,6 +50,7 @@ import RoleManagement from "@/pages/settings/RoleManagement";
 import BackupRestore from "@/pages/settings/BackupRestore";
 import FooterSettings from "@/pages/settings/FooterSettings";
 import NotFound from "@/pages/NotFound";
+import AccPurchases from "@/pages/accounting/Purchases";
 import AccProducts from "@/pages/accounting/Products";
 import AccVendors from "@/pages/accounting/Vendors";
 import AccSales from "@/pages/accounting/Sales";
