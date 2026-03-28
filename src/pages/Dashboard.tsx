@@ -70,7 +70,6 @@ function usePaymentStats(method: string) {
 export default function Dashboard() {
   const [runningBillControl, setRunningBillControl] = useState(false);
   const [refreshingMikrotik, setRefreshingMikrotik] = useState(false);
-  const navigate = (typeof window !== "undefined" ? require("react-router-dom").useNavigate : () => () => {})();
 
   // ── Core data queries ──
   const { data: customers, isLoading: loadingCustomers } = useQuery({
