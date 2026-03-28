@@ -38,6 +38,10 @@ Route::post('/portal/login', [CustomerAuthController::class, 'login'])->middlewa
 Route::any('/bkash/callback', [BkashController::class, 'callback']);
 Route::any('/nagad/callback', [NagadController::class, 'callback']);
 
+// bKash Pay Bill Webhooks (public — called by bKash server)
+Route::post('/bkash-paybill/inquiry', [\App\Http\Controllers\Api\BkashPayBillController::class, 'inquiry']);
+Route::post('/bkash-paybill/payment', [\App\Http\Controllers\Api\BkashPayBillController::class, 'payment']);
+
 /*
 |--------------------------------------------------------------------------
 | Admin Protected Routes
