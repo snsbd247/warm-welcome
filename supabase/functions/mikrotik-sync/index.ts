@@ -766,6 +766,95 @@ Deno.serve(async (req: Request) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ─── SYNC ALL CUSTOMERS ────────────────────────────────────
+    if (req.method === "POST" && path === "sync-all") {
+      const supabase = getSupabaseAdmin();
+
+      // Get all eligible customers
+      const { data: customers, error: custErr } = await supabase
+        .from("customers")
+        .select("id, pppoe_username, pppoe_password, router_id, name, status, package_id")
+        .not("router_id", "is", null)
+        .not("pppoe_username", "is", null)
+        .neq("status", "disconnected");
+
+      if (custErr) {
+        return new Response(JSON.stringify({ success: false, error: custErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const total = customers?.length || 0;
+      let synced = 0;
+      let failed = 0;
+      const errors: string[] = [];
+
+      // Group customers by router_id for efficiency
+      const byRouter: Record<string, any[]> = {};
+      for (const c of customers || []) {
+        const rid = c.router_id;
+        if (!byRouter[rid]) byRouter[rid] = [];
+        byRouter[rid].push(c);
+      }
+
+      for (const [routerId, custs] of Object.entries(byRouter)) {
+        const routerConfig = await getRouterConfig(supabase, routerId);
+        try {
+          await withRouter(routerConfig, async (mt) => {
+            for (const c of custs) {
+              try {
+                // Get package profile name
+                let profileName = "default";
+                if (c.package_id) {
+                  const { data: pkg } = await supabase.from("packages").select("mikrotik_profile_name").eq("id", c.package_id).single();
+                  if (pkg?.mikrotik_profile_name) profileName = pkg.mikrotik_profile_name;
+                }
+
+                await ensureProfileExists(mt, profileName);
+
+                const listRes = await mt.send(["/ppp/secret/print", `?name=${c.pppoe_username}`]);
+                const existing = parseItems(listRes.sentences);
+
+                if (existing.length > 0) {
+                  const words = ["/ppp/secret/set", `=.id=${existing[0][".id"]}`, `=profile=${profileName}`];
+                  if (c.pppoe_password) words.push(`=password=${c.pppoe_password}`);
+                  words.push(`=comment=${c.name || ""}`);
+                  // Set disabled based on status
+                  const shouldDisable = c.status === "inactive" || c.status === "suspended";
+                  words.push(`=disabled=${shouldDisable ? "yes" : "no"}`);
+                  const res = await mt.send(words);
+                  if (res.trap) throw new Error(res.trap);
+                } else {
+                  if (!c.pppoe_password) {
+                    errors.push(`${c.pppoe_username}: No password`);
+                    failed++;
+                    continue;
+                  }
+                  const words = ["/ppp/secret/add", `=name=${c.pppoe_username}`, `=password=${c.pppoe_password}`, `=service=pppoe`, `=profile=${profileName}`, `=comment=${c.name || ""}`];
+                  const res = await mt.send(words);
+                  if (res.trap) throw new Error(res.trap);
+                }
+
+                await supabase.from("customers").update({ mikrotik_sync_status: "synced" }).eq("id", c.id);
+                synced++;
+              } catch (e) {
+                failed++;
+                errors.push(`${c.pppoe_username}: ${e.message}`);
+                await supabase.from("customers").update({ mikrotik_sync_status: "failed" }).eq("id", c.id);
+              }
+            }
+          });
+        } catch (routerErr) {
+          // Entire router failed
+          for (const c of custs) {
+            failed++;
+            errors.push(`${c.pppoe_username}: Router connection failed`);
+            await supabase.from("customers").update({ mikrotik_sync_status: "failed" }).eq("id", c.id);
+          }
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, results: { total, synced, failed, errors: errors.slice(0, 20) } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("MikroTik edge function error:", err);
