@@ -33,7 +33,44 @@
 
 ## 🚀 Step-by-Step Setup
 
-### Step 1: Laravel Backend আপলোড
+### Step 1: React Frontend Build
+
+**আপনার লোকাল মেশিনে:**
+```bash
+# .env.production ফাইল আপডেট করুন
+echo 'VITE_API_URL="https://yourdomain.com/api/api"' > .env.production
+
+# Build
+npm run build
+```
+
+`dist/` ফোল্ডারের সব ফাইল document root এ আপলোড করুন:
+- `index.html`
+- `assets/` ফোল্ডার
+- অন্য সব ফাইল
+
+### Step 2: SPA .htaccess তৈরি করুন
+
+Document root এ `.htaccess` ফাইল তৈরি করুন:
+
+```apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # API requests → Laravel
+    RewriteRule ^api/(.*)$ api/public/$1 [L]
+
+    # If file/folder exists, serve it
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Otherwise → React SPA
+    RewriteRule ^ index.html [L]
+</IfModule>
+```
+
+### Step 3: Laravel Backend আপলোড
 
 **Option A: cPanel File Manager দিয়ে**
 1. Document root এ `api` ফোল্ডার তৈরি করুন
@@ -45,7 +82,7 @@ cd /home/<cpanel-user>
 cp -r laravel-backend/* public_html/<yourdomain.com>/api/
 ```
 
-### Step 2: api/.htaccess তৈরি করুন
+### Step 4: api/.htaccess তৈরি করুন
 
 `<document-root>/api/.htaccess` ফাইল তৈরি করুন:
 
@@ -56,21 +93,33 @@ cp -r laravel-backend/* public_html/<yourdomain.com>/api/
 </IfModule>
 ```
 
-### Step 3: Composer Install
+### Step 5: Composer Install
 
+**Option A: SSH আছে**
 ```bash
 cd <document-root>/api
 composer install --optimize-autoloader --no-dev
 ```
 
-> SSH না থাকলে: লোকালে `composer install --no-dev` করে vendor/ সহ আপলোড করুন
+**Option B: SSH নেই**
+লোকালে `composer install --no-dev` করে vendor/ সহ আপলোড করুন
 
-### Step 4: Environment Setup
+### Step 6: Auto Setup (SSH দিয়ে)
 
 ```bash
 cd <document-root>/api
+chmod +x setup.sh
+bash setup.sh
+```
+
+> setup.sh ইন্টারেক্টিভলি domain, DB credentials জিজ্ঞেস করবে এবং সব সেট করবে।
+
+### Step 6 (Alternative): Manual Setup (SSH ছাড়া)
+
+#### 6a. Environment Setup
+```bash
+cd <document-root>/api
 cp .env.example .env
-php artisan key:generate
 ```
 
 `.env` ফাইল এডিট করুন:
@@ -96,53 +145,48 @@ SANCTUM_STATEFUL_DOMAINS=yourdomain.com,www.yourdomain.com
 > ⚠️ cPanel MySQL Databases থেকে database ও user তৈরি করুন।
 > cPanel এ username prefix লাগে, যেমন: `cpaneluser_dbname`
 
-### Step 5: Database Setup
+#### 6b. Database Setup
 
 1. **cPanel → MySQL Databases**
    - New Database: `your_db_name`
    - New User: `your_db_user` + password
    - Add User to Database → All Privileges ✓
 
-2. Migration রান করুন:
-```bash
-cd <document-root>/api
-php artisan migrate --seed
+2. SSH না থাকলে **cPanel → Cron Jobs** দিয়ে একবার রান করুন:
 ```
+cd <document-root>/api && php artisan key:generate --force && php artisan migrate --force --seed
+```
+> রান হয়ে গেলে Cron Job ডিলিট করুন
 
-### Step 6: Storage & Permissions
-
+#### 6c. Storage & Permissions
 ```bash
 cd <document-root>/api
 php artisan storage:link
 chmod -R 775 storage bootstrap/cache
 ```
 
-### Step 7: Production Cache
-
+#### 6d. Production Cache
 ```bash
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
 
-### Step 8: React Frontend Build ও Upload
-
-**আপনার লোকাল মেশিনে:**
-```bash
-npm run build
-```
-
-`dist/` ফোল্ডারের সব ফাইল document root এ আপলোড করুন:
-- `index.html`
-- `assets/` ফোল্ডার
-- অন্য সব ফাইল
-
-### Step 9: Cron Job
+### Step 7: Cron Job (Laravel Scheduler)
 
 **cPanel → Cron Jobs** → প্রতি মিনিটে:
 ```
 * * * * * cd <document-root>/api && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+---
+
+## 🔑 Default Login Credentials
+
+| User | Username | Password |
+|------|----------|----------|
+| Super Admin #1 | `admin` | `admin123` |
+| Super Admin #2 | `ismail` | `Admin@123` |
 
 ---
 
@@ -157,16 +201,24 @@ php artisan config:clear
 ```
 
 ### CORS Error?
-`config/cors.php` চেক করুন — আপনার domain allowed origins এ আছে কিনা।
+`config/cors.php` → `allowed_origins` ইতিমধ্যে `['*']` সেট আছে।
 
 ### Login কাজ করছে না?
 - API URL চেক: `https://yourdomain.com/api/api/admin/login`
 - `.env` তে `SANCTUM_STATEFUL_DOMAINS=yourdomain.com`
+- `.env.production` এ `VITE_API_URL` সঠিক কিনা চেক করুন
+
+### Data দেখা যাচ্ছে না?
+- `php artisan migrate --force` রান হয়েছে কিনা চেক করুন
+- `php artisan db:seed --force` রান করুন
 
 ---
 
 ## ✅ Final Checklist
 
+- [ ] `.env.production` এ `VITE_API_URL` সেট করে `npm run build`
+- [ ] `dist/` ফাইলগুলো document root এ আপলোড
+- [ ] Document root এ SPA `.htaccess` তৈরি
 - [ ] Document root এর `api/` তে Laravel আপলোড
 - [ ] `api/.htaccess` তৈরি (RewriteRule public/)
 - [ ] `composer install` সম্পন্ন
@@ -176,8 +228,6 @@ php artisan config:clear
 - [ ] `php artisan migrate --seed` সম্পন্ন
 - [ ] `php artisan storage:link` হয়েছে
 - [ ] Permissions 775 (storage, bootstrap/cache)
-- [ ] React `dist/` আপলোড
-- [ ] `.htaccess` (SPA routing) আছে
 - [ ] Cron job সেটআপ
 - [ ] `APP_DEBUG=false`
 - [ ] HTTPS কাজ করছে
