@@ -139,7 +139,8 @@ const handleGenericTableFallback = async (
   resource: string,
   resourceId?: string,
 ) => {
-  const table = resource === 'vendors' ? 'suppliers' : resource;
+  const tableMap: Record<string, string> = { vendors: 'suppliers', 'general-settings': 'general_settings' };
+  const table = tableMap[resource] || resource;
   const method = (config.method || 'get').toLowerCase();
   const bearerToken = await getBearerToken(config);
   const payload = parseJsonData(config.data);
