@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiDb } from "@/lib/apiDb";
-import { supabase as supabaseClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +24,7 @@ export default function GeneralSettingsTab() {
   const { data: settings, isLoading } = useQuery({
     queryKey: ["general-settings"],
     queryFn: async () => {
-      const { data, error } = await apiDb
+      const { data, error } = await supabase
         .from("general_settings")
         .select("*")
         .limit(1)
@@ -68,11 +67,11 @@ export default function GeneralSettingsTab() {
         try {
           const ext = logoFile.name.split(".").pop() || "png";
           const path = `system/company-logo.${ext}`;
-          const { error: uploadErr } = await supabaseClient.storage
+          const { error: uploadErr } = await supabase.storage
             .from("avatars")
             .upload(path, logoFile, { upsert: true, contentType: logoFile.type });
           if (uploadErr) throw uploadErr;
-          const { data: urlData } = supabaseClient.storage.from("avatars").getPublicUrl(path);
+          const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
           logo_url = urlData.publicUrl;
         } catch (uploadErr: any) {
           toast.error("Logo upload failed: " + (uploadErr?.message || "Unknown error"));
@@ -90,14 +89,14 @@ export default function GeneralSettingsTab() {
 
       let error;
       if (settings?.id) {
-        ({ error } = await apiDb
+        ({ error } = await supabase
           .from("general_settings")
           .update(payload)
           .eq("id", settings.id));
       } else {
-        ({ error } = await apiDb
+        ({ error } = await supabase
           .from("general_settings")
-          .insert({ ...payload, site_name: form.site_name || "Smart ISP" } as any));
+          .insert({ ...payload, site_name: form.site_name || "Smart ISP" }));
       }
 
       if (error) throw error;

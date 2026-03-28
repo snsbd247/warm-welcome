@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/apiDb";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ModuleConfig {
   key: string;
@@ -32,27 +32,26 @@ export function useModuleSettings() {
   const { data, isLoading } = useQuery({
     queryKey: ["module-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("system_settings")
         .select("setting_value")
         .eq("setting_key", SETTING_KEY)
         .maybeSingle();
 
       if (error || !data?.setting_value) {
-        // Default: all enabled
-        return ALL_MODULES.map(m => m.key);
+        return ALL_MODULES.map((m) => m.key);
       }
 
       try {
         return JSON.parse(data.setting_value) as string[];
       } catch {
-        return ALL_MODULES.map(m => m.key);
+        return ALL_MODULES.map((m) => m.key);
       }
     },
     staleTime: 5 * 60 * 1000,
   });
 
-  const enabledModules = Array.isArray(data) ? data : ALL_MODULES.map(m => m.key);
+  const enabledModules = Array.isArray(data) ? data : ALL_MODULES.map((m) => m.key);
 
   const isModuleEnabled = (moduleKey: string): boolean => {
     return enabledModules.includes(moduleKey);
@@ -60,25 +59,18 @@ export function useModuleSettings() {
 
   const updateModules = useMutation({
     mutationFn: async (modules: string[]) => {
-      // Check if setting exists
-      const { data: existing } = await supabase
+      const { error } = await (supabase as any)
         .from("system_settings")
-        .select("id")
-        .eq("setting_key", SETTING_KEY)
-        .maybeSingle();
+        .upsert(
+          [{
+            setting_key: SETTING_KEY,
+            setting_value: JSON.stringify(modules),
+            updated_at: new Date().toISOString(),
+          }],
+          { onConflict: "setting_key" }
+        );
 
-      if (existing) {
-        const { error } = await supabase
-          .from("system_settings")
-          .update({ setting_value: JSON.stringify(modules), updated_at: new Date().toISOString() })
-          .eq("setting_key", SETTING_KEY);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("system_settings")
-          .insert({ setting_key: SETTING_KEY, setting_value: JSON.stringify(modules) });
-        if (error) throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["module-settings"] });

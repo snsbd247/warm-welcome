@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/apiDb";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,8 +77,8 @@ export default function EmailTemplatesTab() {
   const { data, isLoading } = useQuery({
     queryKey: ["email-templates-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("system_settings" as any)
+      const { data, error } = await (supabase as any)
+        .from("system_settings")
         .select("setting_key, setting_value")
         .in("setting_key", EMAIL_TEMPLATES.map((t) => t.key));
       if (error) throw error;
@@ -95,15 +95,18 @@ export default function EmailTemplatesTab() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      for (const tpl of EMAIL_TEMPLATES) {
-        if (form[tpl.key] !== undefined) {
-          const { error } = await (supabase as any)
-            .from("system_settings")
-            .update({ setting_value: form[tpl.key], updated_at: new Date().toISOString() })
-            .eq("setting_key", tpl.key);
-          if (error) throw error;
-        }
-      }
+      const now = new Date().toISOString();
+      const entries = EMAIL_TEMPLATES.map((tpl) => ({
+        setting_key: tpl.key,
+        setting_value: form[tpl.key] || "",
+        updated_at: now,
+      }));
+
+      const { error } = await (supabase as any)
+        .from("system_settings")
+        .upsert(entries, { onConflict: "setting_key" });
+
+      if (error) throw error;
       toast.success("Email templates saved");
       queryClient.invalidateQueries({ queryKey: ["email-templates-settings"] });
     } catch (err: any) {
@@ -153,7 +156,9 @@ export default function EmailTemplatesTab() {
             <CardDescription className="text-xs">{tpl.desc}</CardDescription>
           </CardHeader>
           <CardContent>
+            <Label className="sr-only" htmlFor={tpl.key}>{tpl.label}</Label>
             <Textarea
+              id={tpl.key}
               value={form[tpl.key] || ""}
               onChange={(e) => setForm({ ...form, [tpl.key]: e.target.value })}
               rows={3}

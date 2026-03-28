@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/apiDb";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -16,8 +16,8 @@ export default function InvoiceSettingsTab() {
   const { data, isLoading } = useQuery({
     queryKey: ["invoice-footer-setting"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("system_settings" as any)
+      const { data, error } = await (supabase as any)
+        .from("system_settings")
         .select("setting_value")
         .eq("setting_key", "invoice_footer")
         .maybeSingle();
@@ -35,8 +35,14 @@ export default function InvoiceSettingsTab() {
     try {
       const { error } = await (supabase as any)
         .from("system_settings")
-        .update({ setting_value: invoiceFooter, updated_at: new Date().toISOString() })
-        .eq("setting_key", "invoice_footer");
+        .upsert(
+          [{
+            setting_key: "invoice_footer",
+            setting_value: invoiceFooter,
+            updated_at: new Date().toISOString(),
+          }],
+          { onConflict: "setting_key" }
+        );
       if (error) throw error;
       toast.success("Invoice footer saved");
       queryClient.invalidateQueries({ queryKey: ["invoice-footer-setting"] });
