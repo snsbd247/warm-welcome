@@ -300,6 +300,7 @@ export function generatePurchaseInvoicePDF(purchase: any, supplier?: any) {
   doc.save(`purchase-${purchase.purchase_no || purchase.id?.substring(0, 8)}.pdf`);
 }
 
+export function generateSalesInvoicePDF(sale: any) {
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.getWidth();
   const navy = [20, 50, 120] as const;
