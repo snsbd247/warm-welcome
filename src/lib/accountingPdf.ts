@@ -166,7 +166,140 @@ export function generateProfitLossPDF(
   doc.save(`profit-loss-${year}.pdf`);
 }
 
-export function generateSalesInvoicePDF(sale: any) {
+export function generatePurchaseInvoicePDF(purchase: any, supplier?: any) {
+  const doc = new jsPDF();
+  const pw = doc.internal.pageSize.getWidth();
+  const navy = [20, 50, 120] as const;
+
+  doc.setFillColor(...navy);
+  doc.rect(0, 0, pw, 42, "F");
+
+  doc.setFillColor(255, 255, 255);
+  doc.circle(28, 21, 10, "F");
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...navy);
+  doc.text("ISP", 23, 24);
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("Smart ISP", 45, 16);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.text("Internet Service Provider", 45, 22);
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("PURCHASE INVOICE", pw - 15, 14, { align: "right" });
+  doc.setDrawColor(255, 255, 255);
+  doc.roundedRect(pw - 65, 6, 53, 12, 2, 2, "S");
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Invoice: ${purchase.purchase_no || "—"}`, pw - 15, 28, { align: "right" });
+  doc.text(`Date: ${purchase.date ? new Date(purchase.date).toLocaleDateString("en-GB") : "—"}`, pw - 15, 34, { align: "right" });
+
+  let y = 52;
+
+  // Supplier info
+  doc.setFillColor(...navy);
+  doc.rect(15, y, pw - 30, 7, "F");
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 255, 255);
+  doc.text("SUPPLIER INFORMATION", 19, y + 5);
+  y += 10;
+
+  doc.setTextColor(30, 30, 30);
+  const fieldRow = (label: string, value: string) => {
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(100, 100, 100);
+    doc.text(label, 20, y);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(30, 30, 30);
+    doc.text(value || "—", 70, y);
+    y += 7;
+  };
+
+  fieldRow("Supplier", supplier?.name || purchase.supplier_name || "—");
+  if (supplier?.company) fieldRow("Company", supplier.company);
+  if (supplier?.phone) fieldRow("Phone", supplier.phone);
+  fieldRow("Status", (purchase.status || "unpaid").toUpperCase());
+  y += 5;
+
+  // Items table
+  doc.setFillColor(...navy);
+  doc.rect(15, y, pw - 30, 8, "F");
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 255, 255);
+  const itemCols = [20, 90, 120, 155];
+  doc.text("Product", itemCols[0], y + 5.5);
+  doc.text("Qty", itemCols[1], y + 5.5);
+  doc.text("Price", itemCols[2], y + 5.5);
+  doc.text("Total", itemCols[3], y + 5.5);
+  y += 11;
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(30, 30, 30);
+  const purchaseItems = purchase.items || purchase.purchase_items || [];
+  if (purchaseItems.length === 0) {
+    doc.setFontSize(9);
+    doc.text("No items", 20, y);
+    y += 8;
+  } else {
+    purchaseItems.forEach((item: any, i: number) => {
+      if (i % 2 === 0) {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, y - 4, pw - 30, 8, "F");
+      }
+      doc.setFontSize(9);
+      doc.setTextColor(30, 30, 30);
+      const prodName = item.product?.name || item.product_name || "Product";
+      doc.text(prodName.substring(0, 35), itemCols[0], y);
+      doc.text(String(item.quantity || 0), itemCols[1], y);
+      doc.text(`৳${Number(item.unit_price || 0).toLocaleString()}`, itemCols[2], y);
+      doc.text(`৳${Number(item.quantity * item.unit_price || 0).toLocaleString()}`, itemCols[3], y);
+      y += 8;
+    });
+  }
+
+  y += 5;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(100, y, pw - 15, y);
+  y += 8;
+
+  const totalRow = (label: string, value: string, bold = false) => {
+    doc.setFontSize(bold ? 11 : 9);
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setTextColor(30, 30, 30);
+    doc.text(label, 120, y);
+    doc.text(value, pw - 20, y, { align: "right" });
+    y += bold ? 9 : 7;
+  };
+
+  const total = Number(purchase.total_amount || 0);
+  const paid = Number(purchase.paid_amount || 0);
+  const due = total - paid;
+
+  totalRow("Total:", `৳${total.toLocaleString()}`, true);
+  totalRow("Paid:", `৳${paid.toLocaleString()}`);
+  if (due > 0) {
+    doc.setTextColor(239, 68, 68);
+    totalRow("Due:", `৳${due.toLocaleString()}`, true);
+  }
+
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text("This is a computer-generated invoice. No signature required.", pw / 2, 280, { align: "center" });
+  doc.text(`Generated on ${new Date().toLocaleDateString()} — Smart ISP Billing System`, pw / 2, 285, { align: "center" });
+
+  doc.save(`purchase-${purchase.purchase_no || purchase.id?.substring(0, 8)}.pdf`);
+}
+
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.getWidth();
   const navy = [20, 50, 120] as const;
