@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useModuleSettings } from "@/hooks/useModuleSettings";
+import { useBranding } from "@/contexts/TenantBrandingContext";
 import {
   LayoutDashboard, Users, Receipt, CreditCard, LogOut, Wifi,
   ChevronLeft, ChevronDown, Ticket, MessageSquare, Settings, Bell, UserCircle,
@@ -22,75 +23,75 @@ interface NavItem {
   module?: string;
 }
 
-const topNav: NavItem[] = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-];
+// ═══════ Menu Groups ═══════
 
 const customerNav: NavItem[] = [
-  { to: "/customers", icon: Users, label: "All Customer", module: "customers" },
-  { to: "/customers?status=new", icon: UserPlus, label: "New Customer", module: "customers" },
-  { to: "/customers?status=active", icon: UserCheck, label: "Active Customer", module: "customers" },
-  { to: "/customers?status=inactive", icon: UserX, label: "Inactive Customer", module: "customers" },
-  { to: "/customers?connection=online", icon: Globe, label: "Online Customer", module: "customers" },
-  { to: "/customers?connection=offline", icon: WifiOff, label: "Offline Customer", module: "customers" },
-  { to: "/customers?status=free", icon: Users, label: "Free Customer", module: "customers" },
-  { to: "/customers?status=left", icon: UserMinus, label: "Left Customer", module: "customers" },
-  { to: "/customers?filter=due", icon: Receipt, label: "Customer Due", module: "customers" },
-  { to: "/payments", icon: CreditCard, label: "Customer Payments", module: "payments" },
-];
-
-const hrNav: NavItem[] = [
-  { to: "/hr/designations", icon: Briefcase, label: "Designation List", module: "hr" },
-  { to: "/hr/employees", icon: Users, label: "Employee List", module: "hr" },
-  { to: "/hr/daily-attendance", icon: CalendarDays, label: "Daily Attendance", module: "hr" },
-  { to: "/hr/monthly-attendance", icon: CalendarCheck, label: "Monthly Attendance", module: "hr" },
-  { to: "/hr/loans", icon: Banknote, label: "Loan Management", module: "hr" },
-  { to: "/hr/salary", icon: FileSpreadsheet, label: "Salary Sheet", module: "hr" },
-];
-
-const accountsNav: NavItem[] = [
-  { to: "/accounting/chart-of-accounts", icon: FileText, label: "Chart of Accounts", module: "accounting" },
-  { to: "/accounting/all-ledgers", icon: Users, label: "All Ledgers", module: "accounting" },
-  { to: "/accounting/vendors", icon: Building2, label: "Vendors", module: "accounting" },
-  { to: "/accounting/cheque-register", icon: CreditCard, label: "Cheque Register", module: "accounting" },
-  { to: "/accounting/transactions", icon: Receipt, label: "All Transactions", module: "accounting" },
-  { to: "/accounting/journal-entries", icon: BookOpen, label: "Journal Entries", module: "accounting" },
-  { to: "/accounting/daybook", icon: FileText, label: "Daybook", module: "accounting" },
-  { to: "/accounting/income-head", icon: TrendingUp, label: "Income Head", module: "accounting" },
-  { to: "/accounting/expense-head", icon: DollarSign, label: "Expense Head", module: "accounting" },
-  { to: "/accounting/others-head", icon: BoxIcon, label: "Others Head", module: "accounting" },
-  { to: "/accounting/trial-balance", icon: Scale, label: "Trial Balance", module: "accounting" },
-  { to: "/accounting/profit-loss", icon: TrendingUp, label: "Profit & Loss", module: "accounting" },
-  { to: "/accounting/balance-sheet", icon: Scale, label: "Balance Sheet", module: "accounting" },
-  { to: "/accounting/cash-flow", icon: Wallet, label: "Cash Flow", module: "accounting" },
-  { to: "/accounting/equity-changes", icon: BarChart3, label: "Changes in Equity", module: "accounting" },
-  { to: "/accounting/expenses", icon: DollarSign, label: "Expenses", module: "accounting" },
-  { to: "/accounting/receivable-payable", icon: Receipt, label: "Receivable & Payable", module: "accounting" },
-];
-
-const supplierNav: NavItem[] = [
-  { to: "/supplier/list", icon: Truck, label: "Supplier List", module: "supplier" },
-  { to: "/supplier/purchases", icon: ShoppingCart, label: "Purchases", module: "supplier" },
-  { to: "/supplier/payments", icon: Wallet, label: "Supplier Payments", module: "supplier" },
+  { to: "/customers", icon: Users, label: "All Customers", module: "customers" },
+  { to: "/customers?status=active", icon: UserCheck, label: "Active", module: "customers" },
+  { to: "/customers?status=inactive", icon: UserX, label: "Inactive", module: "customers" },
+  { to: "/customers?status=suspended", icon: UserX, label: "Suspended", module: "customers" },
+  { to: "/customers?connection=online", icon: Globe, label: "Online", module: "customers" },
+  { to: "/customers?connection=offline", icon: WifiOff, label: "Offline", module: "customers" },
+  { to: "/customers?status=new", icon: UserPlus, label: "New", module: "customers" },
+  { to: "/customers?status=free", icon: Users, label: "Free", module: "customers" },
+  { to: "/customers?status=left", icon: UserMinus, label: "Left", module: "customers" },
+  { to: "/customers?filter=due", icon: Receipt, label: "Due List", module: "customers" },
 ];
 
 const billingNav: NavItem[] = [
   { to: "/billing", icon: Receipt, label: "Billing", module: "billing" },
   { to: "/billing/cycle", icon: Receipt, label: "Billing Cycle", module: "billing" },
-  { to: "/merchant-payments", icon: Wallet, label: "Merchant Pay", module: "merchant_payments" },
+  { to: "/payments", icon: CreditCard, label: "Payments", module: "payments" },
+  { to: "/merchant-payments", icon: Wallet, label: "Merchant Payments", module: "merchant_payments" },
   { to: "/merchant-reports", icon: BarChart3, label: "Payment Reports", module: "reports" },
 ];
 
-const supportNav: NavItem[] = [
-  { to: "/tickets", icon: Ticket, label: "Tickets", module: "tickets" },
-  { to: "/sms", icon: MessageSquare, label: "SMS", module: "sms" },
-  { to: "/reminders", icon: Bell, label: "Reminders", module: "sms" },
-  { to: "/sms-settings", icon: Settings, label: "SMS Settings", module: "sms" },
+const hrNav: NavItem[] = [
+  { to: "/hr/employees", icon: Users, label: "Employees", module: "hr" },
+  { to: "/hr/designations", icon: Briefcase, label: "Designations", module: "hr" },
+  { to: "/hr/daily-attendance", icon: CalendarDays, label: "Daily Attendance", module: "hr" },
+  { to: "/hr/monthly-attendance", icon: CalendarCheck, label: "Monthly Attendance", module: "hr" },
+  { to: "/hr/salary", icon: FileSpreadsheet, label: "Salary Sheet", module: "hr" },
+  { to: "/hr/loans", icon: Banknote, label: "Loans", module: "hr" },
+];
+
+const accountingNav: NavItem[] = [
+  { to: "/accounting/chart-of-accounts", icon: FileText, label: "Chart of Accounts", module: "accounting" },
+  { to: "/accounting/journal-entries", icon: BookOpen, label: "Journal Entries", module: "accounting" },
+  { to: "/accounting/transactions", icon: Receipt, label: "Transactions", module: "accounting" },
+  { to: "/accounting/all-ledgers", icon: FileText, label: "Ledgers", module: "accounting" },
+  { to: "/accounting/daybook", icon: FileText, label: "Daybook", module: "accounting" },
+  { to: "/accounting/cheque-register", icon: CreditCard, label: "Cheque Register", module: "accounting" },
+  { to: "/accounting/income-head", icon: TrendingUp, label: "Income Heads", module: "accounting" },
+  { to: "/accounting/expense-head", icon: DollarSign, label: "Expense Heads", module: "accounting" },
+  { to: "/accounting/others-head", icon: BoxIcon, label: "Other Heads", module: "accounting" },
+  { to: "/accounting/expenses", icon: DollarSign, label: "Expenses", module: "accounting" },
+  { to: "/accounting/vendors", icon: Building2, label: "Vendors", module: "accounting" },
+  { to: "/accounting/receivable-payable", icon: Receipt, label: "Receivable & Payable", module: "accounting" },
+  { to: "/accounting/trial-balance", icon: Scale, label: "Trial Balance", module: "accounting" },
+  { to: "/accounting/profit-loss", icon: TrendingUp, label: "Profit & Loss", module: "accounting" },
+  { to: "/accounting/balance-sheet", icon: Scale, label: "Balance Sheet", module: "accounting" },
+  { to: "/accounting/cash-flow", icon: Wallet, label: "Cash Flow", module: "accounting" },
+  { to: "/accounting/equity-changes", icon: BarChart3, label: "Equity Changes", module: "accounting" },
 ];
 
 const inventoryNav: NavItem[] = [
   { to: "/accounting/products", icon: BoxIcon, label: "Products", module: "accounting" },
+  { to: "/accounting/purchases", icon: ShoppingCart, label: "Purchases", module: "accounting" },
   { to: "/accounting/sales", icon: DollarSign, label: "Sales", module: "accounting" },
+];
+
+const supplierNav: NavItem[] = [
+  { to: "/supplier/list", icon: Truck, label: "Suppliers", module: "supplier" },
+  { to: "/supplier/purchases", icon: ShoppingCart, label: "Purchases", module: "supplier" },
+  { to: "/supplier/payments", icon: Wallet, label: "Payments", module: "supplier" },
+];
+
+const supportNav: NavItem[] = [
+  { to: "/tickets", icon: Ticket, label: "Tickets", module: "tickets" },
+  { to: "/sms", icon: MessageSquare, label: "SMS Logs", module: "sms" },
+  { to: "/reminders", icon: Bell, label: "Reminders", module: "sms" },
+  { to: "/sms-settings", icon: Settings, label: "SMS Settings", module: "sms" },
 ];
 
 const reportingNav: NavItem[] = [
@@ -101,23 +102,25 @@ const reportingNav: NavItem[] = [
   { to: "/reporting/traffic", icon: Activity, label: "Traffic Monitor", module: "reports" },
 ];
 
-const toolsNav: NavItem[] = [
-  { to: "/profile", icon: UserCircle, label: "Profile" },
-  { to: "/users", icon: Shield, label: "Users", module: "users" },
-  { to: "/settings/packages", icon: Package, label: "Packages", module: "settings" },
-  { to: "/settings/zones", icon: MapPin, label: "Zones", module: "settings" },
+const adminNav: NavItem[] = [
+  { to: "/profile", icon: UserCircle, label: "My Profile" },
+  { to: "/users", icon: Shield, label: "Admin Users", module: "users" },
+  { to: "/settings/roles", icon: KeyRound, label: "Roles & Permissions", module: "roles" },
 ];
 
 const settingsNav: NavItem[] = [
   { to: "/settings/system", icon: Settings, label: "System Settings", module: "settings" },
-  { to: "/settings/integrations", icon: Plug, label: "Integrations", module: "settings" },
-  { to: "/settings/roles", icon: KeyRound, label: "Roles", module: "roles" },
+  { to: "/settings/packages", icon: Package, label: "Packages", module: "settings" },
+  { to: "/settings/zones", icon: MapPin, label: "Zones", module: "settings" },
   { to: "/settings/mikrotik", icon: Router, label: "MikroTik Routers", module: "settings" },
+  { to: "/settings/integrations", icon: Plug, label: "Integrations", module: "settings" },
   { to: "/login-logs", icon: FileText, label: "Login Logs", module: "settings" },
   { to: "/audit-logs", icon: ClipboardList, label: "Audit Logs", module: "settings" },
   { to: "/settings/backup", icon: HardDrive, label: "Backup & Restore", module: "settings" },
   { to: "/settings/api-health", icon: Activity, label: "API Health", module: "settings" },
 ];
+
+// ═══════ NavGroup component ═══════
 
 interface NavGroupProps {
   label: string;
@@ -130,29 +133,18 @@ interface NavGroupProps {
 }
 
 function NavGroup({ label, icon: Icon, items, collapsed, location, defaultOpen = false, onNavigate }: NavGroupProps) {
-  const isChildActive = items.some((item) => {
-    if (item.to.includes("?")) {
-      return location.pathname + location.search === item.to;
-    }
-    return location.pathname === item.to;
-  });
+  const isMatch = (item: NavItem) => item.to.includes("?") ? location.pathname + location.search === item.to : location.pathname === item.to;
+  const isChildActive = items.some(isMatch);
   const [open, setOpen] = useState(defaultOpen || isChildActive);
 
   if (collapsed) {
     return (
       <>
         {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-              (item.to.includes("?") ? location.pathname + location.search === item.to : location.pathname === item.to)
-                ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            )}
-          >
+          <NavLink key={item.to} to={item.to} onClick={onNavigate}
+            className={cn("flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              isMatch(item) ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            )}>
             <item.icon className="h-5 w-5 shrink-0" />
           </NavLink>
         ))}
@@ -161,30 +153,23 @@ function NavGroup({ label, icon: Icon, items, collapsed, location, defaultOpen =
   }
 
   return (
-    <div className="pt-2">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-      >
-        <Icon className="h-5 w-5 shrink-0" />
-        <span className="flex-1 text-left">{label}</span>
-        <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
+    <div className="pt-1">
+      <button onClick={() => setOpen(!open)}
+        className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium w-full transition-colors",
+          isChildActive ? "text-sidebar-foreground bg-sidebar-accent/50" : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+        )}>
+        <Icon className="h-4.5 w-4.5 shrink-0" />
+        <span className="flex-1 text-left text-[13px]">{label}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="ml-4 space-y-0.5 mt-0.5">
+        <div className="ml-3 pl-3 border-l border-sidebar-border/50 space-y-0.5 mt-0.5">
           {items.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-                (item.to.includes("?") ? location.pathname + location.search === item.to : location.pathname === item.to)
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-              )}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
+            <NavLink key={item.to} to={item.to} onClick={onNavigate}
+              className={cn("flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[12.5px] transition-colors",
+                isMatch(item) ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/55 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              )}>
+              <item.icon className="h-3.5 w-3.5 shrink-0" />
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -194,11 +179,14 @@ function NavGroup({ label, icon: Icon, items, collapsed, location, defaultOpen =
   );
 }
 
+// ═══════ Main Sidebar ═══════
+
 export default function AppSidebar() {
   const { signOut } = useAuth();
   const location = useLocation();
   const { hasModuleAccess, isSuperAdmin } = usePermissions();
   const { isModuleEnabled } = useModuleSettings();
+  const { branding } = useBranding();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -212,30 +200,29 @@ export default function AppSidebar() {
       return true;
     });
 
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
   useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
+
+  const siteName = branding.site_name || "Smart ISP";
 
   const sidebarContent = (isMobile: boolean) => (
     <>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
-        <div className="h-9 w-9 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
-          <Wifi className="h-5 w-5 text-sidebar-primary-foreground" />
-        </div>
+      <div className="flex items-center gap-3 px-4 h-14 border-b border-sidebar-border shrink-0">
+        {branding.logo_url ? (
+          <img src={branding.logo_url} alt={siteName} className="h-8 w-8 rounded-lg object-contain shrink-0" />
+        ) : (
+          <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
+            <Wifi className="h-4 w-4 text-sidebar-primary-foreground" />
+          </div>
+        )}
         {(!collapsed || isMobile) && (
-          <div className="overflow-hidden">
-            <h2 className="font-bold text-sm leading-tight">Smart ISP</h2>
-            <p className="text-[11px] text-sidebar-foreground/60">Admin Panel</p>
+          <div className="overflow-hidden flex-1 min-w-0">
+            <h2 className="font-bold text-sm leading-tight truncate">{siteName}</h2>
+            <p className="text-[10px] text-sidebar-foreground/50">Admin Panel</p>
           </div>
         )}
         {isMobile ? (
@@ -249,46 +236,50 @@ export default function AppSidebar() {
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {filterItems(topNav).map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={isMobile ? () => setMobileOpen(false) : undefined}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-              location.pathname === item.to
-                ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            )}
-          >
-            <item.icon className="h-5 w-5 shrink-0" />
-            {(!collapsed || isMobile) && <span>{item.label}</span>}
-          </NavLink>
-        ))}
+      {/* Navigation */}
+      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto scrollbar-thin">
+        {/* Dashboard */}
+        <NavLink to="/" onClick={isMobile ? () => setMobileOpen(false) : undefined}
+          className={cn("flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+            location.pathname === "/" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          )}>
+          <LayoutDashboard className="h-5 w-5 shrink-0" />
+          {(!collapsed || isMobile) && <span>Dashboard</span>}
+        </NavLink>
 
-        {filterItems(customerNav).length > 0 && <NavGroup label="Customer" icon={Users} items={filterItems(customerNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
-        {filterItems(billingNav).length > 0 && <NavGroup label="Billing" icon={Receipt} items={filterItems(billingNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
-        {filterItems(hrNav).length > 0 && <NavGroup label="Human Resource" icon={Briefcase} items={filterItems(hrNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
-        {filterItems(accountsNav).length > 0 && <NavGroup label="Accounts" icon={CreditCard} items={filterItems(accountsNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
-        {filterItems(supplierNav).length > 0 && <NavGroup label="Supplier" icon={Truck} items={filterItems(supplierNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
+        {/* Separator label */}
+        {(!collapsed || isMobile) && <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">ISP Management</p>}
+
+        {filterItems(customerNav).length > 0 && <NavGroup label="Customers" icon={Users} items={filterItems(customerNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
+        {filterItems(billingNav).length > 0 && <NavGroup label="Billing & Payments" icon={Receipt} items={filterItems(billingNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
+        {filterItems(supportNav).length > 0 && <NavGroup label="Support & SMS" icon={Ticket} items={filterItems(supportNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
+
+        {(!collapsed || isMobile) && <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">Business</p>}
+
+        {filterItems(accountingNav).length > 0 && <NavGroup label="Accounting" icon={CreditCard} items={filterItems(accountingNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
         {filterItems(inventoryNav).length > 0 && <NavGroup label="Inventory" icon={BoxIcon} items={filterItems(inventoryNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
-        {filterItems(supportNav).length > 0 && <NavGroup label="Support" icon={Ticket} items={filterItems(supportNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
-        {filterItems(reportingNav).length > 0 && <NavGroup label="Reporting" icon={BarChart3} items={filterItems(reportingNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
-        {filterItems(toolsNav).length > 0 && <NavGroup label="Tools" icon={Wrench} items={filterItems(toolsNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
+        {filterItems(supplierNav).length > 0 && <NavGroup label="Supplier" icon={Truck} items={filterItems(supplierNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
+        {filterItems(hrNav).length > 0 && <NavGroup label="Human Resource" icon={Briefcase} items={filterItems(hrNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
+
+        {(!collapsed || isMobile) && <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">Analytics & Reports</p>}
+
+        {filterItems(reportingNav).length > 0 && <NavGroup label="Reports" icon={BarChart3} items={filterItems(reportingNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
+
+        {(!collapsed || isMobile) && <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">Administration</p>}
+
+        {filterItems(adminNav).length > 0 && <NavGroup label="Users & Roles" icon={Shield} items={filterItems(adminNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
         {filterItems(settingsNav).length > 0 && <NavGroup label="Settings" icon={Settings} items={filterItems(settingsNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
       </nav>
 
       {/* Footer */}
-      <div className="p-2 border-t border-sidebar-border space-y-1">
-        <button onClick={toggleTheme} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
-          {theme === "dark" ? <Sun className="h-5 w-5 shrink-0" /> : <Moon className="h-5 w-5 shrink-0" />}
-          {(!collapsed || isMobile) && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+      <div className="p-2 border-t border-sidebar-border space-y-0.5 shrink-0">
+        <button onClick={toggleTheme} className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
+          {theme === "dark" ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
+          {(!collapsed || isMobile) && <span className="text-[13px]">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
         </button>
-        <button onClick={() => signOut()} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
-          <LogOut className="h-5 w-5 shrink-0" />
-          {(!collapsed || isMobile) && <span>Sign Out</span>}
+        <button onClick={() => signOut()} className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
+          <LogOut className="h-4 w-4 shrink-0" />
+          {(!collapsed || isMobile) && <span className="text-[13px]">Sign Out</span>}
         </button>
       </div>
     </>
@@ -301,10 +292,14 @@ export default function AppSidebar() {
         <Button variant="ghost" size="icon" className="h-9 w-9 text-sidebar-foreground" onClick={() => setMobileOpen(true)}>
           <Menu className="h-5 w-5" />
         </Button>
-        <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-          <Wifi className="h-4 w-4 text-sidebar-primary-foreground" />
-        </div>
-        <h2 className="font-bold text-sm text-sidebar-foreground">Smart ISP</h2>
+        {branding.logo_url ? (
+          <img src={branding.logo_url} alt={siteName} className="h-7 w-7 rounded-lg object-contain" />
+        ) : (
+          <div className="h-7 w-7 rounded-lg bg-sidebar-primary flex items-center justify-center">
+            <Wifi className="h-3.5 w-3.5 text-sidebar-primary-foreground" />
+          </div>
+        )}
+        <h2 className="font-bold text-sm text-sidebar-foreground truncate">{siteName}</h2>
         <div className="ml-auto">
           <Button variant="ghost" size="icon" className="h-9 w-9 text-sidebar-foreground" onClick={toggleTheme}>
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -323,12 +318,10 @@ export default function AppSidebar() {
       )}
 
       {/* Desktop Sidebar */}
-      <aside
-        className={cn(
-          "h-screen bg-sidebar text-sidebar-foreground flex-col border-r border-sidebar-border transition-all duration-300 sticky top-0 hidden md:flex",
-          collapsed ? "w-[68px]" : "w-64"
-        )}
-      >
+      <aside className={cn(
+        "h-screen bg-sidebar text-sidebar-foreground flex-col border-r border-sidebar-border transition-all duration-300 sticky top-0 hidden md:flex",
+        collapsed ? "w-[68px]" : "w-64"
+      )}>
         {sidebarContent(false)}
       </aside>
     </>
