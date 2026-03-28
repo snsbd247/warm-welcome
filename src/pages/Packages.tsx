@@ -197,7 +197,11 @@ export default function Packages() {
       const { data } = await api.post('/mikrotik/bulk-sync-packages', {});
       if (data.success) {
         const r = data.results;
-        toast.success(`Bulk sync complete: ${r.synced} synced, ${r.failed} failed`);
+        const parts = [];
+        if (r.synced > 0) parts.push(`${r.synced} pushed`);
+        if (r.imported > 0) parts.push(`${r.imported} imported`);
+        if (r.failed > 0) parts.push(`${r.failed} failed`);
+        toast.success(`Sync complete: ${parts.join(", ") || "No changes"}`);
         if (r.errors?.length > 0) toast.warning(`Errors: ${r.errors.slice(0, 3).join("; ")}`);
         queryClient.invalidateQueries({ queryKey: ["packages-all"] });
       } else {
