@@ -53,7 +53,7 @@ export default function SupplierProfile() {
   });
 
   const totalPurchase = purchases.reduce((s: number, p: any) => s + Number(p.total_amount), 0);
-  const totalPaid = payments.reduce((s: number, p: any) => s + Number(p.amount), 0);
+  const totalPaid = purchases.reduce((s: number, p: any) => s + Number(p.paid_amount), 0);
   const totalDue = totalPurchase - totalPaid;
 
   // Ledger entries: combine purchases (debit) and payments (credit)
