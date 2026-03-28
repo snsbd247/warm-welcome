@@ -9,12 +9,12 @@ import { Loader2, Save, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 const LEDGER_SETTINGS = [
-  { key: "sales_income_account", label: "Sales Income Account", description: "সেল হলে যে লেজার অ্যাকাউন্টে ক্রেডিট হবে", type: "income" },
-  { key: "sales_cash_account", label: "Sales Cash/Bank Account", description: "সেল পেমেন্ট যে ক্যাশ/ব্যাংক অ্যাকাউন্টে ডেবিট হবে", type: "asset" },
-  { key: "purchase_expense_account", label: "Purchase/COGS Account", description: "পারচেজ হলে যে এক্সপেন্স অ্যাকাউন্টে ডেবিট হবে", type: "expense" },
-  { key: "purchase_cash_account", label: "Purchase Cash/Bank Account", description: "পারচেজ পেমেন্ট যে ক্যাশ/ব্যাংক অ্যাকাউন্টে ক্রেডিট হবে", type: "asset" },
-  { key: "service_income_account", label: "Service Income Account", description: "বিল পেমেন্ট যে ইনকাম অ্যাকাউন্টে ক্রেডিট হবে", type: "income" },
-  { key: "expense_cash_account", label: "Expense Cash/Bank Account", description: "খরচ হলে যে ক্যাশ/ব্যাংক অ্যাকাউন্টে ক্রেডিট হবে", type: "asset" },
+  { key: "sales_income_account", label: "Sales Income Account", description: "সেল হলে যে ইনকাম অ্যাকাউন্টে ক্রেডিট হবে (Cr. Sales Income)", type: "income" },
+  { key: "sales_cash_account", label: "Sales Cash/Bank Account", description: "সেল পেমেন্ট যে ক্যাশ/ব্যাংক অ্যাকাউন্টে ডেবিট হবে (Dr. Cash)", type: "asset" },
+  { key: "purchase_expense_account", label: "Purchase/COGS Account", description: "পারচেজ হলে যে এক্সপেন্স অ্যাকাউন্টে ডেবিট হবে (Dr. COGS)", type: "expense" },
+  { key: "purchase_cash_account", label: "Purchase Cash/Bank Account", description: "পারচেজ পেমেন্ট যে ক্যাশ/ব্যাংক অ্যাকাউন্টে ক্রেডিট হবে (Cr. Cash)", type: "asset" },
+  { key: "service_income_account", label: "Service Income (ISP Bill)", description: "বিল পেমেন্ট / সার্ভিস ইনকাম যে অ্যাকাউন্টে ক্রেডিট হবে (Cr. Service Income)", type: "income" },
+  { key: "expense_cash_account", label: "Expense Cash/Bank Account", description: "খরচ হলে যে ক্যাশ/ব্যাংক অ্যাকাউন্টে ক্রেডিট হবে (Cr. Cash)", type: "asset" },
 ];
 
 export default function LedgerSettingsTab() {

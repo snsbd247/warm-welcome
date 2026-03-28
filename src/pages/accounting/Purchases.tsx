@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { postPurchaseToLedger } from "@/lib/ledger";
+import { postPurchaseToLedger, postPurchasePaymentToLedger } from "@/lib/ledger";
 import { generatePurchaseInvoicePDF } from "@/lib/accountingPdf";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -167,8 +167,8 @@ export default function Purchases() {
         await (supabase as any).from("suppliers").update({ total_due: Math.max(0, Number(sup.total_due) - amount) }).eq("id", purchase.supplier_id);
       }
 
-      // Post accounting entry
-      await postPurchaseToLedger(`${purchase.purchase_no}-PAY`, 0, amount, new Date().toISOString().split("T")[0]);
+      // Post accounting entry: Dr. Accounts Payable, Cr. Cash
+      await postPurchasePaymentToLedger(purchase.purchase_no, amount, method, new Date().toISOString().split("T")[0]);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["purchases"] });

@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Loader2, Download, Pencil, FileDown, CreditCard, Plus, Trash2 } from "lucide-react";
 import { generateApplicationFormPDF } from "@/lib/applicationFormPdf";
-import { postSaleToLedger } from "@/lib/ledger";
+import { postSalePaymentToLedger } from "@/lib/ledger";
 import { toast } from "sonner";
 
 interface SaleItem { product_id: string; quantity: number; unit_price: number; }
@@ -166,7 +166,7 @@ export default function CustomerProfilePage() {
         paid_amount: newPaid,
         status: newPaid >= total ? "completed" : "partial",
       }).eq("id", sale.id);
-      await postSaleToLedger(`${sale.sale_no}-PAY`, 0, amount, method, new Date().toISOString().split("T")[0]);
+      await postSalePaymentToLedger(sale.sale_no, amount, method, new Date().toISOString().split("T")[0]);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customer-sales", id] });
