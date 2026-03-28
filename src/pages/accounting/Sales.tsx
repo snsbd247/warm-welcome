@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { postSaleToLedger } from "@/lib/ledger";
+import { generateSalesInvoicePDF } from "@/lib/accountingPdf";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, Search, FileDown } from "lucide-react";
-import { generateSalesInvoicePDF } from "@/lib/accountingPdf";
+import { Plus, Trash2, Search, FileDown, Pencil, CreditCard } from "lucide-react";
 
 interface SaleItem { product_id: string; quantity: number; unit_price: number; }
 
@@ -22,6 +22,11 @@ export default function Sales() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [editSale, setEditSale] = useState<any>(null);
+  const [payOpen, setPayOpen] = useState(false);
+  const [payTarget, setPayTarget] = useState<any>(null);
+  const [payAmount, setPayAmount] = useState(0);
+  const [payMethod, setPayMethod] = useState("cash");
 
   const [form, setForm] = useState({
     customer_name: "", customer_phone: "", sale_date: new Date().toISOString().split("T")[0],
@@ -32,7 +37,7 @@ export default function Sales() {
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ["sales"],
     queryFn: async () => {
-      const { data } = await ( supabase as any).from("sales").select("*").order("sale_date", { ascending: false });
+      const { data } = await (supabase as any).from("sales").select("*").order("sale_date", { ascending: false });
       return data || [];
     },
   });
@@ -40,7 +45,7 @@ export default function Sales() {
   const { data: products = [] } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
-      const { data } = await ( supabase as any).from("products").select("*");
+      const { data } = await (supabase as any).from("products").select("*");
       return data || [];
     },
   });
@@ -50,13 +55,12 @@ export default function Sales() {
       const saleItems = formData.items;
       const subtotal = saleItems.reduce((s: number, i: SaleItem) => s + i.quantity * i.unit_price, 0);
       const total = subtotal - formData.discount + formData.tax;
-      
-      // Generate sale number
-      const { data: lastSale } = await ( supabase as any).from("sales").select("sale_no").order("created_at", { ascending: false }).limit(1).maybeSingle();
+
+      const { data: lastSale } = await (supabase as any).from("sales").select("sale_no").order("created_at", { ascending: false }).limit(1).maybeSingle();
       const lastNum = lastSale?.sale_no ? parseInt(lastSale.sale_no.replace("INV-", "")) : 0;
       const saleNo = `INV-${String(lastNum + 1).padStart(5, "0")}`;
 
-      const { data: sale, error } = await ( supabase as any).from("sales").insert({
+      const { data: sale, error } = await (supabase as any).from("sales").insert({
         sale_no: saleNo,
         customer_name: formData.customer_name,
         customer_phone: formData.customer_phone,
@@ -71,25 +75,22 @@ export default function Sales() {
       }).select().single();
       if (error) throw error;
 
-      // Insert sale items
       const itemsToInsert = saleItems.map((item: SaleItem) => ({
         sale_id: sale.id,
         product_id: item.product_id,
         quantity: item.quantity,
         unit_price: item.unit_price,
       }));
-      const { error: itemsErr } = await ( supabase as any).from("sale_items").insert(itemsToInsert);
+      const { error: itemsErr } = await (supabase as any).from("sale_items").insert(itemsToInsert);
       if (itemsErr) throw itemsErr;
 
-      // Update product stock
       for (const item of saleItems) {
         const prod = products.find((p: any) => p.id === item.product_id);
         if (prod) {
-          await ( supabase as any).from("products").update({ stock: Math.max(0, Number(prod.stock) - item.quantity) }).eq("id", item.product_id);
+          await (supabase as any).from("products").update({ stock: Math.max(0, Number(prod.stock) - item.quantity) }).eq("id", item.product_id);
         }
       }
 
-      // Post to accounting ledger
       await postSaleToLedger(saleNo, total, formData.paid_amount, formData.payment_method, formData.sale_date);
     },
     onSuccess: () => {
@@ -102,10 +103,94 @@ export default function Sales() {
     onError: () => toast.error("Failed to create sale"),
   });
 
+  const updateSale = useMutation({
+    mutationFn: async (formData: any) => {
+      const saleItems: SaleItem[] = formData.items;
+      const subtotal = saleItems.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+      const total = subtotal - formData.discount + formData.tax;
+
+      await (supabase as any).from("sales").update({
+        customer_name: formData.customer_name,
+        customer_phone: formData.customer_phone,
+        sale_date: formData.sale_date,
+        total,
+        discount: formData.discount,
+        tax: formData.tax,
+        payment_method: formData.payment_method,
+        notes: formData.notes,
+        status: Number(formData.editSale.paid_amount) >= total ? "completed" : "partial",
+      }).eq("id", formData.editSale.id);
+
+      await (supabase as any).from("sale_items").delete().eq("sale_id", formData.editSale.id);
+      const itemsToInsert = saleItems.map((item) => ({
+        sale_id: formData.editSale.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+      }));
+      await (supabase as any).from("sale_items").insert(itemsToInsert);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Sale updated");
+      closeDialog();
+    },
+    onError: () => toast.error("Failed to update sale"),
+  });
+
+  const adjustPayment = useMutation({
+    mutationFn: async ({ sale, amount, method }: { sale: any; amount: number; method: string }) => {
+      const newPaid = Number(sale.paid_amount) + amount;
+      const total = Number(sale.total);
+
+      await (supabase as any).from("sales").update({
+        paid_amount: newPaid,
+        status: newPaid >= total ? "completed" : "partial",
+      }).eq("id", sale.id);
+
+      await postSaleToLedger(`${sale.sale_no}-PAY`, 0, amount, method, new Date().toISOString().split("T")[0]);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success("Payment adjusted successfully");
+      setPayOpen(false);
+      setPayTarget(null);
+      setPayAmount(0);
+    },
+    onError: () => toast.error("Payment adjustment failed"),
+  });
+
   const closeDialog = () => {
     setOpen(false);
+    setEditSale(null);
     setForm({ customer_name: "", customer_phone: "", sale_date: new Date().toISOString().split("T")[0], payment_method: "cash", discount: 0, tax: 0, paid_amount: 0, notes: "" });
     setItems([{ product_id: "", quantity: 1, unit_price: 0 }]);
+  };
+
+  const openEdit = async (s: any) => {
+    const { data: sItems } = await (supabase as any).from("sale_items").select("*").eq("sale_id", s.id);
+    setEditSale(s);
+    setForm({
+      customer_name: s.customer_name || "",
+      customer_phone: s.customer_phone || "",
+      sale_date: s.sale_date || "",
+      payment_method: s.payment_method || "cash",
+      discount: Number(s.discount) || 0,
+      tax: Number(s.tax) || 0,
+      paid_amount: Number(s.paid_amount),
+      notes: s.notes || "",
+    });
+    setItems((sItems || []).map((i: any) => ({ product_id: i.product_id, quantity: Number(i.quantity), unit_price: Number(i.unit_price) })));
+    if (items.length === 0) setItems([{ product_id: "", quantity: 1, unit_price: 0 }]);
+    setOpen(true);
+  };
+
+  const downloadPDF = async (s: any) => {
+    const { data: sItems } = await (supabase as any).from("sale_items").select("*, products(name)").eq("sale_id", s.id);
+    const itemsWithNames = (sItems || []).map((i: any) => ({ ...i, product_name: i.products?.name || "Product" }));
+    generateSalesInvoicePDF({ ...s, items: itemsWithNames, invoice_number: s.sale_no });
   };
 
   const addItem = () => setItems([...items, { product_id: "", quantity: 1, unit_price: 0 }]);
@@ -126,7 +211,11 @@ export default function Sales() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (items.some(i => !i.product_id)) { toast.error("Select products"); return; }
-    create.mutate({ ...form, items });
+    if (editSale) {
+      updateSale.mutate({ ...form, items, editSale });
+    } else {
+      create.mutate({ ...form, items });
+    }
   };
 
   const filtered = sales.filter((s: any) =>
@@ -145,7 +234,7 @@ export default function Sales() {
           <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />New Sale</Button></DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>Create Sale</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editSale ? "Edit Sale" : "Create Sale"}</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div><Label>Customer Name</Label><Input value={form.customer_name} onChange={e => setForm({...form, customer_name: e.target.value})} /></div>
@@ -177,7 +266,7 @@ export default function Sales() {
                 <div className="grid grid-cols-3 gap-4">
                   <div><Label>Discount</Label><Input type="number" step="0.01" value={form.discount} onChange={e => setForm({...form, discount: +e.target.value})} /></div>
                   <div><Label>Tax</Label><Input type="number" step="0.01" value={form.tax} onChange={e => setForm({...form, tax: +e.target.value})} /></div>
-                  <div><Label>Paid</Label><Input type="number" step="0.01" value={form.paid_amount} onChange={e => setForm({...form, paid_amount: +e.target.value})} /></div>
+                  {!editSale && <div><Label>Paid</Label><Input type="number" step="0.01" value={form.paid_amount} onChange={e => setForm({...form, paid_amount: +e.target.value})} /></div>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -198,12 +287,48 @@ export default function Sales() {
                 <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} /></div>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
-                  <Button type="submit" disabled={create.isPending}>{create.isPending ? "Creating..." : "Create Sale"}</Button>
+                  <Button type="submit" disabled={create.isPending || updateSale.isPending}>
+                    {editSale ? "Update Sale" : "Create Sale"}
+                  </Button>
                 </div>
               </form>
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Payment Adjustment Dialog */}
+        <Dialog open={payOpen} onOpenChange={v => { if (!v) { setPayOpen(false); setPayTarget(null); } }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle>Payment Adjustment</DialogTitle></DialogHeader>
+            {payTarget && (
+              <div className="space-y-4">
+                <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
+                  <p><span className="font-medium">Invoice:</span> {payTarget.sale_no}</p>
+                  <p><span className="font-medium">Total:</span> ৳{Number(payTarget.total).toLocaleString()}</p>
+                  <p><span className="font-medium">Paid:</span> ৳{Number(payTarget.paid_amount).toLocaleString()}</p>
+                  <p className="text-destructive font-semibold">Due: ৳{(Number(payTarget.total) - Number(payTarget.paid_amount)).toLocaleString()}</p>
+                </div>
+                <div><Label>Payment Amount</Label><Input type="number" step="0.01" value={payAmount} onChange={e => setPayAmount(+e.target.value)} max={Number(payTarget.total) - Number(payTarget.paid_amount)} /></div>
+                <div><Label>Payment Method</Label>
+                  <Select value={payMethod} onValueChange={setPayMethod}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="bank">Bank</SelectItem>
+                      <SelectItem value="bkash">bKash</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => { setPayOpen(false); setPayTarget(null); }}>Cancel</Button>
+                  <Button disabled={payAmount <= 0 || adjustPayment.isPending} onClick={() => adjustPayment.mutate({ sale: payTarget, amount: payAmount, method: payMethod })}>
+                    {adjustPayment.isPending ? "Processing..." : "Confirm Payment"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <Card>
           <CardHeader className="pb-3">
@@ -222,8 +347,8 @@ export default function Sales() {
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Paid</TableHead>
                   <TableHead className="text-right">Due</TableHead>
-                   <TableHead>Status</TableHead>
-                   <TableHead></TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -231,18 +356,31 @@ export default function Sales() {
                   <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No sales found</TableCell></TableRow>
-                ) : filtered.map((s: any) => (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-medium">{s.sale_no}</TableCell>
-                    <TableCell>{s.customer_name || "—"}</TableCell>
-                    <TableCell>{s.sale_date}</TableCell>
-                    <TableCell className="text-right">৳{Number(s.total).toLocaleString()}</TableCell>
-                    <TableCell className="text-right">৳{Number(s.paid_amount).toLocaleString()}</TableCell>
-                    <TableCell className="text-right text-destructive">৳{(Number(s.total) - Number(s.paid_amount)).toLocaleString()}</TableCell>
-                    <TableCell><Badge variant={s.status === "completed" ? "default" : "secondary"}>{s.status}</Badge></TableCell>
-                    <TableCell><Button variant="ghost" size="icon" onClick={() => generateSalesInvoicePDF(s)} title="Download Invoice"><FileDown className="h-4 w-4" /></Button></TableCell>
-                  </TableRow>
-                ))}
+                ) : filtered.map((s: any) => {
+                  const due = Number(s.total) - Number(s.paid_amount);
+                  return (
+                    <TableRow key={s.id}>
+                      <TableCell className="font-medium">{s.sale_no}</TableCell>
+                      <TableCell>{s.customer_name || "—"}</TableCell>
+                      <TableCell>{s.sale_date}</TableCell>
+                      <TableCell className="text-right">৳{Number(s.total).toLocaleString()}</TableCell>
+                      <TableCell className="text-right">৳{Number(s.paid_amount).toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-destructive">৳{due.toLocaleString()}</TableCell>
+                      <TableCell><Badge variant={s.status === "completed" ? "default" : "secondary"}>{s.status}</Badge></TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => downloadPDF(s)} title="Download PDF"><FileDown className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(s)} title="Edit"><Pencil className="h-4 w-4" /></Button>
+                          {due > 0 && (
+                            <Button variant="ghost" size="icon" onClick={() => { setPayTarget(s); setPayAmount(due); setPayOpen(true); }} title="Adjust Payment">
+                              <CreditCard className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
