@@ -116,6 +116,7 @@ const settingsNav: NavItem[] = [
   { to: "/login-logs", icon: FileText, label: "Login Logs", module: "settings" },
   { to: "/audit-logs", icon: ClipboardList, label: "Audit Logs", module: "settings" },
   { to: "/settings/backup", icon: HardDrive, label: "Backup & Restore", module: "settings" },
+  { to: "/settings/api-health", icon: Activity, label: "API Health", module: "settings" },
 ];
 
 interface NavGroupProps {
