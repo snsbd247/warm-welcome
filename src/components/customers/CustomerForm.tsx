@@ -447,6 +447,20 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
               </SelectContent>
             </Select>
           </div>
+          {!isEdit && (
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label>Initial Invoice Amount (Connection Charge + First Month Bill)</Label>
+              <Input
+                type="number"
+                placeholder="e.g. 1500 (leave empty to skip)"
+                value={form.initial_invoice_amount}
+                onChange={(e) => update("initial_invoice_amount", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                এই এমাউন্ট দিলে কাস্টমার তৈরির সাথে সাথে একটি ইনভয়েস/বিল অটো জেনারেট হবে
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
