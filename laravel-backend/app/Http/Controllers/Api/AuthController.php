@@ -8,6 +8,8 @@ use App\Models\AdminLoginLog;
 use App\Models\AdminSession;
 use App\Models\Profile;
 use App\Models\UserRole;
+use App\Models\RolePermission;
+use App\Models\CustomRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -29,6 +31,18 @@ class AuthController extends Controller
         }
 
         $role = UserRole::where('user_id', $profile->id)->first();
+
+        // Get permissions for custom role
+        $permissions = [];
+        if ($role && $role->custom_role_id) {
+            $customRole = CustomRole::with('permissions')->find($role->custom_role_id);
+            if ($customRole) {
+                $permissions = $customRole->permissions->map(fn($p) => [
+                    'module' => $p->module,
+                    'action' => $p->action,
+                ])->toArray();
+            }
+        }
 
         $sessionToken = Str::uuid()->toString();
         $session = AdminSession::create([
@@ -52,8 +66,12 @@ class AuthController extends Controller
                 'id' => $profile->id,
                 'email' => $profile->email,
                 'name' => $profile->full_name,
+                'username' => $profile->username,
                 'role' => $role->role ?? 'staff',
+                'custom_role_id' => $role->custom_role_id ?? null,
                 'avatar_url' => $profile->avatar_url,
+                'mobile' => $profile->mobile,
+                'permissions' => $permissions,
             ],
             'token' => $sessionToken,
         ]);
@@ -83,12 +101,55 @@ class AuthController extends Controller
         $admin = $request->get('admin_user');
         $role = UserRole::where('user_id', $admin->id)->first();
 
+        $permissions = [];
+        if ($role && $role->custom_role_id) {
+            $customRole = CustomRole::with('permissions')->find($role->custom_role_id);
+            if ($customRole) {
+                $permissions = $customRole->permissions->map(fn($p) => [
+                    'module' => $p->module,
+                    'action' => $p->action,
+                ])->toArray();
+            }
+        }
+
         return response()->json([
             'id' => $admin->id,
             'email' => $admin->email,
             'name' => $admin->full_name,
+            'username' => $admin->username,
             'role' => $role->role ?? 'staff',
+            'custom_role_id' => $role->custom_role_id ?? null,
             'avatar_url' => $admin->avatar_url,
+            'mobile' => $admin->mobile,
+            'staff_id' => $admin->staff_id,
+            'address' => $admin->address,
+            'permissions' => $permissions,
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $admin = $request->get('admin_user');
+
+        $data = $request->only(['full_name', 'mobile', 'address', 'avatar_url']);
+
+        if ($request->has('current_password') && $request->has('new_password')) {
+            if (!Hash::check($request->current_password, $admin->password_hash)) {
+                return response()->json(['error' => 'Current password is incorrect'], 422);
+            }
+            $data['password_hash'] = Hash::make($request->new_password);
+        }
+
+        $admin->update($data);
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $admin->id,
+                'email' => $admin->email,
+                'name' => $admin->full_name,
+                'avatar_url' => $admin->avatar_url,
+            ],
         ]);
     }
 }

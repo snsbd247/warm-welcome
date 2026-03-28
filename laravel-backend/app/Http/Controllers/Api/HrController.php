@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Attendance;
 use App\Models\Loan;
 use App\Models\SalarySheet;
+use App\Models\EmployeeSalaryStructure;
 use Illuminate\Http\Request;
 
 class HrController extends Controller
@@ -85,6 +86,26 @@ class HrController extends Controller
         return response()->json(['message' => 'Deleted']);
     }
 
+    /**
+     * GET /api/hr/employees/{id}
+     * Full employee profile with all related data.
+     */
+    public function employeeProfile(string $id)
+    {
+        $employee = Employee::with([
+            'designation',
+            'salaryStructure',
+            'education',
+            'experience',
+            'emergencyContacts',
+            'providentFund',
+            'savingsFund',
+            'loans',
+        ])->findOrFail($id);
+
+        return response()->json($employee);
+    }
+
     // ── Attendance ────────────────────────────────────────
 
     public function dailyAttendance(Request $request)
@@ -104,7 +125,6 @@ class HrController extends Controller
             ->orderBy('date')
             ->get();
 
-        // Group by employee
         $grouped = $attendances->groupBy('employee_id')->map(function ($records) {
             $employee = $records->first()->employee;
             return [
@@ -130,7 +150,7 @@ class HrController extends Controller
 
         $attendance = Attendance::updateOrCreate(
             ['employee_id' => $request->employee_id, 'date' => $request->date],
-            $request->only('status', 'check_in', 'check_out', 'note')
+            $request->only('status', 'check_in', 'check_out', 'notes')
         );
 
         return response()->json($attendance->load('employee'), 201);
@@ -152,7 +172,7 @@ class HrController extends Controller
                     'status'    => $record['status'],
                     'check_in'  => $record['check_in'] ?? null,
                     'check_out' => $record['check_out'] ?? null,
-                    'note'      => $record['note'] ?? null,
+                    'notes'     => $record['notes'] ?? null,
                 ]
             );
         }
@@ -164,7 +184,7 @@ class HrController extends Controller
 
     public function loans(Request $request)
     {
-        $query = Loan::with('employee')->orderByDesc('loan_date');
+        $query = Loan::with('employee')->orderByDesc('created_at');
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
@@ -179,7 +199,6 @@ class HrController extends Controller
         $request->validate([
             'employee_id' => 'required|uuid|exists:employees,id',
             'amount'      => 'required|numeric|min:1',
-            'loan_date'   => 'required|date',
         ]);
         $loan = Loan::create($request->all());
         return response()->json($loan->load('employee'), 201);
@@ -221,18 +240,37 @@ class HrController extends Controller
             $existing = SalarySheet::where('employee_id', $emp->id)->where('month', $month)->first();
             if ($existing) continue;
 
-            // Calculate loan deduction
+            // Get salary structure if available
+            $structure = EmployeeSalaryStructure::where('employee_id', $emp->id)
+                ->orderByDesc('effective_from')
+                ->first();
+
+            $basicSalary = $structure ? $structure->basic_salary : $emp->salary;
+            $houseRent = $structure ? $structure->house_rent : 0;
+            $medical = $structure ? $structure->medical : 0;
+            $conveyance = $structure ? $structure->conveyance : 0;
+            $otherAllowance = $structure ? $structure->other_allowance : 0;
+
+            $grossSalary = $basicSalary + $houseRent + $medical + $conveyance + $otherAllowance;
+
+            // Loan deduction
             $activeLoan = Loan::where('employee_id', $emp->id)->where('status', 'active')->first();
             $loanDeduction = $activeLoan ? $activeLoan->monthly_deduction : 0;
 
             SalarySheet::create([
                 'employee_id'    => $emp->id,
                 'month'          => $month,
-                'basic_salary'   => $emp->salary,
+                'basic_salary'   => $basicSalary,
+                'house_rent'     => $houseRent,
+                'medical'        => $medical,
+                'conveyance'     => $conveyance,
+                'other_allowance'=> $otherAllowance,
                 'bonus'          => 0,
                 'deduction'      => 0,
                 'loan_deduction' => $loanDeduction,
-                'net_salary'     => $emp->salary - $loanDeduction,
+                'pf_deduction'   => 0,
+                'savings_deduction' => 0,
+                'net_salary'     => $grossSalary - $loanDeduction,
                 'status'         => 'pending',
             ]);
             $generated++;
@@ -247,7 +285,11 @@ class HrController extends Controller
         $sheet->update($request->all());
 
         // Recalculate net salary
-        $sheet->net_salary = $sheet->basic_salary + $sheet->bonus - $sheet->deduction - $sheet->loan_deduction;
+        $gross = $sheet->basic_salary + $sheet->house_rent + $sheet->medical
+            + $sheet->conveyance + $sheet->other_allowance + $sheet->bonus;
+        $deductions = $sheet->deduction + $sheet->loan_deduction
+            + $sheet->pf_deduction + $sheet->savings_deduction;
+        $sheet->net_salary = $gross - $deductions;
         $sheet->save();
 
         return response()->json($sheet->load('employee'));

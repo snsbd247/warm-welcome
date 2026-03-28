@@ -7,6 +7,7 @@ use App\Models\Bill;
 use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\SupportTicket;
+use App\Models\TicketReply;
 use Illuminate\Http\Request;
 
 class PortalController extends Controller
@@ -34,7 +35,11 @@ class PortalController extends Controller
             ->sum('amount');
 
         return response()->json([
-            'customer' => $customer->only(['id', 'customer_id', 'name', 'phone', 'area', 'status', 'monthly_bill', 'package_id', 'photo_url']),
+            'customer' => $customer->only([
+                'id', 'customer_id', 'name', 'phone', 'area',
+                'status', 'monthly_bill', 'package_id', 'photo_url',
+                'connection_status',
+            ]),
             'bills' => $bills,
             'recent_payments' => $payments,
             'unpaid_count' => $unpaidCount,
@@ -86,7 +91,6 @@ class PortalController extends Controller
             'priority' => $request->get('priority', 'medium'),
         ]);
 
-        // Add initial message as reply
         $ticket->replies()->create([
             'message' => $request->message,
             'sender_type' => 'customer',
@@ -96,6 +100,28 @@ class PortalController extends Controller
         return response()->json($ticket->load('replies'), 201);
     }
 
+    public function replyTicket(Request $request, string $id)
+    {
+        $customer = $request->get('portal_customer');
+        $request->validate(['message' => 'required|string']);
+
+        $ticket = SupportTicket::where('customer_id', $customer->id)
+            ->findOrFail($id);
+
+        $reply = $ticket->replies()->create([
+            'message' => $request->message,
+            'sender_type' => 'customer',
+            'sender_name' => $customer->name,
+        ]);
+
+        // Reopen if closed
+        if ($ticket->status === 'closed') {
+            $ticket->update(['status' => 'open']);
+        }
+
+        return response()->json($reply, 201);
+    }
+
     public function profile(Request $request)
     {
         $customer = $request->get('portal_customer');
@@ -103,7 +129,15 @@ class PortalController extends Controller
         return response()->json($customer->only([
             'id', 'customer_id', 'name', 'phone', 'alt_phone', 'email',
             'area', 'road', 'house', 'city', 'status', 'monthly_bill',
-            'discount', 'package_id', 'installation_date', 'photo_url', 'package',
+            'discount', 'package_id', 'installation_date', 'photo_url',
+            'connection_status', 'package',
         ]));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $customer = $request->get('portal_customer');
+        $customer->update($request->only(['alt_phone', 'email', 'photo_url']));
+        return response()->json(['success' => true]);
     }
 }

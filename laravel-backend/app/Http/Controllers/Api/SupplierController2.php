@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use Illuminate\Http\Request;
@@ -84,7 +85,6 @@ class SupplierController2 extends Controller
     public function deletePayment(string $id)
     {
         $payment = SupplierPayment::findOrFail($id);
-        // Reverse balance
         $supplier = Supplier::find($payment->supplier_id);
         if ($supplier) {
             $supplier->balance += $payment->amount;
@@ -92,5 +92,17 @@ class SupplierController2 extends Controller
         }
         $payment->delete();
         return response()->json(['message' => 'Deleted']);
+    }
+
+    // ── Purchases (supplier-specific) ────────────────────
+
+    public function purchases(Request $request)
+    {
+        $query = Purchase::with(['vendor', 'items.product'])->orderByDesc('purchase_date');
+        if ($request->has('supplier_id')) {
+            // Map supplier to vendor for purchase lookup
+            $query->where('vendor_id', $request->supplier_id);
+        }
+        return response()->json($query->get());
     }
 }
