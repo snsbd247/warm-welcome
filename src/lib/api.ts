@@ -139,7 +139,8 @@ const handleGenericTableFallback = async (
   resource: string,
   resourceId?: string,
 ) => {
-  const table = resource === 'vendors' ? 'suppliers' : resource;
+  const tableMap: Record<string, string> = { vendors: 'suppliers', 'general-settings': 'general_settings' };
+  const table = tableMap[resource] || resource;
   const method = (config.method || 'get').toLowerCase();
   const bearerToken = await getBearerToken(config);
   const payload = parseJsonData(config.data);
@@ -450,7 +451,7 @@ const fallbackRequest = async (config: InternalAxiosRequestConfig) => {
   }
 
   // Generic CRUD fallbacks used in accounting pages
-  const tableFallbackResources = new Set(['products', 'purchases', 'sales', 'expenses', 'vendors', 'suppliers']);
+  const tableFallbackResources = new Set(['products', 'purchases', 'sales', 'expenses', 'vendors', 'suppliers', 'general-settings']);
   if (tableFallbackResources.has(resource)) {
     return handleGenericTableFallback(config, resource, arg1);
   }
