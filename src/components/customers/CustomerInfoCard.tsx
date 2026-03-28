@@ -61,7 +61,7 @@ export default function CustomerInfoCard({ customer, dueAmount }: Props) {
           <Info icon={Package} label="Package" value={customer.packages?.name} />
           <Info icon={CreditCard} label="Monthly Bill" value={`৳${Number(customer.monthly_bill).toLocaleString()}`} />
           <Info icon={CreditCard} label="Discount" value={`৳${Number(customer.discount || 0).toLocaleString()}`} />
-          <Info icon={CreditCard} label="Connectivity Fee" value={`৳${Number(customer.connectivity_fee || 0).toLocaleString()}`} />
+          
           <Info icon={Wifi} label="PPPoE Username" value={customer.pppoe_username} />
           <Info icon={Calendar} label="Connection Date" value={customer.installation_date} />
           <Info icon={Clock} label="Due Date (Day)" value={customer.due_date_day ? `${customer.due_date_day}th of every month` : "—"} />

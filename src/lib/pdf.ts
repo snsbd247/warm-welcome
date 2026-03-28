@@ -270,8 +270,7 @@ export function generateCustomerPDF(customer: any, invoiceFooter?: string) {
 
   const monthlyBill = Number(customer.monthly_bill || 0);
   const discount = Number(customer.discount || 0);
-  const connectivityFee = Number(customer.connectivity_fee || 0);
-  const totalAmount = monthlyBill - discount + connectivityFee;
+  const totalAmount = monthlyBill - discount;
 
   fieldRow([
     { label: "Connection Date", value: customer.installation_date || "" },
@@ -280,7 +279,6 @@ export function generateCustomerPDF(customer: any, invoiceFooter?: string) {
   ]);
 
   fieldRow([
-    { label: "Connectivity Fee", value: `${connectivityFee.toLocaleString()} BDT` },
     { label: "Discount", value: `${discount.toLocaleString()} BDT` },
     { label: "Total Amount", value: `${totalAmount.toLocaleString()} BDT` },
   ]);
