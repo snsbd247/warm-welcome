@@ -10,40 +10,23 @@ class Purchase extends Model
     use HasUuid;
 
     protected $fillable = [
-        'id', 'purchase_number', 'vendor_id', 'purchase_date',
-        'subtotal', 'discount', 'tax', 'total',
-        'paid_amount', 'due_amount', 'payment_method',
-        'status', 'notes', 'created_by',
+        'id', 'purchase_no', 'supplier_id', 'date',
+        'total_amount', 'paid_amount', 'status', 'notes',
     ];
 
     protected $casts = [
-        'subtotal'      => 'decimal:2',
-        'discount'      => 'decimal:2',
-        'tax'           => 'decimal:2',
-        'total'         => 'decimal:2',
-        'paid_amount'   => 'decimal:2',
-        'due_amount'    => 'decimal:2',
-        'purchase_date' => 'date',
+        'total_amount' => 'decimal:2',
+        'paid_amount'  => 'decimal:2',
+        'date'         => 'datetime',
     ];
 
-    public function vendor()
+    public function supplier()
     {
-        return $this->belongsTo(Vendor::class);
+        return $this->belongsTo(Supplier::class);
     }
 
     public function items()
     {
         return $this->hasMany(PurchaseItem::class);
-    }
-
-    public function createdBy()
-    {
-        return $this->belongsTo(Profile::class, 'created_by');
-    }
-
-    public function transactions()
-    {
-        return $this->hasMany(Transaction::class, 'reference_id')
-            ->where('reference_type', 'purchase');
     }
 }

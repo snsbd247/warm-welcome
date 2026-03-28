@@ -11,16 +11,13 @@ class Product extends Model
 
     protected $fillable = [
         'id', 'name', 'sku', 'category', 'description',
-        'cost_price', 'selling_price', 'stock_quantity',
-        'low_stock_alert', 'unit', 'is_active',
+        'buy_price', 'sell_price', 'stock', 'unit', 'status',
     ];
 
     protected $casts = [
-        'cost_price'     => 'decimal:2',
-        'selling_price'  => 'decimal:2',
-        'stock_quantity' => 'integer',
-        'low_stock_alert'=> 'integer',
-        'is_active'      => 'boolean',
+        'buy_price'  => 'decimal:2',
+        'sell_price' => 'decimal:2',
+        'stock'      => 'decimal:2',
     ];
 
     public function purchaseItems()
@@ -31,10 +28,5 @@ class Product extends Model
     public function saleItems()
     {
         return $this->hasMany(SaleItem::class);
-    }
-
-    public function isLowStock(): bool
-    {
-        return $this->stock_quantity <= $this->low_stock_alert;
     }
 }

@@ -13,11 +13,7 @@ class SalesController extends Controller
 
     public function index(Request $request)
     {
-        $query = Sale::with(['customer', 'items.product', 'createdBy']);
-
-        if ($request->has('customer_id')) {
-            $query->where('customer_id', $request->customer_id);
-        }
+        $query = Sale::with(['items.product']);
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
@@ -34,15 +30,13 @@ class SalesController extends Controller
 
     public function show(string $id)
     {
-        $sale = Sale::with(['customer', 'items.product', 'createdBy'])
-            ->findOrFail($id);
+        $sale = Sale::with(['items.product'])->findOrFail($id);
         return response()->json($sale);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'customer_id'           => 'nullable|uuid|exists:customers,id',
             'customer_name'         => 'nullable|string|max:255',
             'customer_phone'        => 'nullable|string|max:20',
             'sale_date'             => 'nullable|date',
@@ -54,20 +48,16 @@ class SalesController extends Controller
             'tax'                   => 'nullable|numeric|min:0',
             'paid_amount'           => 'nullable|numeric|min:0',
             'payment_method'        => 'nullable|string',
-            'account_id'            => 'nullable|uuid|exists:accounts,id',
         ]);
-
-        $admin = $request->get('admin_user');
 
         try {
             $sale = $this->salesService->createSale(
                 $request->only([
-                    'customer_id', 'customer_name', 'customer_phone',
+                    'customer_name', 'customer_phone',
                     'sale_date', 'discount', 'tax', 'paid_amount',
-                    'payment_method', 'notes', 'account_id',
+                    'payment_method', 'notes',
                 ]),
-                $request->items,
-                $admin?->id
+                $request->items
             );
 
             return response()->json($sale, 201);
@@ -76,31 +66,16 @@ class SalesController extends Controller
         }
     }
 
-    /**
-     * POST /api/sales/{id}/pay
-     */
     public function addPayment(Request $request, string $id)
     {
         $request->validate([
-            'amount'     => 'required|numeric|min:0.01',
-            'account_id' => 'nullable|uuid|exists:accounts,id',
+            'amount' => 'required|numeric|min:0.01',
         ]);
 
-        $admin = $request->get('admin_user');
-
-        $sale = $this->salesService->addPayment(
-            $id,
-            $request->amount,
-            $request->account_id,
-            $admin?->id
-        );
-
+        $sale = $this->salesService->addPayment($id, $request->amount);
         return response()->json($sale);
     }
 
-    /**
-     * POST /api/sales/{id}/cancel
-     */
     public function cancel(string $id)
     {
         try {
@@ -111,9 +86,6 @@ class SalesController extends Controller
         }
     }
 
-    /**
-     * GET /api/sales/profit-report
-     */
     public function profitReport(Request $request)
     {
         return response()->json(

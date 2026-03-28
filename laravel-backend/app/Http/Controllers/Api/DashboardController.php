@@ -12,8 +12,6 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Sale;
-use App\Models\SaleItem;
-use App\Models\Transaction;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -33,7 +31,6 @@ class DashboardController extends Controller
         $onlineCustomers = Customer::where('connection_status', 'online')->count();
         $offlineCustomers = Customer::where('connection_status', 'offline')->count();
 
-        // New customers this month
         $newCustomersMonth = Customer::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->count();
@@ -65,7 +62,6 @@ class DashboardController extends Controller
             ->whereYear('paid_at', now()->year)
             ->sum('amount');
 
-        // Payment method breakdown
         $paymentByMethod = Payment::where('status', 'completed')
             ->whereMonth('paid_at', now()->month)
             ->whereYear('paid_at', now()->year)
@@ -88,24 +84,21 @@ class DashboardController extends Controller
         $totalRouters = MikrotikRouter::count();
         $activeRouters = MikrotikRouter::where('status', 'active')->count();
 
-        // ── Sales & Purchase Stats ──────────────────────
+        // ── Sales & Purchase Stats (using actual DB columns) ──
         $totalSales = (float) Sale::whereBetween('sale_date', [$monthStart, $monthEnd])
             ->where('status', '!=', 'cancelled')
             ->sum('total');
-        $totalPurchases = (float) Purchase::whereBetween('purchase_date', [$monthStart, $monthEnd])
-            ->sum('total');
-        $salesProfit = (float) SaleItem::whereHas('sale', function ($q) use ($monthStart, $monthEnd) {
-            $q->whereBetween('sale_date', [$monthStart, $monthEnd])->where('status', '!=', 'cancelled');
-        })->sum('profit');
+        $totalPurchases = (float) Purchase::whereBetween('date', [$monthStart, $monthEnd])
+            ->sum('total_amount');
 
-        // ── Expense Stats ───────────────────────────────
-        $totalExpenses = (float) Expense::where('status', 'approved')
-            ->whereBetween('expense_date', [$monthStart, $monthEnd])
+        // ── Expense Stats (using actual DB column: date) ──
+        $totalExpenses = (float) Expense::where('status', 'active')
+            ->whereBetween('date', [$monthStart, $monthEnd])
             ->sum('amount');
 
-        // ── Low Stock ───────────────────────────────────
-        $lowStockCount = Product::where('is_active', true)
-            ->whereColumn('stock_quantity', '<=', 'low_stock_alert')
+        // ── Low Stock (using actual DB column: stock) ──
+        $lowStockCount = Product::where('status', 'active')
+            ->where('stock', '<=', 5)
             ->count();
 
         // ── Collection Target ───────────────────────────
@@ -130,7 +123,6 @@ class DashboardController extends Controller
         }
 
         return response()->json([
-            // Customers
             'total_customers' => $totalCustomers,
             'active_customers' => $activeCustomers,
             'suspended_customers' => $suspendedCustomers,
@@ -138,8 +130,6 @@ class DashboardController extends Controller
             'online_customers' => $onlineCustomers,
             'offline_customers' => $offlineCustomers,
             'new_customers_month' => $newCustomersMonth,
-
-            // Billing
             'total_bills' => $totalBills,
             'paid_bills' => $paidBills,
             'unpaid_bills' => $unpaidBills,
@@ -148,29 +138,19 @@ class DashboardController extends Controller
             'total_collection' => $totalCollection,
             'total_due' => $totalDue,
             'collection_target' => $collectionTarget,
-
-            // Payments
             'today_collection' => $todayCollection,
             'month_collection' => $monthCollection,
             'payment_by_method' => $paymentByMethod,
-
-            // Merchant
             'merchant_total' => $merchantTotal,
             'merchant_matched' => $merchantMatched,
             'merchant_unmatched' => $merchantUnmatched,
-
-            // Routers
             'total_routers' => $totalRouters,
             'active_routers' => $activeRouters,
-
-            // Sales/Purchase/Expense
             'total_sales' => $totalSales,
             'total_purchases' => $totalPurchases,
-            'sales_profit' => $salesProfit,
+            'sales_profit' => 0,
             'total_expenses' => $totalExpenses,
             'low_stock_count' => $lowStockCount,
-
-            // Trend
             'revenue_trend' => $revenueTrend,
             'current_month' => $currentMonth,
         ]);
