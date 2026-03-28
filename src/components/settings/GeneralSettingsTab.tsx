@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/apiDb";
-import { uploadCompanyLogo } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,10 +65,16 @@ export default function GeneralSettingsTab() {
       let logo_url = form.logo_url;
       if (logoFile) {
         try {
-          const uploadOwner = settings?.id || `system-${Date.now()}`;
-          logo_url = await uploadCompanyLogo(uploadOwner, logoFile);
-        } catch {
-          toast.error("Logo upload failed, but other settings will still be saved");
+          const ext = logoFile.name.split(".").pop() || "png";
+          const path = `system/company-logo.${ext}`;
+          const { error: uploadErr } = await supabase.storage
+            .from("avatars")
+            .upload(path, logoFile, { upsert: true });
+          if (uploadErr) throw uploadErr;
+          const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+          logo_url = urlData.publicUrl;
+        } catch (uploadErr: any) {
+          toast.error("Logo upload failed: " + (uploadErr.message || "Unknown error"));
         }
       }
 
