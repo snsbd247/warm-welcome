@@ -98,10 +98,9 @@ class SupplierController2 extends Controller
 
     public function purchases(Request $request)
     {
-        $query = Purchase::with(['vendor', 'items.product'])->orderByDesc('purchase_date');
+        $query = Purchase::with(['supplier', 'items.product'])->orderByDesc('date');
         if ($request->has('supplier_id')) {
-            // Map supplier to vendor for purchase lookup
-            $query->where('vendor_id', $request->supplier_id);
+            $query->where('supplier_id', $request->supplier_id);
         }
         return response()->json($query->get());
     }

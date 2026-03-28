@@ -50,15 +50,24 @@ class ReportController extends Controller
 
         $totalSales   = Sale::whereBetween('sale_date', [$monthStart, $monthEnd])->where('status', '!=', 'cancelled')->count();
         $salesRevenue = (float) Sale::whereBetween('sale_date', [$monthStart, $monthEnd])->where('status', '!=', 'cancelled')->sum('total');
-        $salesProfit  = (float) SaleItem::whereHas('sale', function ($q) use ($monthStart, $monthEnd) {
-            $q->whereBetween('sale_date', [$monthStart, $monthEnd])->where('status', '!=', 'cancelled');
-        })->sum('profit');
 
-        $totalPurchases  = Purchase::whereBetween('purchase_date', [$monthStart, $monthEnd])->count();
-        $purchaseAmount  = (float) Purchase::whereBetween('purchase_date', [$monthStart, $monthEnd])->sum('total');
+        // Calculate profit from sale items (unit_price - buy_price) * quantity
+        $salesProfit = 0;
+        $saleItems = SaleItem::with('product')
+            ->whereHas('sale', function ($q) use ($monthStart, $monthEnd) {
+                $q->whereBetween('sale_date', [$monthStart, $monthEnd])->where('status', '!=', 'cancelled');
+            })->get();
+        foreach ($saleItems as $item) {
+            if ($item->product) {
+                $salesProfit += ($item->unit_price - $item->product->buy_price) * $item->quantity;
+            }
+        }
 
-        $totalExpenses = (float) Expense::where('status', 'approved')
-            ->whereBetween('expense_date', [$monthStart, $monthEnd])
+        $totalPurchases  = Purchase::whereBetween('date', [$monthStart, $monthEnd])->count();
+        $purchaseAmount  = (float) Purchase::whereBetween('date', [$monthStart, $monthEnd])->sum('total_amount');
+
+        $totalExpenses = (float) Expense::where('status', 'active')
+            ->whereBetween('date', [$monthStart, $monthEnd])
             ->sum('amount');
 
         $stockSummary = $this->inventoryService->getStockSummary();
@@ -76,7 +85,7 @@ class ReportController extends Controller
             'total_due'           => $totalDue,
             'total_sales'         => $totalSales,
             'sales_revenue'       => $salesRevenue,
-            'sales_profit'        => $salesProfit,
+            'sales_profit'        => (float) $salesProfit,
             'total_purchases'     => $totalPurchases,
             'purchase_amount'     => $purchaseAmount,
             'total_expenses'      => $totalExpenses,
@@ -105,8 +114,8 @@ class ReportController extends Controller
         $from = $request->from ?? now()->subDays(30)->toDateString();
         $to   = $request->to ?? now()->toDateString();
 
-        $reports = DailyReport::whereBetween('report_date', [$from, $to])
-            ->orderBy('report_date', 'desc')
+        $reports = DailyReport::whereBetween('date', [$from, $to])
+            ->orderBy('date', 'desc')
             ->get();
 
         return response()->json([
@@ -114,9 +123,9 @@ class ReportController extends Controller
             'to'      => $to,
             'reports' => $reports,
             'summary' => [
-                'total_income'  => $reports->sum('total_income'),
-                'total_expense' => $reports->sum('total_expense'),
-                'net_profit'    => $reports->sum('net_profit'),
+                'total_billed'     => $reports->sum('total_billed'),
+                'total_collection' => $reports->sum('total_collection'),
+                'total_expense'    => $reports->sum('total_expense'),
             ],
         ]);
     }
@@ -143,11 +152,11 @@ class ReportController extends Controller
                 ->where('status', '!=', 'cancelled')
                 ->sum('total');
 
-            $purchaseExp = (float) Purchase::whereBetween('purchase_date', [$monthStart, $monthEnd])
-                ->sum('total');
+            $purchaseExp = (float) Purchase::whereBetween('date', [$monthStart, $monthEnd])
+                ->sum('total_amount');
 
-            $otherExp = (float) Expense::where('status', 'approved')
-                ->whereBetween('expense_date', [$monthStart, $monthEnd])
+            $otherExp = (float) Expense::where('status', 'active')
+                ->whereBetween('date', [$monthStart, $monthEnd])
                 ->sum('amount');
 
             $totalIncome  = $billingIncome + $salesIncome;
@@ -192,13 +201,13 @@ class ReportController extends Controller
      */
     public function vendorDues()
     {
-        $vendors = Vendor::where('balance', '>', 0)
-            ->orderBy('balance', 'desc')
-            ->get(['id', 'name', 'phone', 'company', 'balance']);
+        $vendors = Vendor::where('total_due', '>', 0)
+            ->orderBy('total_due', 'desc')
+            ->get(['id', 'name', 'phone', 'company', 'total_due']);
 
         return response()->json([
             'vendors'   => $vendors,
-            'total_due' => $vendors->sum('balance'),
+            'total_due' => $vendors->sum('total_due'),
         ]);
     }
 
@@ -236,7 +245,7 @@ class ReportController extends Controller
      */
     public function stockReport()
     {
-        $products = Product::where('is_active', true)
+        $products = Product::where('status', 'active')
             ->orderBy('name')
             ->get();
 
@@ -255,15 +264,15 @@ class ReportController extends Controller
         $from = $request->from ?? now()->startOfMonth()->toDateString();
         $to   = $request->to ?? now()->endOfMonth()->toDateString();
 
-        $expenses = Expense::where('status', 'approved')
-            ->whereBetween('expense_date', [$from, $to])
+        $expenses = Expense::where('status', 'active')
+            ->whereBetween('date', [$from, $to])
             ->selectRaw('category, SUM(amount) as total, COUNT(*) as count')
             ->groupBy('category')
             ->orderBy('total', 'desc')
             ->get();
 
-        $purchases = Purchase::whereBetween('purchase_date', [$from, $to])
-            ->sum('total');
+        $purchases = Purchase::whereBetween('date', [$from, $to])
+            ->sum('total_amount');
 
         return response()->json([
             'from'              => $from,
@@ -284,9 +293,9 @@ class ReportController extends Controller
         $to   = $request->get('to', now()->toDateString());
 
         $totalIncome   = Payment::whereBetween('paid_at', [$from, $to])->where('status', 'completed')->sum('amount');
-        $totalExpenses = Expense::whereBetween('expense_date', [$from, $to])->where('status', 'approved')->sum('amount');
+        $totalExpenses = Expense::whereBetween('date', [$from, $to])->where('status', 'active')->sum('amount');
         $totalSales    = Sale::whereBetween('sale_date', [$from, $to])->where('status', '!=', 'cancelled')->sum('total');
-        $totalPurchases = Purchase::whereBetween('purchase_date', [$from, $to])->sum('total');
+        $totalPurchases = Purchase::whereBetween('date', [$from, $to])->sum('total_amount');
 
         return response()->json([
             'from'            => $from,
@@ -312,8 +321,8 @@ class ReportController extends Controller
             ->with('items.product')
             ->get();
 
-        $purchases = Purchase::whereBetween('purchase_date', [$from, $to])
-            ->with('items.product', 'vendor')
+        $purchases = Purchase::whereBetween('date', [$from, $to])
+            ->with('items.product', 'supplier')
             ->get();
 
         return response()->json([
@@ -323,14 +332,14 @@ class ReportController extends Controller
                 'count'    => $sales->count(),
                 'total'    => (float) $sales->sum('total'),
                 'paid'     => (float) $sales->sum('paid_amount'),
-                'due'      => (float) $sales->sum('due_amount'),
+                'due'      => (float) ($sales->sum('total') - $sales->sum('paid_amount')),
                 'records'  => $sales,
             ],
             'purchases' => [
                 'count'    => $purchases->count(),
-                'total'    => (float) $purchases->sum('total'),
+                'total'    => (float) $purchases->sum('total_amount'),
                 'paid'     => (float) $purchases->sum('paid_amount'),
-                'due'      => (float) $purchases->sum('due_amount'),
+                'due'      => (float) ($purchases->sum('total_amount') - $purchases->sum('paid_amount')),
                 'records'  => $purchases,
             ],
         ]);
