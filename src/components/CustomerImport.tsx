@@ -192,6 +192,13 @@ export default function CustomerImport({ open, onOpenChange, onComplete }: Props
           customer_id: "TEMP",
         };
         const n = row.raw;
+        // Username → customer_id (use as unique ID) and also pppoe_username
+        if (n.username) {
+          insertData.customer_id = String(n.username).trim();
+          insertData.username = String(n.username).trim();
+          if (!n.pppoe_username) insertData.pppoe_username = String(n.username).trim();
+        }
+        if (n.customer_id && n.customer_id !== "TEMP") insertData.customer_id = String(n.customer_id).trim();
         if (n.email) insertData.email = String(n.email).trim();
         if (n.nid) insertData.nid = String(n.nid).trim();
         if (n.father_name) insertData.father_name = String(n.father_name).trim();
@@ -205,9 +212,24 @@ export default function CustomerImport({ open, onOpenChange, onComplete }: Props
         if (n.pppoe_password) insertData.pppoe_password = String(n.pppoe_password).trim();
         if (n.onu_mac) insertData.onu_mac = String(n.onu_mac).trim();
 
-        const { error } = await supabase.from("customers").insert(insertData as any);
+        const { data: inserted, error } = await supabase.from("customers").insert(insertData as any).select("id").single();
         if (error) { errors.push({ row: row.rowNum, name: row.name, reason: error.message, data: row.raw }); }
-        else { imported++; }
+        else {
+          imported++;
+          // If due > 0, create an unpaid bill for migration
+          const dueAmount = parseFloat(String(n.due || "0"));
+          if (dueAmount > 0 && inserted?.id) {
+            const now = new Date();
+            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+            await supabase.from("bills").insert({
+              customer_id: inserted.id,
+              month: currentMonth,
+              amount: dueAmount,
+              status: "unpaid",
+              due_date: now.toISOString().split("T")[0],
+            } as any);
+          }
+        }
       }
 
       setResult({ total: parsedRows.length, imported, duplicates, errors });
