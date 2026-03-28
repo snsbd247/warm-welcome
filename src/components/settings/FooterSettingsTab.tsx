@@ -65,7 +65,7 @@ export default function FooterSettingsTab() {
         { setting_key: "auto_update_year", setting_value: form.auto_update_year ? "true" : "false" },
       ];
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("system_settings")
         .upsert(entries, { onConflict: "setting_key" });
       if (error) throw error;
