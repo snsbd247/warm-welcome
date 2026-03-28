@@ -144,7 +144,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
 export async function uploadCustomerPhoto(customerId: string, file: File): Promise<string> {
   const ext = file.name.split(".").pop() || "jpg";
   const path = `customer-photos/${customerId}.${ext}`;
-  const result = await uploadFile("avatars", path, file);
+  const result = await uploadFile("avatars", path, file, { upsert: true });
   return result.publicUrl;
 }
 
