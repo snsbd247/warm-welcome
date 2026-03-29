@@ -155,7 +155,7 @@ export default function SalarySheet() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {sheets.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">No records. Click Generate.</TableCell></TableRow>}
+                  {sheets.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">{t.common.noData}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>

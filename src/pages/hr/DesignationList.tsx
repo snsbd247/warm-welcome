@@ -72,7 +72,7 @@ export default function DesignationList() {
                     </div></TableCell>
                   </TableRow>
                 ))}
-                {rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No designations found</TableCell></TableRow>}
+                {rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">{t.common.noData}</TableCell></TableRow>}
               </TableBody>
             </Table>
           )}

@@ -67,7 +67,7 @@ export default function DailyAttendance() {
                   <TableCell>
                     <Select value={r.status} onValueChange={(v) => upd(emp.id, "status", v)}>
                       <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="present">Present</SelectItem><SelectItem value="absent">Absent</SelectItem><SelectItem value="late">Late</SelectItem><SelectItem value="leave">Leave</SelectItem></SelectContent>
+                      <SelectContent><SelectItem value="present">{t.hr.present}</SelectItem><SelectItem value="absent">{t.hr.absent}</SelectItem><SelectItem value="late">{t.hr.late}</SelectItem><SelectItem value="leave">{t.hr.leave}</SelectItem></SelectContent>
                     </Select>
                   </TableCell>
                   <TableCell><Input type="time" value={r.check_in} onChange={(e) => upd(emp.id, "check_in", e.target.value)} className="w-32" /></TableCell>

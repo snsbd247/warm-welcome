@@ -48,16 +48,16 @@ export default function LoanManagement() {
         </Dialog>
       </div>
       <Card>
-        <CardHeader><CardTitle>All Loans</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t.sidebar.loans}</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> : (
+          {isLoading ? <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p> : (
             <Table>
-              <TableHeader><TableRow><TableHead>Employee</TableHead><TableHead>Amount</TableHead><TableHead>Paid</TableHead><TableHead>Monthly Ded.</TableHead><TableHead>Remaining</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t.sidebar.employees}</TableHead><TableHead>{t.common.amount}</TableHead><TableHead>{t.hr.paidAmount}</TableHead><TableHead>{t.hr.monthlyDeduction}</TableHead><TableHead>{t.hr.remaining}</TableHead><TableHead>{t.common.status}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {loans.map((l: any) => (
                   <TableRow key={l.id}><TableCell className="font-medium">{getEmpName(l.employee_id)}</TableCell><TableCell>৳{Number(l.amount).toLocaleString()}</TableCell><TableCell>৳{Number(l.paid_amount).toLocaleString()}</TableCell><TableCell>৳{Number(l.monthly_deduction).toLocaleString()}</TableCell><TableCell className="font-semibold">৳{(Number(l.amount) - Number(l.paid_amount)).toLocaleString()}</TableCell><TableCell><Badge variant={l.status === "active" ? "default" : "secondary"}>{l.status}</Badge></TableCell></TableRow>
                 ))}
-                {loans.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No loans</TableCell></TableRow>}
+                {loans.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">{t.common.noData}</TableCell></TableRow>}
               </TableBody>
             </Table>
           )}
