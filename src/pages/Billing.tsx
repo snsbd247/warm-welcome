@@ -289,7 +289,7 @@ export default function Billing() {
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 rounded-lg bg-success/10">
                         <p className="text-lg font-bold text-success">{stats.paid}</p>
-                        <p className="text-[10px] text-success/80">Paid</p>
+                        <p className="text-[10px] text-success/80">{t.common.paid}</p>
                       </div>
                       <div className="p-2 rounded-lg bg-destructive/10">
                         <p className="text-lg font-bold text-destructive">{stats.unpaid}</p>
