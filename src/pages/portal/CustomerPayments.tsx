@@ -43,7 +43,6 @@ export default function CustomerPayments() {
     enabled: !!customer?.id,
   });
 
-  // Fetch full customer for PDF
   const { data: fullCustomer } = useQuery({
     queryKey: ["portal-customer-full-pay", customer?.id],
     queryFn: async () => {
@@ -75,10 +74,10 @@ export default function CustomerPayments() {
 
   const formatPaymentMethod = (method: string) => {
     const map: Record<string, string> = {
-      cash: "Cash",
-      bkash: "Bkash",
-      nagad: "Nagad",
-      bank: "Bank Transfer",
+      cash: t.payments.cash,
+      bkash: t.payments.bkash,
+      nagad: t.payments.nagad,
+      bank: t.portal.bankTransfer,
       "brac bank": "Brac Bank",
       "brac_bank": "Brac Bank",
     };
@@ -88,15 +87,14 @@ export default function CustomerPayments() {
   return (
     <PortalLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Payment History</h1>
-        <p className="text-muted-foreground mt-1">View and download your payment receipts</p>
+        <h1 className="text-2xl font-bold text-foreground">{t.portal.paymentHistoryTitle}</h1>
+        <p className="text-muted-foreground mt-1">{t.portal.paymentHistoryDesc}</p>
       </div>
 
       <div className="glass-card rounded-xl p-4 sm:p-6">
-        {/* Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Show</span>
+            <span className="text-muted-foreground">{t.table.show}</span>
             <Select value={perPage} onValueChange={setPerPage}>
               <SelectTrigger className="w-[70px] h-8"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -106,12 +104,12 @@ export default function CustomerPayments() {
                 <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
-            <span className="text-muted-foreground">entries</span>
+            <span className="text-muted-foreground">{t.table.entries}</span>
           </div>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search..."
+              placeholder={t.table.searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 w-full sm:w-56"
@@ -128,19 +126,19 @@ export default function CustomerPayments() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Serial</TableHead>
-                  <TableHead>Client Id</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Payment Mode</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Money Receipt</TableHead>
+                  <TableHead>{t.portal.serial}</TableHead>
+                  <TableHead>{t.portal.clientId}</TableHead>
+                  <TableHead>{t.common.date}</TableHead>
+                  <TableHead>{t.portal.paymentMode}</TableHead>
+                  <TableHead className="text-right">{t.common.amount}</TableHead>
+                  <TableHead className="text-right">{t.portal.moneyReceipt}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {displayPayments.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
-                      No payment history found
+                      {t.portal.noPaymentHistory}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -158,7 +156,7 @@ export default function CustomerPayments() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          title="Download Money Receipt"
+                          title={t.portal.downloadMoneyReceipt}
                           onClick={() => generatePaymentReceiptPDF(payment, fullCustomer || customer, invoiceFooter)}
                         >
                           <Download className="h-4 w-4 text-emerald-600" />
@@ -174,7 +172,7 @@ export default function CustomerPayments() {
 
         {!isLoading && filteredPayments.length > 0 && (
           <div className="mt-3 text-xs text-muted-foreground">
-            Showing {Math.min(displayPayments.length, filteredPayments.length)} of {filteredPayments.length} entries
+            {t.table.showing} {Math.min(displayPayments.length, filteredPayments.length)} {t.table.of} {filteredPayments.length} {t.table.entries}
           </div>
         )}
       </div>

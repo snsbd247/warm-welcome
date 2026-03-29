@@ -36,14 +36,12 @@ export default function CustomerBills() {
   const { data: bills, isLoading } = useQuery({
     queryKey: ["customer-bills-list", customer?.id],
     queryFn: async () => {
-      // First try edge function, fallback to direct Supabase query
       try {
         const result = await fetchCustomerData(customer!.session_token, { include_bills: true });
         if (result.bills && result.bills.length > 0) return result.bills;
       } catch (e) {
         console.log("Edge function bills fetch failed, using direct query");
       }
-      // Direct Supabase query as fallback
       const { data } = await supabase
         .from("bills")
         .select("*")
@@ -54,7 +52,6 @@ export default function CustomerBills() {
     enabled: !!customer?.id,
   });
 
-  // Fetch full customer data for PDF generation
   const { data: fullCustomer } = useQuery({
     queryKey: ["portal-customer-full", customer?.id],
     queryFn: async () => {
@@ -84,9 +81,9 @@ export default function CustomerBills() {
   const handleDownloadInvoice = async (bill: any) => {
     try {
       await generateBillInvoicePDF(bill, fullCustomer || customer);
-      toast.success("Invoice downloaded");
+      toast.success(t.portal.invoiceDownloaded);
     } catch {
-      toast.error("Failed to download invoice");
+      toast.error(t.portal.invoiceDownloadFailed);
     }
   };
 
@@ -110,10 +107,10 @@ export default function CustomerBills() {
         localStorage.setItem("bkash_payment_id", data.paymentID);
         window.location.href = data.bkashURL;
       } else {
-        toast.error(data.error || "Failed to initiate payment");
+        toast.error(data.error || t.portal.paymentFailed);
       }
     } catch (err: any) {
-      toast.error(err.message || "Payment failed");
+      toast.error(err.message || t.portal.paymentFailed);
     } finally {
       setPaying(false);
     }
@@ -122,8 +119,8 @@ export default function CustomerBills() {
   const paymentMethods = [
     { id: "bkash", name: "bKash", icon: Smartphone, color: "text-pink-600", bgColor: "bg-pink-50", available: true, action: handleBkashPay },
     { id: "nagad", name: "Nagad", icon: Smartphone, color: "text-orange-600", bgColor: "bg-orange-50", available: false },
-    { id: "bank", name: "Bank Transfer", icon: Building2, color: "text-blue-600", bgColor: "bg-blue-50", available: false },
-    { id: "cash", name: "Cash", icon: Banknote, color: "text-green-600", bgColor: "bg-green-50", available: false, note: "Pay at office" },
+    { id: "bank", name: t.portal.bankTransfer, icon: Building2, color: "text-blue-600", bgColor: "bg-blue-50", available: false },
+    { id: "cash", name: t.payments.cash, icon: Banknote, color: "text-green-600", bgColor: "bg-green-50", available: false, note: t.portal.payAtOffice },
   ];
 
   const formatBillDate = (month: string) => {
@@ -138,15 +135,14 @@ export default function CustomerBills() {
   return (
     <PortalLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Invoice History</h1>
-        <p className="text-muted-foreground mt-1">View, download and pay your invoices</p>
+        <h1 className="text-2xl font-bold text-foreground">{t.portal.invoiceHistory}</h1>
+        <p className="text-muted-foreground mt-1">{t.portal.invoiceHistoryDesc}</p>
       </div>
 
       <div className="glass-card rounded-xl p-4 sm:p-6">
-        {/* Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Show</span>
+            <span className="text-muted-foreground">{t.table.show}</span>
             <Select value={perPage} onValueChange={setPerPage}>
               <SelectTrigger className="w-[70px] h-8"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -156,12 +152,12 @@ export default function CustomerBills() {
                 <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
-            <span className="text-muted-foreground">entries</span>
+            <span className="text-muted-foreground">{t.table.entries}</span>
           </div>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search..."
+              placeholder={t.table.searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 w-full sm:w-56"
@@ -178,20 +174,20 @@ export default function CustomerBills() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Serial</TableHead>
-                  <TableHead>Client Id</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Invoice For</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead>{t.portal.serial}</TableHead>
+                  <TableHead>{t.portal.clientId}</TableHead>
+                  <TableHead>{t.common.date}</TableHead>
+                  <TableHead>{t.portal.invoiceFor}</TableHead>
+                  <TableHead className="text-right">{t.common.amount}</TableHead>
+                  <TableHead>{t.common.status}</TableHead>
+                  <TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {displayBills.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
-                      No invoices found
+                      {t.portal.noInvoicesFound}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -202,7 +198,7 @@ export default function CustomerBills() {
                       </TableCell>
                       <TableCell>{customer?.customer_id}</TableCell>
                       <TableCell className="text-primary">{formatBillDate(bill.month)}</TableCell>
-                      <TableCell className="text-primary">Monthly Bill (MRC)</TableCell>
+                      <TableCell className="text-primary">{t.portal.monthlyBillMRC}</TableCell>
                       <TableCell className="text-right">{Number(bill.amount).toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={
@@ -212,7 +208,7 @@ export default function CustomerBills() {
                             ? "bg-red-50 text-red-700 border-red-200"
                             : "bg-amber-50 text-amber-700 border-amber-200"
                         }>
-                          {bill.status}
+                          {bill.status === "paid" ? t.common.paid : bill.status === "unpaid" ? t.common.unpaid : bill.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -220,7 +216,7 @@ export default function CustomerBills() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="Download Invoice"
+                            title={t.portal.downloadInvoice}
                             onClick={() => handleDownloadInvoice(bill)}
                           >
                             <Download className="h-4 w-4 text-emerald-600" />
@@ -233,7 +229,7 @@ export default function CustomerBills() {
                               className="text-xs"
                             >
                               <CreditCard className="h-3.5 w-3.5 mr-1" />
-                              Pay
+                              {t.portal.pay}
                             </Button>
                           )}
                         </div>
@@ -246,29 +242,27 @@ export default function CustomerBills() {
           </div>
         )}
 
-        {/* Entry count */}
         {!isLoading && filteredBills.length > 0 && (
           <div className="mt-3 text-xs text-muted-foreground">
-            Showing {Math.min(displayBills.length, filteredBills.length)} of {filteredBills.length} entries
+            {t.table.showing} {Math.min(displayBills.length, filteredBills.length)} {t.table.of} {filteredBills.length} {t.table.entries}
           </div>
         )}
       </div>
 
-      {/* Payment Method Dialog */}
       <Dialog open={payOpen} onOpenChange={setPayOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Choose Payment Method</DialogTitle>
+            <DialogTitle>{t.portal.choosePaymentMethod}</DialogTitle>
           </DialogHeader>
           {selectedBill && (
             <div className="space-y-4">
               <div className="p-4 rounded-lg bg-muted">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Bill Month</span>
+                  <span className="text-muted-foreground">{t.portal.billMonth}</span>
                   <span className="font-medium text-foreground">{selectedBill.month}</span>
                 </div>
                 <div className="flex justify-between text-sm mt-1">
-                  <span className="text-muted-foreground">Amount</span>
+                  <span className="text-muted-foreground">{t.common.amount}</span>
                   <span className="font-bold text-lg text-foreground">৳{Number(selectedBill.amount).toLocaleString()}</span>
                 </div>
               </div>
@@ -290,7 +284,7 @@ export default function CustomerBills() {
                     <div className="text-left flex-1">
                       <p className="font-medium text-sm text-foreground">{method.name}</p>
                       {method.note && <p className="text-xs text-muted-foreground">{method.note}</p>}
-                      {!method.available && <p className="text-xs text-muted-foreground">Coming soon</p>}
+                      {!method.available && <p className="text-xs text-muted-foreground">{t.portal.comingSoon}</p>}
                     </div>
                     {paying && method.id === "bkash" && (
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />

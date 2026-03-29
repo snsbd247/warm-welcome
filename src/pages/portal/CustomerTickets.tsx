@@ -11,17 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { safeFormat } from "@/lib/utils";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Plus, Loader2, MessageSquare, Send, Ticket } from "lucide-react";
 import { toast } from "sonner";
@@ -97,7 +90,7 @@ export default function CustomerTickets() {
       setForm({ subject: "", category: "general", priority: "medium", message: "" });
       setCreateOpen(false);
       queryClient.invalidateQueries({ queryKey: ["customer-tickets"] });
-      toast.success("Ticket created successfully");
+      toast.success(t.portal.ticketCreated);
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -118,7 +111,7 @@ export default function CustomerTickets() {
       if (error) throw error;
       setReplyText("");
       queryClient.invalidateQueries({ queryKey: ["ticket-replies", viewTicket.id] });
-      toast.success("Reply sent");
+      toast.success(t.portal.replySent);
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -131,11 +124,11 @@ export default function CustomerTickets() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Support Tickets</h1>
-            <p className="text-muted-foreground">Get help from our support team</p>
+            <h1 className="text-2xl font-bold text-foreground">{t.portal.supportTickets}</h1>
+            <p className="text-muted-foreground">{t.portal.supportTicketsDesc}</p>
           </div>
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> New Ticket
+            <Plus className="h-4 w-4 mr-2" /> {t.portal.newTicket}
           </Button>
         </div>
 
@@ -147,9 +140,9 @@ export default function CustomerTickets() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Ticket className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No support tickets yet</p>
+              <p className="text-muted-foreground">{t.portal.noTicketsYet}</p>
               <Button className="mt-4" onClick={() => setCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" /> Create Your First Ticket
+                <Plus className="h-4 w-4 mr-2" /> {t.portal.createFirstTicket}
               </Button>
             </CardContent>
           </Card>
@@ -187,56 +180,56 @@ export default function CustomerTickets() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Support Ticket</DialogTitle>
+            <DialogTitle>{t.portal.createSupportTicket}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Subject</Label>
+              <Label>{t.portal.subject}</Label>
               <Input
                 value={form.subject}
                 onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                placeholder="Brief description of your issue"
+                placeholder={t.portal.subjectPlaceholder}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Category</Label>
+                <Label>{t.portal.category}</Label>
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="general">General</SelectItem>
-                    <SelectItem value="billing">Billing</SelectItem>
-                    <SelectItem value="technical">Technical</SelectItem>
-                    <SelectItem value="connection">Connection Issue</SelectItem>
-                    <SelectItem value="speed">Speed Issue</SelectItem>
+                    <SelectItem value="general">{t.portal.general}</SelectItem>
+                    <SelectItem value="billing">{t.billing.title}</SelectItem>
+                    <SelectItem value="technical">{t.portal.technical}</SelectItem>
+                    <SelectItem value="connection">{t.portal.connectionIssue}</SelectItem>
+                    <SelectItem value="speed">{t.portal.speedIssue}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Priority</Label>
+                <Label>{t.portal.priority}</Label>
                 <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="low">{t.tickets.low}</SelectItem>
+                    <SelectItem value="medium">{t.tickets.medium}</SelectItem>
+                    <SelectItem value="high">{t.tickets.high}</SelectItem>
+                    <SelectItem value="urgent">{t.portal.urgent}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <Label>Describe your issue</Label>
+              <Label>{t.portal.describeIssue}</Label>
               <Textarea
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
-                placeholder="Please provide details about your issue..."
+                placeholder={t.portal.issuePlaceholder}
                 className="min-h-[100px]"
               />
             </div>
             <Button onClick={handleCreate} disabled={loading || !form.subject.trim() || !form.message.trim()} className="w-full">
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-              Submit Ticket
+              {t.portal.submitTicket}
             </Button>
           </div>
         </DialogContent>
@@ -260,11 +253,11 @@ export default function CustomerTickets() {
 
               <div className="border rounded-lg">
                 <div className="p-3 border-b bg-muted/50">
-                  <h4 className="font-medium text-sm">Conversation</h4>
+                  <h4 className="font-medium text-sm">{t.portal.conversation}</h4>
                 </div>
                 <div className="p-3 space-y-3 max-h-60 overflow-y-auto">
                   {replies.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">No messages yet</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">{t.portal.noMessagesYet}</p>
                   ) : (
                     replies.map((reply: any) => (
                       <div
@@ -287,7 +280,7 @@ export default function CustomerTickets() {
                 {viewTicket.status !== "closed" && (
                   <div className="p-3 border-t flex gap-2">
                     <Textarea
-                      placeholder="Type your reply..."
+                      placeholder={t.portal.typeReply}
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
                       className="min-h-[60px]"

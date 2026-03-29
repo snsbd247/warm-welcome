@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   LayoutDashboard, Receipt, History, User, LogOut, Wifi, ChevronLeft, Ticket, Menu, X,
 } from "lucide-react";
@@ -7,19 +8,20 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
-const navItems = [
-  { to: "/portal", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/portal/bills", icon: Receipt, label: "My Bills" },
-  { to: "/portal/payments", icon: History, label: "Payment History" },
-  { to: "/portal/tickets", icon: Ticket, label: "Support" },
-  { to: "/portal/profile", icon: User, label: "Profile" },
-];
-
 export default function PortalSidebar() {
+  const { t } = useLanguage();
   const { signOut, customer } = useCustomerAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navItems = [
+    { to: "/portal", icon: LayoutDashboard, label: t.portal.dashboard },
+    { to: "/portal/bills", icon: Receipt, label: t.portal.myBills },
+    { to: "/portal/payments", icon: History, label: t.portal.paymentHistory },
+    { to: "/portal/tickets", icon: Ticket, label: t.portal.support },
+    { to: "/portal/profile", icon: User, label: t.portal.profile },
+  ];
 
   useEffect(() => {
     setMobileOpen(false);
@@ -44,7 +46,7 @@ export default function PortalSidebar() {
           <div className="overflow-hidden">
             <h2 className="font-bold text-sm leading-tight">Smart ISP</h2>
             <p className="text-[11px] text-sidebar-foreground/60 truncate">
-              {customer?.name ?? "Customer Portal"}
+              {customer?.name ?? t.portal.customerPortal}
             </p>
           </div>
         )}
@@ -100,7 +102,7 @@ export default function PortalSidebar() {
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           <LogOut className="h-5 w-5 shrink-0" />
-          {(!collapsed || isMobile) && <span>Sign Out</span>}
+          {(!collapsed || isMobile) && <span>{t.portal.signOut}</span>}
         </button>
       </div>
     </>
