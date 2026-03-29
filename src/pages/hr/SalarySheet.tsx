@@ -107,10 +107,10 @@ export default function SalarySheet() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Salary Sheet</h1>
+        <h1 className="text-2xl font-bold">{t.sidebar.salarySheet}</h1>
         <div className="flex gap-3">
           <Select value={month} onValueChange={setMonth}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent>{months.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent></Select>
-          <Button onClick={() => generate.mutate()} disabled={generate.isPending}><FileText className="h-4 w-4 mr-2" />{generate.isPending ? "Generating..." : "Generate"}</Button>
+          <Button onClick={() => generate.mutate()} disabled={generate.isPending}><FileText className="h-4 w-4 mr-2" />{generate.isPending ? t.common.loading : t.hr.generateSalary}</Button>
         </div>
       </div>
       <Card>
