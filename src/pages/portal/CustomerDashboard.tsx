@@ -15,6 +15,7 @@ import {
   CreditCard,
   Loader2,
 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StatCardProps {
   title: string;
@@ -43,6 +44,7 @@ function StatCard({ title, value, icon: Icon, color, bgColor }: StatCardProps) {
 }
 
 export default function CustomerDashboard() {
+  const { t } = useLanguage();
   const { customer } = useCustomerAuth();
 
   const { data: pkg } = useQuery({

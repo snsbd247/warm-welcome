@@ -9,8 +9,10 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SMSSettings() {
+  const { t } = useLanguage();
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
 

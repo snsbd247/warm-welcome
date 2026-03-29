@@ -17,8 +17,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, Eye } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AuditLogs() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -69,7 +71,7 @@ export default function AuditLogs() {
               <SelectContent>
                 <SelectItem value="all">All Actions</SelectItem>
                 <SelectItem value="edit">Edit</SelectItem>
-                <SelectItem value="delete">Delete</SelectItem>
+                <SelectItem value="delete">{t.common.delete}</SelectItem>
               </SelectContent>
             </Select>
             <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />

@@ -16,8 +16,10 @@ import {
 import { Loader2, Download, Search } from "lucide-react";
 import { generatePaymentReceiptPDF } from "@/lib/pdf";
 import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function CustomerPayments() {
+  const { t } = useLanguage();
   const { customer } = useCustomerAuth();
   const [search, setSearch] = useState("");
   const [perPage, setPerPage] = useState("10");

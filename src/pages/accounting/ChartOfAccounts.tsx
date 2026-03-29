@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, ChevronRight, ChevronDown, Edit2, Trash2, FileText, BookOpen } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Account {
   id: string;
@@ -134,6 +135,7 @@ function AccountRow({ account, expanded, onToggle, onEdit, onDelete, onAddChild,
 }
 
 export default function ChartOfAccounts() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { hasPermission, isSuperAdmin } = usePermissions();
@@ -365,7 +367,7 @@ export default function ChartOfAccounts() {
                       <Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
+                      <Button type="button" variant="outline" onClick={resetForm}>{t.common.cancel}</Button>
                       <Button type="submit" disabled={saveMutation.isPending}>{editAccount ? "Update" : "Create"}</Button>
                     </div>
                   </form>
@@ -399,12 +401,12 @@ export default function ChartOfAccounts() {
                   <TableHead className="text-right">Total Debit</TableHead>
                   <TableHead className="text-right">Total Credit</TableHead>
                   <TableHead className="text-right">Closing Balance</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8">{t.common.loading}</TableCell></TableRow>
                 ) : accounts.length === 0 ? (
                   <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No accounts found</TableCell></TableRow>
                 ) : (

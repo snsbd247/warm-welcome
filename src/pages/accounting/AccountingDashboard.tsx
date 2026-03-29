@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, Package, AlertTriangle, ShoppingCart } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "hsl(var(--accent))", "#f59e0b", "#10b981", "#6366f1"];
 
 export default function AccountingDashboard() {
+  const { t } = useLanguage();
   const { data: products = [] } = useQuery({
     queryKey: ["products"],
     queryFn: async () => { const { data } = await supabase.from("products").select("*"); return data || []; },
@@ -70,7 +72,7 @@ export default function AccountingDashboard() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Accounting Dashboard</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.accounting.title}</h1>
           <p className="text-muted-foreground text-sm">Financial overview and analytics</p>
         </div>
 

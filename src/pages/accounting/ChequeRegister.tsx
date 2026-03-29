@@ -14,8 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ChequeRegister() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -118,7 +120,7 @@ export default function ChequeRegister() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {isLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> : (
+            {isLoading ? <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p> : (
               <Table>
                 <TableHeader>
                   <TableRow>

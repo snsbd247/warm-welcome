@@ -13,8 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2, Search, Eye, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SupplierList() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -90,7 +92,7 @@ export default function SupplierList() {
                 </div>
                 <div><Label>Address</Label><Textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
+                  <Button type="button" variant="outline" onClick={closeDialog}>{t.common.cancel}</Button>
                   <Button type="submit" disabled={!form.name || save.isPending}>{save.isPending ? "Saving..." : "Save"}</Button>
                 </div>
               </form>
@@ -111,7 +113,7 @@ export default function SupplierList() {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> : (
+            {isLoading ? <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p> : (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -120,7 +122,7 @@ export default function SupplierList() {
                     <TableHead>Phone</TableHead>
                     <TableHead className="text-right">Total Due</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right">{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

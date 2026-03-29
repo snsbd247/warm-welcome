@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useSmtpSettings, useSmsTestSend, useBkashTest, useNagadTest } from "@/hooks/useIntegrationSettings";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ─── SMTP Tab ────────────────────────────────────────────────────
 function SmtpTab() {
@@ -806,6 +807,7 @@ function PasswordField({ label, value, onChange, show, onToggle, disabled }: {
 
 // ─── Main Page ───────────────────────────────────────────────────
 export default function IntegrationManagement() {
+  const { t } = useLanguage();
   return (
     <DashboardLayout>
       <div className="space-y-6">

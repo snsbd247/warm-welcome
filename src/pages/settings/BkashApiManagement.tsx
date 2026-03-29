@@ -17,6 +17,7 @@ import { Loader2, Eye, EyeOff, Wifi, WifiOff, TestTube, Save, RefreshCw, Search,
 import { toast } from "sonner";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const BASE_URLS: Record<string, string> = {
   sandbox: "https://tokenized.sandbox.bka.sh/v1.2.0-beta",
@@ -24,6 +25,7 @@ const BASE_URLS: Record<string, string> = {
 };
 
 export default function BkashApiManagement() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { role } = useAdminRole();
   const isSuperAdmin = role === "super_admin";
@@ -540,7 +542,7 @@ export default function BkashApiManagement() {
               </div>
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setRefundTxn(null)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setRefundTxn(null)}>{t.common.cancel}</Button>
               <Button
                 variant="destructive"
                 disabled={refundMutation.isPending || !refundAmount || Number(refundAmount) <= 0}

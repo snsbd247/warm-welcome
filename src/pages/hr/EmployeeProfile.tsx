@@ -14,8 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Plus, Pencil, Trash2, GraduationCap, Briefcase, DollarSign, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function EmployeeProfile() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -37,7 +39,7 @@ export default function EmployeeProfile() {
     enabled: !!employee?.designation_id,
   });
 
-  if (!employee) return <DashboardLayout><p className="text-center py-12 text-muted-foreground">Loading...</p></DashboardLayout>;
+  if (!employee) return <DashboardLayout><p className="text-center py-12 text-muted-foreground">{t.common.loading}</p></DashboardLayout>;
 
   return (
     <DashboardLayout>
@@ -75,6 +77,7 @@ export default function EmployeeProfile() {
 
 /* ── Education Tab ── */
 function EducationTab({ employeeId }: { employeeId: string }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -123,7 +126,7 @@ function EducationTab({ employeeId }: { employeeId: string }) {
       </CardHeader>
       <CardContent>
         <Table>
-          <TableHeader><TableRow><TableHead>Degree</TableHead><TableHead>Institution</TableHead><TableHead>Board/University</TableHead><TableHead>Year</TableHead><TableHead>Result</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Degree</TableHead><TableHead>Institution</TableHead><TableHead>Board/University</TableHead><TableHead>Year</TableHead><TableHead>Result</TableHead><TableHead>{t.common.actions}</TableHead></TableRow></TableHeader>
           <TableBody>
             {rows.map((r: any) => (
               <TableRow key={r.id}>
@@ -148,6 +151,7 @@ function EducationTab({ employeeId }: { employeeId: string }) {
 
 /* ── Experience Tab ── */
 function ExperienceTab({ employeeId }: { employeeId: string }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -199,7 +203,7 @@ function ExperienceTab({ employeeId }: { employeeId: string }) {
       </CardHeader>
       <CardContent>
         <Table>
-          <TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Designation</TableHead><TableHead>From</TableHead><TableHead>To</TableHead><TableHead>Responsibilities</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Designation</TableHead><TableHead>From</TableHead><TableHead>To</TableHead><TableHead>Responsibilities</TableHead><TableHead>{t.common.actions}</TableHead></TableRow></TableHeader>
           <TableBody>
             {rows.map((r: any) => (
               <TableRow key={r.id}>
@@ -224,6 +228,7 @@ function ExperienceTab({ employeeId }: { employeeId: string }) {
 
 /* ── Salary Structure Tab ── */
 function SalaryStructureTab({ employeeId, currentSalary }: { employeeId: string; currentSalary: number }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -289,7 +294,7 @@ function SalaryStructureTab({ employeeId, currentSalary }: { employeeId: string;
       </CardHeader>
       <CardContent>
         <Table>
-          <TableHeader><TableRow><TableHead>Effective From</TableHead><TableHead className="text-right">Basic</TableHead><TableHead className="text-right">House Rent</TableHead><TableHead className="text-right">Medical</TableHead><TableHead className="text-right">Conveyance</TableHead><TableHead className="text-right">Other</TableHead><TableHead className="text-right">Gross</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Effective From</TableHead><TableHead className="text-right">Basic</TableHead><TableHead className="text-right">House Rent</TableHead><TableHead className="text-right">Medical</TableHead><TableHead className="text-right">Conveyance</TableHead><TableHead className="text-right">Other</TableHead><TableHead className="text-right">Gross</TableHead><TableHead>{t.common.actions}</TableHead></TableRow></TableHeader>
           <TableBody>
             {rows.map((r: any, idx: number) => {
               const gross = Number(r.basic_salary) + Number(r.house_rent) + Number(r.medical) + Number(r.conveyance) + Number(r.other_allowance);
@@ -319,6 +324,7 @@ function SalaryStructureTab({ employeeId, currentSalary }: { employeeId: string;
 
 /* ── Emergency Contact Tab ── */
 function EmergencyContactTab({ employeeId }: { employeeId: string }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -366,7 +372,7 @@ function EmergencyContactTab({ employeeId }: { employeeId: string }) {
       </CardHeader>
       <CardContent>
         <Table>
-          <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Relation</TableHead><TableHead>Phone</TableHead><TableHead>Address</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Relation</TableHead><TableHead>Phone</TableHead><TableHead>Address</TableHead><TableHead>{t.common.actions}</TableHead></TableRow></TableHeader>
           <TableBody>
             {rows.map((r: any) => (
               <TableRow key={r.id}>

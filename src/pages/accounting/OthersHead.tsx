@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, BookOpen, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const TYPE_COLORS: Record<string, string> = {
   asset: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -21,6 +22,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function OthersHead() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -129,7 +131,7 @@ export default function OthersHead() {
         <CardHeader><CardTitle>Asset / Liability / Equity Ledgers ({rows.length})</CardTitle></CardHeader>
         <CardContent>
           <Table>
-            <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Code</TableHead><TableHead>Type</TableHead><TableHead>Description</TableHead><TableHead>Balance</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Code</TableHead><TableHead>Type</TableHead><TableHead>Description</TableHead><TableHead>Balance</TableHead><TableHead>{t.common.actions}</TableHead></TableRow></TableHeader>
             <TableBody>
               {rows.map((r: any) => (
                 <TableRow key={r.id}>

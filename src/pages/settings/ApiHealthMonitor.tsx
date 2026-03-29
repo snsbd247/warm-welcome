@@ -7,6 +7,7 @@ import { apiHealth, type ApiHealthEntry } from "@/lib/apiHealth";
 import { IS_LOVABLE_RUNTIME } from "@/lib/apiBaseUrl";
 import { Activity, Server, Cloud, AlertTriangle, CheckCircle, XCircle, Trash2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 let cachedStats = apiHealth.getStats();
 let cachedLog = apiHealth.getLog();
@@ -25,6 +26,7 @@ function useHealthLog() {
 }
 
 export default function ApiHealthMonitor() {
+  const { t } = useLanguage();
   const stats = useHealthData();
   const log = useHealthLog();
   const [now, setNow] = useState(Date.now());

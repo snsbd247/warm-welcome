@@ -3,8 +3,10 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function DailyReport() {
+  const { t } = useLanguage();
   const today = format(new Date(), "yyyy-MM-dd");
   const { data: payments = [] } = useQuery({ queryKey: ["daily-payments"], queryFn: async () => { const { data } = await ( supabase as any).from("payments").select("*").gte("paid_at", `${today}T00:00:00`).lte("paid_at", `${today}T23:59:59`); return data || []; } });
   const { data: bills = [] } = useQuery({ queryKey: ["daily-bills"], queryFn: async () => { const { data } = await ( supabase as any).from("bills").select("*").gte("created_at", `${today}T00:00:00`).lte("created_at", `${today}T23:59:59`); return data || []; } });

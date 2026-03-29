@@ -5,8 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Activity, Wifi, WifiOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function TrafficMonitor() {
+  const { t } = useLanguage();
   const { data: routers = [], isLoading } = useQuery({
     queryKey: ["routers-traffic"],
     queryFn: async () => { const { data } = await ( supabase as any).from("mikrotik_routers").select("*"); return data || []; },
@@ -20,7 +22,7 @@ export default function TrafficMonitor() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Traffic Monitor</h1>
+        <h1 className="text-2xl font-bold">{t.sidebar.trafficMonitor}</h1>
         <Badge variant="outline" className="gap-1"><Activity className="h-3 w-3" />Auto-refresh: 30s</Badge>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -31,7 +33,7 @@ export default function TrafficMonitor() {
       <Card>
         <CardHeader><CardTitle>Router Status</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> : (
+          {isLoading ? <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p> : (
             <Table>
               <TableHeader><TableRow><TableHead>Router Name</TableHead><TableHead>IP Address</TableHead><TableHead>API Port</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
               <TableBody>

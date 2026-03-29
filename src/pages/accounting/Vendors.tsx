@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Building2, Search } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Vendor {
   id: string; name: string; phone: string; email: string; company: string;
@@ -21,6 +22,7 @@ interface Vendor {
 const emptyVendor = { name: "", phone: "", email: "", company: "", address: "", status: "active", notes: "" };
 
 export default function Vendors() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Vendor | null>(null);
@@ -96,7 +98,7 @@ export default function Vendors() {
                 <div><Label>Address</Label><Textarea value={form.address} onChange={e => setForm({...form, address: e.target.value})} /></div>
                 <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} /></div>
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
+                  <Button type="button" variant="outline" onClick={closeDialog}>{t.common.cancel}</Button>
                   <Button type="submit" disabled={save.isPending}>{save.isPending ? "Saving..." : "Save"}</Button>
                 </div>
               </form>
@@ -125,12 +127,12 @@ export default function Vendors() {
                   <TableHead>Company</TableHead>
                   <TableHead className="text-right">Balance Due</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">{t.common.loading}</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No vendors found</TableCell></TableRow>
                 ) : filtered.map((v: Vendor) => (

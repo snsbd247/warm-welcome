@@ -26,6 +26,7 @@ import {
 import { Plus, Loader2, MessageSquare, Send, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { ticketsApi } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const priorityColors: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
@@ -42,6 +43,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function CustomerTickets() {
+  const { t } = useLanguage();
   const { customer } = useCustomerAuth();
   const [createOpen, setCreateOpen] = useState(false);
   const [viewTicket, setViewTicket] = useState<any>(null);

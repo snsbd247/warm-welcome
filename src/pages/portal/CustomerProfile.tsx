@@ -5,6 +5,7 @@ import PortalLayout from "@/components/layout/PortalLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, MapPin, Wifi, Loader2, CreditCard } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
@@ -16,6 +17,7 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 }
 
 export default function CustomerProfile() {
+  const { t } = useLanguage();
   const { customer, fetchProfile } = useCustomerAuth();
 
   // Fetch full profile from server (sensitive data never stored locally)

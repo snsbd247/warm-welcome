@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +14,7 @@ import { format } from "date-fns";
 import { generatePaySlipPdf } from "@/lib/salaryPaySlipPdf";
 
 export default function SalarySheet() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const now = new Date();
   const [month, setMonth] = useState(format(now, "yyyy-MM"));
@@ -105,31 +107,31 @@ export default function SalarySheet() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Salary Sheet</h1>
+        <h1 className="text-2xl font-bold">{t.sidebar.salarySheet}</h1>
         <div className="flex gap-3">
           <Select value={month} onValueChange={setMonth}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent>{months.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent></Select>
-          <Button onClick={() => generate.mutate()} disabled={generate.isPending}><FileText className="h-4 w-4 mr-2" />{generate.isPending ? "Generating..." : "Generate"}</Button>
+          <Button onClick={() => generate.mutate()} disabled={generate.isPending}><FileText className="h-4 w-4 mr-2" />{generate.isPending ? t.common.loading : t.hr.generateSalary}</Button>
         </div>
       </div>
       <Card>
-        <CardHeader><CardTitle>Salary — {month} (Total: ৳{total.toLocaleString()})</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t.hr.salary} — {month} ({t.common.total}: ৳{total.toLocaleString()})</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> : (
+          {isLoading ? <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p> : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead className="text-right">Basic</TableHead>
-                    <TableHead className="text-right">House Rent</TableHead>
-                    <TableHead className="text-right">Medical</TableHead>
-                    <TableHead className="text-right">Conv.</TableHead>
+                    <TableHead>{t.sidebar.employees}</TableHead>
+                    <TableHead className="text-right">{t.hr.basicSalary}</TableHead>
+                    <TableHead className="text-right">{t.hr.houseRent}</TableHead>
+                    <TableHead className="text-right">{t.hr.medical}</TableHead>
+                    <TableHead className="text-right">{t.hr.conveyance}</TableHead>
                     <TableHead className="text-right">Bonus</TableHead>
-                    <TableHead className="text-right">Loan Ded.</TableHead>
-                    <TableHead className="text-right">Net</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-right">{t.hr.loanDeduction}</TableHead>
+                    <TableHead className="text-right">{t.hr.netSalary}</TableHead>
+                    <TableHead>{t.common.status}</TableHead>
+                    <TableHead>{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -147,13 +149,13 @@ export default function SalarySheet() {
                       <TableCell><Badge variant={s.status === "paid" ? "default" : "outline"}>{s.status}</Badge></TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          {s.status === "pending" && <Button size="sm" variant="outline" onClick={() => markPaid.mutate(s.id)}><CheckCircle className="h-3 w-3 mr-1" />Pay</Button>}
+                          {s.status === "pending" && <Button size="sm" variant="outline" onClick={() => markPaid.mutate(s.id)}><CheckCircle className="h-3 w-3 mr-1" />{t.hr.paySalary}</Button>}
                           <Button size="sm" variant="ghost" onClick={() => generatePaySlip(s)}><Download className="h-3 w-3 mr-1" />Slip</Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {sheets.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">No records. Click Generate.</TableCell></TableRow>}
+                  {sheets.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">{t.common.noData}</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>

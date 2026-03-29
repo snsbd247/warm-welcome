@@ -21,8 +21,10 @@ import { Loader2, CreditCard, Smartphone, Building2, Banknote, Download, Search 
 import { toast } from "sonner";
 import { format } from "date-fns";
 import api from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function CustomerBills() {
+  const { t } = useLanguage();
   const { customer } = useCustomerAuth();
   const queryClient = useQueryClient();
   const [payOpen, setPayOpen] = useState(false);

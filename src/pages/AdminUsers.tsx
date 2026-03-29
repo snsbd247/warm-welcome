@@ -25,8 +25,10 @@ import {
 import { Plus, Pencil, Trash2, Loader2, Search, Ban, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AdminUsers() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { isSuperAdmin } = usePermissions();
   const normalizedUserRole = (typeof user?.role === 'string' ? user.role : '').toLowerCase().replace(/[\s-]+/g, "_");
@@ -256,7 +258,7 @@ export default function AdminUsers() {
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -386,8 +388,8 @@ export default function AdminUsers() {
             <AlertDialogDescription>Are you sure you want to delete "{deleteUser?.full_name || deleteUser?.username}"? This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t.common.delete}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

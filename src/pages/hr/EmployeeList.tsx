@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function EmployeeList() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -41,34 +43,34 @@ export default function EmployeeList() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Employee List</h1>
+        <h1 className="text-2xl font-bold">{t.hr.employeeList}</h1>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditId(null); setForm(emptyForm); } }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Add Employee</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{t.hr.addEmployee}</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>{editId ? "Edit" : "Add"} Employee</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editId ? t.common.edit : t.common.add} {t.sidebar.employees}</DialogTitle></DialogHeader>
             <div className="grid grid-cols-2 gap-3">
-              <Input placeholder="Employee ID" value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} disabled={!!editId} />
-              <Input placeholder="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <Input placeholder={t.hr.employeeId} value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} disabled={!!editId} />
+              <Input placeholder={t.common.name} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input placeholder={t.common.phone} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <Input placeholder={t.common.email} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <Select value={form.designation_id} onValueChange={(v) => setForm({ ...form, designation_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Designation" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t.hr.designation} /></SelectTrigger>
                 <SelectContent>{desigs.map((d: any) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
               </Select>
               <Input type="date" value={form.joining_date} onChange={(e) => setForm({ ...form, joining_date: e.target.value })} />
-              <Input placeholder="Salary" type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} />
-              <Input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              <Input placeholder={t.hr.salary} type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} />
+              <Input placeholder={t.common.address} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
             </div>
-            <Button onClick={() => save.mutate()} disabled={!form.name || !form.employee_id || save.isPending} className="w-full mt-2">{save.isPending ? "Saving..." : "Save"}</Button>
+            <Button onClick={() => save.mutate()} disabled={!form.name || !form.employee_id || save.isPending} className="w-full mt-2">{save.isPending ? t.common.loading : t.common.save}</Button>
           </DialogContent>
         </Dialog>
       </div>
       <Card>
-        <CardHeader><CardTitle>Employees ({rows.length})</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t.sidebar.employees} ({rows.length})</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> : (
+          {isLoading ? <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p> : (
             <Table>
-              <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Name</TableHead><TableHead>Phone</TableHead><TableHead>Designation</TableHead><TableHead>Salary</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>{t.common.name}</TableHead><TableHead>{t.common.phone}</TableHead><TableHead>{t.hr.designation}</TableHead><TableHead>{t.hr.salary}</TableHead><TableHead>{t.common.status}</TableHead><TableHead>{t.common.actions}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {rows.map((e: any) => (
                   <TableRow key={e.id}>
@@ -85,7 +87,7 @@ export default function EmployeeList() {
                     </div></TableCell>
                   </TableRow>
                 ))}
-                {rows.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No employees</TableCell></TableRow>}
+                {rows.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">{t.common.noData}</TableCell></TableRow>}
               </TableBody>
             </Table>
           )}

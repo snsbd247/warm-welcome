@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Eye, Users, Truck, Briefcase } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const fmt = (v: number) => `৳${Math.abs(v).toLocaleString("en-BD", { minimumFractionDigits: 2 })}`;
 
 export default function AllLedgersList() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 

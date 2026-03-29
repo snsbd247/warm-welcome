@@ -9,8 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Printer, FileSpreadsheet } from "lucide-react";
 import { useTenantBranding } from "@/contexts/TenantBrandingContext";
 import * as XLSX from "xlsx";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function BtrcReport() {
+  const { t } = useLanguage();
   const { branding } = useTenantBranding();
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +89,7 @@ export default function BtrcReport() {
         th { background: #e0e0e0; font-weight: bold; }
         @media print { body { margin: 0; } }
       </style></head><body>
-      <h1>BTRC Report</h1>
+      <h1>{t.sidebar.btrcReport}</h1>
       ${printContent.innerHTML}
       </body></html>
     `);
@@ -112,14 +114,14 @@ export default function BtrcReport() {
     ];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "BTRC Report");
+    XLSX.utils.book_append_sheet(wb, ws, t.sidebar.btrcReport);
     XLSX.writeFile(wb, `btrc-report-${new Date().toISOString().split("T")[0]}.xlsx`);
   };
 
   return (
     <DashboardLayout>
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">BTRC Report</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t.sidebar.btrcReport}</h1>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-1.5" />

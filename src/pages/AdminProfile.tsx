@@ -13,8 +13,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Save, Camera, KeyRound, User } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AdminProfile() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -155,7 +157,7 @@ export default function AdminProfile() {
     <DashboardLayout>
       <div className="space-y-6 max-w-2xl">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Admin Profile</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.sidebar.myProfile}</h1>
           <p className="text-muted-foreground">Manage your account information</p>
         </div>
 

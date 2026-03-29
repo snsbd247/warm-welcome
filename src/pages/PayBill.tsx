@@ -8,8 +8,10 @@ import { Loader2, Wifi, CreditCard } from "lucide-react";
 import { safeFormat } from "@/lib/utils";
 
 import api from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PayBill() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const [bill, setBill] = useState<any>(null);

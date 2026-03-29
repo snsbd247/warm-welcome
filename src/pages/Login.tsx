@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Wifi, Loader2, Eye, EyeOff, Lock, User } from "lucide-react";
 import api from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Login() {
+  const { t } = useLanguage();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -91,19 +93,19 @@ export default function Login() {
             )}
             <div>
               <h1 className="text-2xl font-bold text-foreground">{branding.site_name}</h1>
-              <p className="text-xs text-muted-foreground">Admin Panel</p>
+              <p className="text-xs text-muted-foreground">{t.sidebar.adminPanel}</p>
             </div>
           </div>
 
           {/* Form header */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
-            <p className="text-muted-foreground mt-1">Sign in to your admin account</p>
+            <h2 className="text-2xl font-bold text-foreground">{t.auth.loginTitle}</h2>
+            <p className="text-muted-foreground mt-1">{t.auth.loginSubtitle}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-medium">Username</Label>
+              <Label htmlFor="username" className="text-sm font-medium">{t.auth.username}</Label>
               <div className="relative">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -119,7 +121,7 @@ export default function Login() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium">{t.auth.password}</Label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -144,7 +146,7 @@ export default function Login() {
 
             <Button type="submit" className="w-full h-11 text-sm font-semibold" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Sign In
+              {t.auth.signIn}
             </Button>
           </form>
 

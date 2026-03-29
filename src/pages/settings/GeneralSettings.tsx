@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Upload, Save, Palette } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function GeneralSettings() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -122,7 +124,7 @@ export default function GeneralSettings() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">General Settings</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t.settings.general}</h1>
         <p className="text-muted-foreground mt-1">Configure system information and branding</p>
       </div>
 

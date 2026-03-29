@@ -15,10 +15,12 @@ import { toast } from "sonner";
 import { Plus, Trash2, Search, Printer, Pencil, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateSupplierPurchaseInvoicePDF } from "@/lib/supplierPurchasePdf";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PurchaseItem { product_id: string; description: string; quantity: number; unit_price: number; }
 
 export default function SupplierPurchases() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -287,7 +289,7 @@ export default function SupplierPurchases() {
                 <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
 
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
+                  <Button type="button" variant="outline" onClick={closeDialog}>{t.common.cancel}</Button>
                   <Button type="submit" disabled={saveMutation.isPending}>{saveMutation.isPending ? "Saving..." : editId ? "Update Purchase" : "Create Purchase"}</Button>
                 </div>
               </form>
@@ -313,12 +315,12 @@ export default function SupplierPurchases() {
                   <TableHead className="text-right">Paid</TableHead>
                   <TableHead className="text-right">Due</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">{t.common.loading}</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No purchases found</TableCell></TableRow>
                 ) : filtered.map((p: any) => {
@@ -405,7 +407,7 @@ export default function SupplierPurchases() {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setPayOpen(false)}>Cancel</Button>
+                <Button variant="outline" onClick={() => setPayOpen(false)}>{t.common.cancel}</Button>
                 <Button onClick={() => payMutation.mutate()} disabled={payMutation.isPending || !payAmount}>
                   {payMutation.isPending ? "Processing..." : "Record Payment"}
                 </Button>

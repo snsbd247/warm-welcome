@@ -27,8 +27,10 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { logAudit } from "@/lib/auditLog";
 import MerchantPaymentImport from "@/components/MerchantPaymentImport";
 import { merchantPaymentsApi } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function MerchantPayments() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
@@ -200,7 +202,7 @@ export default function MerchantPayments() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead><TableHead>Transaction ID</TableHead><TableHead>Sender Phone</TableHead><TableHead>Amount</TableHead><TableHead>Reference</TableHead><TableHead>Status</TableHead><TableHead>Matched Customer</TableHead><TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Date</TableHead><TableHead>Transaction ID</TableHead><TableHead>Sender Phone</TableHead><TableHead>Amount</TableHead><TableHead>Reference</TableHead><TableHead>Status</TableHead><TableHead>Matched Customer</TableHead><TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

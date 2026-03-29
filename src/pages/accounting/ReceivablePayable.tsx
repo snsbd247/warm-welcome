@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { safeFormat } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const fmt = (v: number) => `৳${Math.abs(v).toLocaleString("en-BD", { minimumFractionDigits: 2 })}`;
 
@@ -18,6 +19,7 @@ function getAgingBucket(daysDue: number): string {
 }
 
 export default function ReceivablePayable() {
+  const { t } = useLanguage();
   const now = new Date();
 
   // Receivable: unpaid bills

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function DesignationList() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -39,25 +41,25 @@ export default function DesignationList() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Designation List</h1>
+        <h1 className="text-2xl font-bold">{t.sidebar.designations}</h1>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditId(null); setForm({ name: "", description: "" }); } }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Add Designation</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{t.common.add} {t.sidebar.designations}</Button></DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>{editId ? "Edit" : "Add"} Designation</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editId ? t.common.edit : t.common.add} {t.sidebar.designations}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <Input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              <Input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending} className="w-full">{save.isPending ? "Saving..." : "Save"}</Button>
+              <Input placeholder={t.common.name} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input placeholder={t.common.description} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending} className="w-full">{save.isPending ? t.common.loading : t.common.save}</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
       <Card>
-        <CardHeader><CardTitle>Designations</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t.sidebar.designations}</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> : (
+          {isLoading ? <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p> : (
             <Table>
-              <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Description</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t.common.name}</TableHead><TableHead>{t.common.description}</TableHead><TableHead>{t.common.status}</TableHead><TableHead>{t.common.actions}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {rows.map((d: any) => (
                   <TableRow key={d.id}>
@@ -70,7 +72,7 @@ export default function DesignationList() {
                     </div></TableCell>
                   </TableRow>
                 ))}
-                {rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No designations found</TableCell></TableRow>}
+                {rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">{t.common.noData}</TableCell></TableRow>}
               </TableBody>
             </Table>
           )}

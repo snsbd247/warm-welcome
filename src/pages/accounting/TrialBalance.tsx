@@ -8,10 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const fmt = (v: number) => `৳${Math.abs(v).toLocaleString("en-BD", { minimumFractionDigits: 2 })}`;
 
 export default function TrialBalance() {
+  const { t } = useLanguage();
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date(); d.setMonth(d.getMonth() - 12);
     return d.toISOString().split("T")[0];
@@ -87,7 +89,7 @@ export default function TrialBalance() {
   const totalPeriodCredit = accountData.reduce((s: number, a: any) => s + a.periodCredit, 0);
 
   const typeOrder = ["asset", "liability", "equity", "income", "expense"];
-  const typeLabels: Record<string, string> = { asset: "Assets", liability: "Liabilities", equity: "Equity", income: "Income", expense: "Expenses" };
+  const typeLabels: Record<string, string> = { asset: "Assets", liability: "Liabilities", equity: "Equity", income: "Income", expense: t.sidebar.expenses };
 
   return (
     <DashboardLayout>

@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Bell } from "lucide-react";
 import { safeFormat } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ReminderLogs() {
+  const { t } = useLanguage();
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["reminder-logs"],
     queryFn: async () => {
@@ -25,7 +27,7 @@ export default function ReminderLogs() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Reminder Logs</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.sidebar.reminders}</h1>
           <p className="text-muted-foreground">View all bill reminders sent via SMS and WhatsApp</p>
         </div>
 

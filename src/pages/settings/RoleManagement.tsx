@@ -25,6 +25,7 @@ import {
 import { Plus, Pencil, Trash2, Loader2, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const DB_ROLES = [
   { value: "super_admin", label: "Super Admin" },
@@ -61,6 +62,7 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export default function RoleManagement() {
+  const { t } = useLanguage();
   const { isSuperAdmin } = usePermissions();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
@@ -235,7 +237,7 @@ export default function RoleManagement() {
                 <TableHead>DB Role</TableHead>
                 <TableHead>Permissions</TableHead>
                 <TableHead>System</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -342,7 +344,7 @@ export default function RoleManagement() {
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>{t.common.cancel}</Button>
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {editRole ? "Update Role" : "Create Role"}
@@ -360,8 +362,8 @@ export default function RoleManagement() {
             <AlertDialogDescription>Are you sure you want to delete the role "{deleteRole?.name}"? Users assigned this role will lose their permissions.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t.common.delete}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Search, Shield, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const actionColors: Record<string, string> = {
   login: "default",
@@ -34,6 +35,7 @@ const actionLabels: Record<string, string> = {
 };
 
 export default function LoginLogs() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
 
   const { data: logs, isLoading } = useQuery({

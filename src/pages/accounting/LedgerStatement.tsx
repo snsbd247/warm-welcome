@@ -12,8 +12,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, FileDown, BookOpen } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LedgerStatement() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const accountId = searchParams.get("account_id") || "";
@@ -166,7 +168,7 @@ export default function LedgerStatement() {
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
-              <p className="text-center py-8 text-muted-foreground">Loading...</p>
+              <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p>
             ) : (
               <Table>
                 <TableHeader>

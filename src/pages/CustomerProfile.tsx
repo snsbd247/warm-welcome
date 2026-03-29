@@ -25,10 +25,12 @@ import { postSalePaymentToLedger } from "@/lib/ledger";
 import { toast } from "sonner";
 import { paymentsApi } from "@/lib/api";
 import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SaleItem { product_id: string; quantity: number; unit_price: number; }
 
 export default function CustomerProfilePage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -304,7 +306,7 @@ export default function CustomerProfilePage() {
                         <TableHead>Due Date</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Paid Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">{t.common.actions}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -364,7 +366,7 @@ export default function CustomerProfilePage() {
                         <TableHead className="text-right">Paid</TableHead>
                         <TableHead className="text-right">Due</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">{t.common.actions}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -415,7 +417,7 @@ export default function CustomerProfilePage() {
                         <TableHead>Transaction ID</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">{t.common.actions}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -513,7 +515,7 @@ export default function CustomerProfilePage() {
               <div className="flex items-end"><div className="text-right w-full"><p className="text-sm text-muted-foreground">Total</p><p className="text-xl font-bold">৳{saleEditTotal.toLocaleString()}</p></div></div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setEditSaleOpen(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setEditSaleOpen(false)}>{t.common.cancel}</Button>
               <Button type="submit" disabled={editSaleMutation.isPending}>Update Sale</Button>
             </div>
           </form>
@@ -544,7 +546,7 @@ export default function CustomerProfilePage() {
                 </Select>
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => { setPayOpen(false); setPayTarget(null); }}>Cancel</Button>
+                <Button variant="outline" onClick={() => { setPayOpen(false); setPayTarget(null); }}>{t.common.cancel}</Button>
                 <Button disabled={payAmount <= 0 || adjustPayment.isPending} onClick={() => adjustPayment.mutate({ sale: payTarget, amount: payAmount, method: payMethod })}>
                   Confirm Payment
                 </Button>
@@ -572,7 +574,7 @@ export default function CustomerProfilePage() {
               </Select>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setEditBillOpen(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setEditBillOpen(false)}>{t.common.cancel}</Button>
               <Button type="submit" disabled={editBillMutation.isPending}>Update Bill</Button>
             </div>
           </form>
@@ -626,7 +628,7 @@ export default function CustomerProfilePage() {
             </div>
             <div><Label>Paid At</Label><Input type="datetime-local" value={editPaymentForm.paid_at} onChange={e => setEditPaymentForm({...editPaymentForm, paid_at: e.target.value})} /></div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setEditPaymentOpen(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setEditPaymentOpen(false)}>{t.common.cancel}</Button>
               <Button type="submit">Update Payment</Button>
             </div>
           </form>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function LoanManagement() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ employee_id: "", amount: "", monthly_deduction: "", reason: "" });
@@ -30,32 +32,32 @@ export default function LoanManagement() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Loan Management</h1>
+         <h1 className="text-2xl font-bold">{t.sidebar.loans}</h1>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Add Loan</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{t.common.add} {t.sidebar.loans}</Button></DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>New Loan</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t.common.add} {t.sidebar.loans}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <Select value={form.employee_id} onValueChange={(v) => setForm({ ...form, employee_id: v })}><SelectTrigger><SelectValue placeholder="Select Employee" /></SelectTrigger><SelectContent>{employees.map((e: any) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent></Select>
-              <Input placeholder="Amount" type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-              <Input placeholder="Monthly Deduction" type="number" value={form.monthly_deduction} onChange={(e) => setForm({ ...form, monthly_deduction: e.target.value })} />
-              <Input placeholder="Reason" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
-              <Button onClick={() => save.mutate()} disabled={!form.employee_id || !form.amount || save.isPending} className="w-full">{save.isPending ? "Saving..." : "Add Loan"}</Button>
+              <Select value={form.employee_id} onValueChange={(v) => setForm({ ...form, employee_id: v })}><SelectTrigger><SelectValue placeholder={t.sidebar.employees} /></SelectTrigger><SelectContent>{employees.map((e: any) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent></Select>
+              <Input placeholder={t.common.amount} type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+              <Input placeholder={t.hr.monthlyDeduction} type="number" value={form.monthly_deduction} onChange={(e) => setForm({ ...form, monthly_deduction: e.target.value })} />
+              <Input placeholder={t.common.description} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
+              <Button onClick={() => save.mutate()} disabled={!form.employee_id || !form.amount || save.isPending} className="w-full">{save.isPending ? t.common.loading : t.common.save}</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
       <Card>
-        <CardHeader><CardTitle>All Loans</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t.sidebar.loans}</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> : (
+          {isLoading ? <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p> : (
             <Table>
-              <TableHeader><TableRow><TableHead>Employee</TableHead><TableHead>Amount</TableHead><TableHead>Paid</TableHead><TableHead>Monthly Ded.</TableHead><TableHead>Remaining</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>{t.sidebar.employees}</TableHead><TableHead>{t.common.amount}</TableHead><TableHead>{t.hr.paidAmount}</TableHead><TableHead>{t.hr.monthlyDeduction}</TableHead><TableHead>{t.hr.remaining}</TableHead><TableHead>{t.common.status}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {loans.map((l: any) => (
                   <TableRow key={l.id}><TableCell className="font-medium">{getEmpName(l.employee_id)}</TableCell><TableCell>৳{Number(l.amount).toLocaleString()}</TableCell><TableCell>৳{Number(l.paid_amount).toLocaleString()}</TableCell><TableCell>৳{Number(l.monthly_deduction).toLocaleString()}</TableCell><TableCell className="font-semibold">৳{(Number(l.amount) - Number(l.paid_amount)).toLocaleString()}</TableCell><TableCell><Badge variant={l.status === "active" ? "default" : "secondary"}>{l.status}</Badge></TableCell></TableRow>
                 ))}
-                {loans.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No loans</TableCell></TableRow>}
+                {loans.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">{t.common.noData}</TableCell></TableRow>}
               </TableBody>
             </Table>
           )}

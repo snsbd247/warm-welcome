@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
 export default function DailyAttendance() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [records, setRecords] = useState<Record<string, { status: string; check_in: string; check_out: string }>>({});
@@ -46,17 +48,17 @@ export default function DailyAttendance() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Daily Attendance</h1>
+        <h1 className="text-2xl font-bold">{t.sidebar.dailyAttendance}</h1>
         <div className="flex gap-3 items-center">
           <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-44" />
-          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}><Save className="h-4 w-4 mr-2" />{saveMut.isPending ? "Saving..." : "Save"}</Button>
+          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}><Save className="h-4 w-4 mr-2" />{saveMut.isPending ? t.common.loading : t.common.save}</Button>
         </div>
       </div>
       <Card>
-        <CardHeader><CardTitle>Attendance — {selectedDate}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t.hr.attendance} — {selectedDate}</CardTitle></CardHeader>
         <CardContent>
           <Table>
-            <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Name</TableHead><TableHead>Status</TableHead><TableHead>Check In</TableHead><TableHead>Check Out</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>{t.common.name}</TableHead><TableHead>{t.common.status}</TableHead><TableHead>Check In</TableHead><TableHead>Check Out</TableHead></TableRow></TableHeader>
             <TableBody>
               {employees.map((emp: any) => { const r = getR(emp.id); return (
                 <TableRow key={emp.id}>
@@ -65,7 +67,7 @@ export default function DailyAttendance() {
                   <TableCell>
                     <Select value={r.status} onValueChange={(v) => upd(emp.id, "status", v)}>
                       <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="present">Present</SelectItem><SelectItem value="absent">Absent</SelectItem><SelectItem value="late">Late</SelectItem><SelectItem value="leave">Leave</SelectItem></SelectContent>
+                      <SelectContent><SelectItem value="present">{t.hr.present}</SelectItem><SelectItem value="absent">{t.hr.absent}</SelectItem><SelectItem value="late">{t.hr.late}</SelectItem><SelectItem value="leave">{t.hr.leave}</SelectItem></SelectContent>
                     </Select>
                   </TableCell>
                   <TableCell><Input type="time" value={r.check_in} onChange={(e) => upd(emp.id, "check_in", e.target.value)} className="w-32" /></TableCell>

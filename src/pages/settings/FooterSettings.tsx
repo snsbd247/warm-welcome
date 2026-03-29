@@ -11,8 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Save, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { renderFooterText, type FooterSettings as FooterSettingsType } from "@/hooks/useFooterSettings";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function FooterSettings() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -105,7 +107,7 @@ export default function FooterSettings() {
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Footer Settings</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.settings.footer}</h1>
           <p className="text-muted-foreground mt-1">Customize the footer shown across the system</p>
         </div>
         <Button onClick={handleSave} disabled={saving}>

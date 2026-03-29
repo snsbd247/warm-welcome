@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const fmt = (v: number) => `৳${Math.abs(v).toLocaleString("en-BD", { minimumFractionDigits: 2 })}`;
 
 export default function SalesPurchaseReport() {
+  const { t } = useLanguage();
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date(); d.setMonth(d.getMonth() - 1);
     return d.toISOString().split("T")[0];
@@ -50,7 +52,7 @@ export default function SalesPurchaseReport() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Sales & Purchase Report</h1>
+        <h1 className="text-2xl font-bold">{t.sidebar.salesPurchase}</h1>
 
         <Card>
           <CardContent className="pt-4 pb-4">

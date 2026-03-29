@@ -14,8 +14,10 @@ import {
 import { TrendingUp, TrendingDown, DollarSign, Building2, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateProfitLossPDF } from "@/lib/accountingPdf";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Reports() {
+  const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(String(currentYear));
 

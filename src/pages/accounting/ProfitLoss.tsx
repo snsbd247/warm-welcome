@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const fmt = (v: number) => `৳${Math.abs(v).toLocaleString("en-BD", { minimumFractionDigits: 2 })}`;
 
 export default function ProfitLoss() {
+  const { t } = useLanguage();
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date(); d.setMonth(0); d.setDate(1);
     return d.toISOString().split("T")[0];
