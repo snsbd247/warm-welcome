@@ -100,7 +100,7 @@ export async function generateBillInvoicePDF(bill: any, customer: any) {
   doc.text(addrLines, m + addrLabelW, y);
   y += 6 * Math.max(addrLines.length, 1);
 
-  infoRow("Mobile No", customer?.phone || "—");
+  infoRow("Mobile No", customer?.phone || "-");
   if (customer?.email) infoRow("Email", customer.email);
 
   // Right section
