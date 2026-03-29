@@ -273,7 +273,7 @@ export default function Tickets() {
                 </div>
                 <div className="p-3 space-y-3 max-h-60 overflow-y-auto">
                   {replies.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">No replies yet</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">{t.tickets.noRepliesYet}</p>
                   ) : (
                     replies.map((reply: any) => (
                       <div
