@@ -31,6 +31,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { logAudit } from "@/lib/auditLog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { generateBillInvoicePDF } from "@/lib/billPdf";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Billing() {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
