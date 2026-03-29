@@ -5,6 +5,7 @@ import {
   drawFooter, getPaymentMethodLines,
 } from "./pdfTheme";
 import { supabase } from "@/integrations/supabase/client";
+import { formatAddress, formatPermanentAddress } from "./bangladeshGeo";
 
 // ─── Payment Receipt ───
 export async function generatePaymentReceiptPDF(payment: any, customer: any, invoiceFooter?: string) {
