@@ -197,7 +197,7 @@ export default function Payments() {
             </div>
             <div className="space-y-1.5"><Label>{t.payments.transactionId}</Label><Input value={editTrxId} onChange={(e) => setEditTrxId(e.target.value)} /></div>
             <div className="space-y-1.5"><Label>{t.common.status}</Label>
-              <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="completed">Completed</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="failed">Failed</SelectItem></SelectContent></Select>
+              <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="completed">{t.common.completed}</SelectItem><SelectItem value="pending">{t.common.pending}</SelectItem><SelectItem value="failed">{t.sms.failed}</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-1.5"><Label>{t.common.date}</Label><Input type="datetime-local" value={editDate} onChange={(e) => setEditDate(e.target.value)} /></div>
             <div className="flex justify-end"><Button onClick={handleEditSave}>{t.common.save}</Button></div>

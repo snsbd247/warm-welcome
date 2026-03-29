@@ -291,8 +291,8 @@ export default function Customers() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm px-2 text-muted-foreground">
-                  Page {safeCurrentPage} of {totalPages}
+                 <span className="text-sm px-2 text-muted-foreground">
+                   {t.customers.page} {safeCurrentPage} {t.table.of} {totalPages}
                 </span>
                 <Button
                   variant="outline"

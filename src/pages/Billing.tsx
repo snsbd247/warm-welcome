@@ -418,14 +418,14 @@ export default function Billing() {
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Edit Bill</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5"><Label>Month</Label><Input type="month" value={editMonth} onChange={(e) => setEditMonth(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label>Amount</Label><Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label>Status</Label>
-              <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unpaid">Unpaid</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="partial">Partial</SelectItem></SelectContent></Select>
-            </div>
-            <div className="flex justify-end"><Button onClick={handleEditSave}>Save Changes</Button></div>
+           <DialogHeader><DialogTitle>{t.billing.editBill}</DialogTitle></DialogHeader>
+           <div className="space-y-4">
+             <div className="space-y-1.5"><Label>{t.billing.month}</Label><Input type="month" value={editMonth} onChange={(e) => setEditMonth(e.target.value)} /></div>
+             <div className="space-y-1.5"><Label>{t.common.amount}</Label><Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} /></div>
+             <div className="space-y-1.5"><Label>{t.common.status}</Label>
+               <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unpaid">{t.common.unpaid}</SelectItem><SelectItem value="paid">{t.common.paid}</SelectItem><SelectItem value="partial">{t.billing.partial}</SelectItem></SelectContent></Select>
+             </div>
+             <div className="flex justify-end"><Button onClick={handleEditSave}>{t.billing.saveChanges}</Button></div>
           </div>
         </DialogContent>
       </Dialog>

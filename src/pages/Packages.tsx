@@ -359,7 +359,7 @@ export default function Packages() {
             <div className="flex justify-end">
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                {editPkg ? "Update" : "Create"}
+                {editPkg ? t.common.update : t.common.create}
               </Button>
             </div>
           </form>

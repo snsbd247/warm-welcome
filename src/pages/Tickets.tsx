@@ -318,7 +318,7 @@ export default function Tickets() {
                     setViewTicket(null);
                   }}
                 >
-                  <X className="h-4 w-4 mr-1" /> Close Ticket
+                  <X className="h-4 w-4 mr-1" /> {t.tickets.closeTicket}
                 </Button>
               </div>
             </div>
