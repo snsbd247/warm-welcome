@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Download, Pencil, FileDown, CreditCard, Plus, Trash2, Printer } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Pencil, FileDown, CreditCard, Plus, Trash2, Printer, Receipt } from "lucide-react";
 import { generateApplicationFormPDF } from "@/lib/applicationFormPdf";
 import { postSalePaymentToLedger } from "@/lib/ledger";
 import { toast } from "sonner";
