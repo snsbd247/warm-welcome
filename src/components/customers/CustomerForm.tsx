@@ -120,6 +120,29 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
     },
   });
 
+  // ─── Geo data from DB (cascading) ───
+  const [divisionId, setDivisionId] = useState("");
+  const [districtId, setDistrictId] = useState("");
+  const [permDivisionId, setPermDivisionId] = useState("");
+  const [permDistrictId, setPermDistrictId] = useState("");
+
+  const { data: geoDivisions } = useGeoDivisions();
+  const { data: geoDistricts } = useGeoDistricts(divisionId || undefined);
+  const { data: geoUpazilas } = useGeoUpazilas(districtId || undefined);
+  const { data: permGeoDistricts } = useGeoDistricts(permDivisionId || undefined);
+  const { data: permGeoUpazilas } = useGeoUpazilas(permDistrictId || undefined);
+
+  // Resolve IDs from names when editing
+  const { data: foundDivision } = useGeoDivisionByName(isEdit && !divisionId ? form.division : undefined);
+  const { data: foundDistrict } = useGeoDistrictByName(isEdit && !districtId ? form.district : undefined);
+  const { data: foundPermDivision } = useGeoDivisionByName(isEdit && !permDivisionId ? form.perm_division : undefined);
+  const { data: foundPermDistrict } = useGeoDistrictByName(isEdit && !permDistrictId ? form.perm_district : undefined);
+
+  useEffect(() => { if (foundDivision?.id && !divisionId) setDivisionId(foundDivision.id); }, [foundDivision]);
+  useEffect(() => { if (foundDistrict?.id && !districtId) setDistrictId(foundDistrict.id); }, [foundDistrict]);
+  useEffect(() => { if (foundPermDivision?.id && !permDivisionId) setPermDivisionId(foundPermDivision.id); }, [foundPermDivision]);
+  useEffect(() => { if (foundPermDistrict?.id && !permDistrictId) setPermDistrictId(foundPermDistrict.id); }, [foundPermDistrict]);
+
   const update = (key: string, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
