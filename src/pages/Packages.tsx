@@ -220,8 +220,8 @@ export default function Packages() {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Packages</h1>
-          <p className="text-muted-foreground mt-1">Manage internet packages & bandwidth</p>
+           <h1 className="text-2xl font-bold text-foreground">{t.sidebar.packages}</h1>
+           <p className="text-muted-foreground mt-1">{t.sidebar.packages}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={bulkSyncPackages} disabled={bulkSyncing}>

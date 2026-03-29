@@ -70,7 +70,7 @@ export default function SMSLogs() {
               <Users className="h-4 w-4 mr-2" /> Group SMS
             </Button>
             <Button onClick={() => setSendOpen(true)}>
-              <Send className="h-4 w-4 mr-2" /> Send SMS
+              <Send className="h-4 w-4 mr-2" /> {t.sms.sendSms}
             </Button>
           </div>
         </div>
