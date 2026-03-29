@@ -81,7 +81,7 @@ export async function generateBillInvoicePDF(bill: any, customer: any) {
     doc.setTextColor(...PDF_COLORS.text);
     doc.text(`${label}:`, m, y);
     doc.setFont("helvetica", "normal");
-    doc.text(value || "—", m + doc.getTextWidth(`${label}: `) + 1, y);
+    doc.text(value || "-", m + doc.getTextWidth(`${label}: `) + 1, y);
     y += 6;
   };
 
