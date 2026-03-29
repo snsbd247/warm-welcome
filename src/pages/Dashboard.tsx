@@ -271,14 +271,14 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">{t.dashboard.title}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t.dashboard.subtitle}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleRefreshMikrotik} disabled={refreshingMikrotik || loadingMikrotik}>
-            {refreshingMikrotik ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
-            {t.common.refresh}
+            {refreshingMikrotik ? <Loader2 className="h-3.5 w-3.5 animate-spin sm:mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 sm:mr-1.5" />}
+            <span className="hidden sm:inline">{t.common.refresh}</span>
           </Button>
           <Button size="sm" onClick={runBillControl} disabled={runningBillControl}>
-            {runningBillControl ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Router className="h-3.5 w-3.5 mr-1.5" />}
-            {t.dashboard.billControl}
+            {runningBillControl ? <Loader2 className="h-3.5 w-3.5 animate-spin sm:mr-1.5" /> : <Router className="h-3.5 w-3.5 sm:mr-1.5" />}
+            <span className="hidden sm:inline">{t.dashboard.billControl}</span>
           </Button>
         </div>
       </div>
