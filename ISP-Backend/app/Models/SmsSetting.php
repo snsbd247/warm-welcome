@@ -23,6 +23,7 @@ class SmsSetting extends Model
         'sms_on_payment' => 'boolean',
         'sms_on_registration' => 'boolean',
         'sms_on_suspension' => 'boolean',
+        'sms_on_reminder' => 'boolean',
         'whatsapp_enabled' => 'boolean',
     ];
 }
