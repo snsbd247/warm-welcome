@@ -67,7 +67,7 @@ export default function SMSLogs() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setGroupSmsOpen(true)}>
-              <Users className="h-4 w-4 mr-2" /> Group SMS
+              <Users className="h-4 w-4 mr-2" /> {t.sms.groupSms}
             </Button>
             <Button onClick={() => setSendOpen(true)}>
               <Send className="h-4 w-4 mr-2" /> {t.sms.sendSms}
