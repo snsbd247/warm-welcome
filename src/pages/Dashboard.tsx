@@ -278,7 +278,7 @@ export default function Dashboard() {
           </Button>
           <Button size="sm" onClick={runBillControl} disabled={runningBillControl}>
             {runningBillControl ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Router className="h-3.5 w-3.5 mr-1.5" />}
-            {t.sidebar.billing}
+            {t.dashboard.billControl}
           </Button>
         </div>
       </div>
