@@ -321,7 +321,6 @@ export function generateLedgerStatementPdf(opts: LedgerPdfOptions) {
 
   drawPageFooter();
 
-  const blob = doc.output("blob");
-  const url = URL.createObjectURL(blob);
-  window.open(url, "_blank");
+  const accountSlug = opts.accountName.replace(/\s+/g, "-").toLowerCase();
+  doc.save(`ledger-statement-${accountSlug}.pdf`);
 }
