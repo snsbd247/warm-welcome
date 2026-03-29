@@ -10,13 +10,23 @@ class SaleItem extends Model
     use HasUuid;
 
     protected $fillable = [
-        'id', 'sale_id', 'product_id',
-        'quantity', 'unit_price', 'description',
+        'id',
+        'sale_id',
+        'product_id',
+        'quantity',
+        'unit_price',
+        'cost_price',
+        'total',
+        'profit',
+        'description',
     ];
 
     protected $casts = [
-        'quantity'   => 'decimal:2',
+        'quantity'   => 'integer',
         'unit_price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
+        'total'      => 'decimal:2',
+        'profit'     => 'decimal:2',
     ];
 
     public function sale()

@@ -19,9 +19,12 @@ class SalesService
     public function generateSaleNumber(): string
     {
         $last = Sale::orderBy('created_at', 'desc')->first();
-        if ($last && preg_match('/SL-(\d+)/', $last->sale_no, $m)) {
+        $lastNumber = $last?->sale_no ?: $last?->invoice_number;
+
+        if ($lastNumber && preg_match('/SL-(\d+)/', $lastNumber, $m)) {
             return 'SL-' . str_pad((int) $m[1] + 1, 6, '0', STR_PAD_LEFT);
         }
+
         return 'SL-000001';
     }
 
@@ -33,7 +36,6 @@ class SalesService
         return DB::transaction(function () use ($data, $items) {
             $subtotal = 0;
 
-            // Pre-validate stock
             foreach ($items as $item) {
                 $product = Product::findOrFail($item['product_id']);
                 if ($product->stock < $item['quantity']) {
@@ -41,45 +43,58 @@ class SalesService
                 }
             }
 
-            $discount = $data['discount'] ?? 0;
-            $tax      = $data['tax'] ?? 0;
+            $discount = (float) ($data['discount'] ?? 0);
+            $tax = (float) ($data['tax'] ?? 0);
 
             foreach ($items as $item) {
-                $product   = Product::findOrFail($item['product_id']);
-                $unitPrice = $item['unit_price'] ?? $product->sell_price;
+                $product = Product::findOrFail($item['product_id']);
+                $unitPrice = (float) ($item['unit_price'] ?? $product->sell_price);
                 $subtotal += $item['quantity'] * $unitPrice;
             }
 
             $total = $subtotal - $discount + $tax;
-            $paid  = $data['paid_amount'] ?? $total;
+            $paid = (float) ($data['paid_amount'] ?? $total);
+            $due = max($total - $paid, 0);
+            $saleNo = $this->generateSaleNumber();
 
             $sale = Sale::create([
-                'sale_no'        => $this->generateSaleNumber(),
+                'sale_no'        => $saleNo,
+                'invoice_number' => $saleNo,
+                'customer_id'    => $data['customer_id'] ?? null,
                 'customer_name'  => $data['customer_name'] ?? null,
                 'customer_phone' => $data['customer_phone'] ?? null,
                 'sale_date'      => $data['sale_date'] ?? now()->toDateString(),
+                'subtotal'       => $subtotal,
                 'discount'       => $discount,
                 'tax'            => $tax,
                 'total'          => $total,
                 'paid_amount'    => $paid,
+                'due_amount'     => $due,
                 'payment_method' => $data['payment_method'] ?? 'cash',
                 'status'         => $paid >= $total ? 'completed' : 'partial',
                 'notes'          => $data['notes'] ?? null,
             ]);
 
-            // Create items & update stock
             foreach ($items as $item) {
-                $product   = Product::findOrFail($item['product_id']);
-                $unitPrice = $item['unit_price'] ?? $product->sell_price;
+                $product = Product::findOrFail($item['product_id']);
+                $qty = (int) $item['quantity'];
+                $unitPrice = (float) ($item['unit_price'] ?? $product->sell_price);
+                $costPrice = (float) ($product->buy_price ?? 0);
+                $lineTotal = $qty * $unitPrice;
+                $lineProfit = ($unitPrice - $costPrice) * $qty;
 
                 SaleItem::create([
-                    'sale_id'    => $sale->id,
-                    'product_id' => $item['product_id'],
-                    'quantity'   => $item['quantity'],
-                    'unit_price' => $unitPrice,
+                    'sale_id'      => $sale->id,
+                    'product_id'   => $item['product_id'],
+                    'quantity'     => $qty,
+                    'unit_price'   => $unitPrice,
+                    'cost_price'   => $costPrice,
+                    'total'        => $lineTotal,
+                    'profit'       => $lineProfit,
+                    'description'  => $item['description'] ?? null,
                 ]);
 
-                $this->inventoryService->decreaseStock($item['product_id'], $item['quantity']);
+                $this->inventoryService->decreaseStock($item['product_id'], $qty);
             }
 
             return $sale->load('items.product');
@@ -94,11 +109,13 @@ class SalesService
         return DB::transaction(function () use ($saleId, $amount) {
             $sale = Sale::findOrFail($saleId);
 
-            $newPaid = $sale->paid_amount + $amount;
+            $newPaid = (float) $sale->paid_amount + $amount;
+            $due = max((float) $sale->total - $newPaid, 0);
 
             $sale->update([
                 'paid_amount' => $newPaid,
-                'status'      => $newPaid >= $sale->total ? 'completed' : 'partial',
+                'due_amount'  => $due,
+                'status'      => $newPaid >= (float) $sale->total ? 'completed' : 'partial',
             ]);
 
             return $sale->fresh();

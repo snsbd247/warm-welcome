@@ -39,12 +39,17 @@ class CalculateDailyProfit extends Command
         $totalIncome = $billingIncome + $salesIncome + $otherIncome;
 
         // Purchase expense
-        $purchaseExpense = (float) Purchase::where('purchase_date', $date)
-            ->sum('paid_amount');
+        $purchaseExpense = (float) Purchase::where(function ($q) use ($date) {
+            $q->where('purchase_date', $date)
+              ->orWhere('date', $date);
+        })->sum('paid_amount');
 
         // Operational expenses
-        $operationalExpense = (float) Expense::where('status', 'approved')
-            ->where('expense_date', $date)
+        $operationalExpense = (float) Expense::whereIn('status', ['approved', 'active'])
+            ->where(function ($q) use ($date) {
+                $q->where('expense_date', $date)
+                  ->orWhere('date', $date);
+            })
             ->sum('amount');
 
         $totalExpense = $purchaseExpense + $operationalExpense;
@@ -57,28 +62,34 @@ class CalculateDailyProfit extends Command
         $netProfit = $totalIncome - $totalExpense;
 
         // Counts
-        $newCustomers    = Customer::whereDate('created_at', $date)->count();
-        $salesCount      = Sale::where('sale_date', $date)->where('status', '!=', 'cancelled')->count();
-        $purchasesCount  = Purchase::where('purchase_date', $date)->count();
-        $billsPaid       = Bill::whereDate('paid_date', $date)->count();
+        $newCustomers = Customer::whereDate('created_at', $date)->count();
+        $salesCount = Sale::where('sale_date', $date)->where('status', '!=', 'cancelled')->count();
+        $purchasesCount = Purchase::where(function ($q) use ($date) {
+            $q->where('purchase_date', $date)
+              ->orWhere('date', $date);
+        })->count();
+        $billsPaid = Bill::whereDate('paid_date', $date)->count();
 
-        // Upsert
+        // Upsert + backward-compatible fields
         DailyReport::updateOrCreate(
             ['report_date' => $date],
             [
-                'total_income'        => $totalIncome,
-                'billing_income'      => $billingIncome,
-                'sales_income'        => $salesIncome,
-                'other_income'        => $otherIncome,
-                'total_expense'       => $totalExpense,
-                'purchase_expense'    => $purchaseExpense,
-                'operational_expense' => $operationalExpense,
-                'net_profit'          => $netProfit,
-                'gross_profit'        => $grossProfit,
-                'new_customers'       => $newCustomers,
-                'total_sales_count'   => $salesCount,
+                'date'                  => $date,
+                'total_income'          => $totalIncome,
+                'billing_income'        => $billingIncome,
+                'sales_income'          => $salesIncome,
+                'other_income'          => $otherIncome,
+                'total_expense'         => $totalExpense,
+                'purchase_expense'      => $purchaseExpense,
+                'operational_expense'   => $operationalExpense,
+                'net_profit'            => $netProfit,
+                'gross_profit'          => $grossProfit,
+                'new_customers'         => $newCustomers,
+                'total_sales_count'     => $salesCount,
                 'total_purchases_count' => $purchasesCount,
-                'bills_paid'          => $billsPaid,
+                'bills_paid'            => $billsPaid,
+                'total_billed'          => $totalIncome,
+                'total_collection'      => $billingIncome,
             ]
         );
 

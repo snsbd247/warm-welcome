@@ -20,9 +20,12 @@ class PurchaseService
     public function generatePurchaseNumber(): string
     {
         $last = Purchase::orderBy('created_at', 'desc')->first();
-        if ($last && preg_match('/PUR-(\d+)/', $last->purchase_no, $m)) {
+        $lastNumber = $last?->purchase_no ?: $last?->purchase_number;
+
+        if ($lastNumber && preg_match('/PUR-(\d+)/', $lastNumber, $m)) {
             return 'PUR-' . str_pad((int) $m[1] + 1, 6, '0', STR_PAD_LEFT);
         }
+
         return 'PUR-000001';
     }
 
@@ -31,30 +34,45 @@ class PurchaseService
      */
     public function createPurchase(array $data, array $items, ?string $createdBy = null): Purchase
     {
-        return DB::transaction(function () use ($data, $items) {
-            $totalAmount = 0;
+        return DB::transaction(function () use ($data, $items, $createdBy) {
+            $subtotal = 0;
             foreach ($items as $item) {
-                $totalAmount += $item['quantity'] * $item['unit_price'];
+                $subtotal += $item['quantity'] * $item['unit_price'];
             }
 
-            $paid = $data['paid_amount'] ?? 0;
+            $paid = (float) ($data['paid_amount'] ?? 0);
+            $purchaseNo = $this->generatePurchaseNumber();
+            $purchaseDate = $data['date'] ?? now()->toDateString();
+            $totalAmount = $subtotal;
+            $dueAmount = max($totalAmount - $paid, 0);
 
             $purchase = Purchase::create([
-                'purchase_no'  => $this->generatePurchaseNumber(),
-                'supplier_id'  => $data['supplier_id'],
-                'date'         => $data['date'] ?? now(),
-                'total_amount' => $totalAmount,
-                'paid_amount'  => $paid,
-                'status'       => $paid >= $totalAmount ? 'paid' : 'unpaid',
-                'notes'        => $data['notes'] ?? null,
+                'purchase_no'     => $purchaseNo,
+                'purchase_number' => $purchaseNo,
+                'supplier_id'     => $data['supplier_id'],
+                'vendor_id'       => $data['supplier_id'],
+                'date'            => $purchaseDate,
+                'purchase_date'   => $purchaseDate,
+                'subtotal'        => $subtotal,
+                'total'           => $totalAmount,
+                'total_amount'    => $totalAmount,
+                'paid_amount'     => $paid,
+                'due_amount'      => $dueAmount,
+                'payment_method'  => $data['payment_method'] ?? null,
+                'status'          => $paid >= $totalAmount ? 'paid' : 'unpaid',
+                'notes'           => $data['notes'] ?? null,
+                'created_by'      => $createdBy,
             ]);
 
             foreach ($items as $item) {
+                $lineTotal = $item['quantity'] * $item['unit_price'];
+
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
                     'product_id'  => $item['product_id'],
                     'quantity'    => $item['quantity'],
                     'unit_price'  => $item['unit_price'],
+                    'total'       => $lineTotal,
                 ]);
 
                 $this->inventoryService->increaseStock($item['product_id'], $item['quantity']);
@@ -63,10 +81,8 @@ class PurchaseService
                     ->update(['buy_price' => $item['unit_price']]);
             }
 
-            // Update supplier total_due
-            $due = $totalAmount - $paid;
-            if ($due > 0) {
-                Supplier::where('id', $data['supplier_id'])->increment('total_due', $due);
+            if ($dueAmount > 0) {
+                Supplier::where('id', $data['supplier_id'])->increment('total_due', $dueAmount);
             }
 
             return $purchase->load('items.product', 'supplier');
@@ -81,14 +97,15 @@ class PurchaseService
         return DB::transaction(function () use ($purchaseId, $amount) {
             $purchase = Purchase::findOrFail($purchaseId);
 
-            $newPaid = $purchase->paid_amount + $amount;
+            $newPaid = (float) $purchase->paid_amount + $amount;
+            $due = max((float) $purchase->total_amount - $newPaid, 0);
 
             $purchase->update([
                 'paid_amount' => $newPaid,
-                'status'      => $newPaid >= $purchase->total_amount ? 'paid' : 'unpaid',
+                'due_amount'  => $due,
+                'status'      => $newPaid >= (float) $purchase->total_amount ? 'paid' : 'unpaid',
             ]);
 
-            // Reduce supplier total_due
             Supplier::where('id', $purchase->supplier_id)->decrement('total_due', $amount);
 
             return $purchase->fresh();

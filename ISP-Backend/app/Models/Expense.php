@@ -10,14 +10,22 @@ class Expense extends Model
     use HasUuid;
 
     protected $fillable = [
-        'id', 'category', 'amount', 'date',
-        'description', 'payment_method', 'account_id',
-        'reference', 'status',
+        'id',
+        'category',
+        'amount',
+        'date',
+        'expense_date',
+        'description',
+        'payment_method',
+        'account_id',
+        'reference',
+        'status',
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
-        'date'   => 'date',
+        'amount'       => 'decimal:2',
+        'date'         => 'date',
+        'expense_date' => 'date',
     ];
 
     public function account()
