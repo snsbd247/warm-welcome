@@ -65,14 +65,11 @@ export function useSmtpSettings() {
 
   const testMutation = useMutation({
     mutationFn: async (testEmail: string) => {
-      const { data, error } = await supabase.functions.invoke("send-email", {
-        body: {
-          to: testEmail,
-          subject: "Smart ISP - SMTP Test Email",
-          html: `<div style="font-family:Arial,sans-serif;padding:20px"><h2>✅ SMTP Test Successful</h2><p>This is a test email from your Smart ISP admin panel.</p><p>If you received this email, your SMTP configuration is working correctly.</p><p style="color:#666;font-size:12px">Sent at: ${new Date().toLocaleString()}</p></div>`,
-        },
+      const { data } = await api.post('/email/send', {
+        to: testEmail,
+        subject: "Smart ISP - SMTP Test Email",
+        body: `<div style="font-family:Arial,sans-serif;padding:20px"><h2>✅ SMTP Test Successful</h2><p>This is a test email from your Smart ISP admin panel.</p><p>If you received this email, your SMTP configuration is working correctly.</p><p style="color:#666;font-size:12px">Sent at: ${new Date().toLocaleString()}</p></div>`,
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
     },

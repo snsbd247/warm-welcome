@@ -16,7 +16,7 @@ class EmailController extends Controller
         $result = $this->emailService->send(
             $request->to,
             $request->subject,
-            $request->html,
+            $request->body ?? $request->html,
             $request->from_name
         );
 
