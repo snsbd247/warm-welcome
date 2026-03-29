@@ -245,7 +245,7 @@ export default function Dashboard() {
     try {
       const { data } = await api.post('/mikrotik/bill-control', {});
       const r = data?.results;
-      toast.success(`Bill control: ${r?.suspended || 0} suspended, ${r?.reactivated || 0} reactivated`);
+      toast.success(`${t.dashboard.billControlResult}: ${r?.suspended || 0} suspended, ${r?.reactivated || 0} reactivated`);
     } catch (e: any) {
       toast.error("Bill control failed: " + (e.message || "Unknown error"));
     } finally {
