@@ -210,7 +210,7 @@ export default function Tickets() {
                   <p className="font-medium">{viewTicket.category}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Status</Label>
+                  <Label className="text-muted-foreground">{t.common.status}</Label>
                   <Select
                     value={viewTicket.status}
                     onValueChange={(v) => updateTicket(viewTicket.id, { status: v })}
