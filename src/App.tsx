@@ -34,7 +34,7 @@ import SystemSettings from "@/pages/settings/SystemSettings";
 import IntegrationManagement from "@/pages/settings/IntegrationManagement";
 import BkashApiManagement from "@/pages/settings/BkashApiManagement";
 import NagadApiManagement from "@/pages/settings/NagadApiManagement";
-import ZoneManagement from "@/pages/settings/ZoneManagement";
+
 import MikroTikRouters from "@/pages/settings/MikroTikRouters";
 import CustomerLogin from "@/pages/portal/CustomerLogin";
 import CustomerDashboard from "@/pages/portal/CustomerDashboard";
