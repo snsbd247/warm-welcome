@@ -11,16 +11,33 @@ const envApiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim
 const isEnvLocalhost = /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(envApiBaseUrl);
 const hasExplicitApiUrl = !!envApiBaseUrl && !isEnvLocalhost;
 
-let supabase: any;
+// Use a lazy proxy so we avoid top-level await and circular import issues.
+// On first property access, it loads the correct backend module.
 
-if (hasExplicitApiUrl) {
-  // cPanel production mode — use Laravel API wrapper (no Supabase)
-  const { apiDb } = await import('@/lib/apiDb');
-  supabase = apiDb;
-} else {
-  // Lovable preview / local dev — use real Supabase client
-  const { supabaseRaw } = await import('./rawClient');
-  supabase = supabaseRaw;
+let _resolved: any = null;
+
+function getClient(): any {
+  if (_resolved) return _resolved;
+
+  if (hasExplicitApiUrl) {
+    // cPanel production — use Laravel API wrapper (apiDb), no Supabase
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    _resolved = require('@/lib/apiDb').apiDb;
+  } else {
+    // Lovable preview / local dev — use real Supabase client
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    _resolved = require('./rawClient').supabaseRaw;
+  }
+  return _resolved;
 }
 
-export { supabase };
+// Proxy that forwards all property access to the resolved client
+export const supabase: any = new Proxy({} as any, {
+  get(_target, prop) {
+    return getClient()[prop];
+  },
+  set(_target, prop, value) {
+    getClient()[prop] = value;
+    return true;
+  },
+});
