@@ -493,7 +493,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card className="border-border/50">
-            <CardHeader className="pb-2"><CardTitle className="text-base">Income vs Expense</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-base">{t.accounting.income} vs {t.accounting.expense}</CardTitle></CardHeader>
             <CardContent>
               {accMonthlyData.length > 0 ? (
                 <div className="h-[240px]">
