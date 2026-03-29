@@ -1,7 +1,7 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, FileText, MessageSquare, Receipt, ToggleLeft, Wallet, BookOpen, Globe } from "lucide-react";
+import { Settings, FileText, MessageSquare, Receipt, ToggleLeft, Wallet, BookOpen, Globe, Database } from "lucide-react";
 import GeneralSettingsTab from "@/components/settings/GeneralSettingsTab";
 import FooterSettingsTab from "@/components/settings/FooterSettingsTab";
 import InvoiceSettingsTab from "@/components/settings/InvoiceSettingsTab";
@@ -10,6 +10,7 @@ import ModuleSettingsTab from "@/components/settings/ModuleSettingsTab";
 import PaymentSettingsTab from "@/components/settings/PaymentSettingsTab";
 import LedgerSettingsTab from "@/components/settings/LedgerSettingsTab";
 import LanguageSettingsTab from "@/components/settings/LanguageSettingsTab";
+import InitialDataImportTab from "@/components/settings/InitialDataImportTab";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SystemSettings() {
