@@ -469,7 +469,7 @@ export default function Dashboard() {
           {...bkash}
         />
         <PaymentSummaryCard
-          title="Nagad Payments"
+          title={t.dashboard.nagadPayments}
           icon={<Wallet className="h-4 w-4 text-accent" />}
           chartColor="hsl(var(--accent))"
           chartLabel="Nagad"
