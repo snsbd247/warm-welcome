@@ -9,6 +9,7 @@ import CustomerLedger from "@/components/customers/CustomerLedger";
 import CustomerForm from "@/components/customers/CustomerForm";
 import { generateSalesInvoicePDF } from "@/lib/accountingPdf";
 import { generateBillInvoicePDF } from "@/lib/billPdf";
+import { generatePaymentReceiptPDF } from "@/lib/pdf";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
