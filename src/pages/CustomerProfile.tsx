@@ -271,7 +271,65 @@ export default function CustomerProfilePage() {
             <CustomerLedger customerId={customer.id} customerName={customer.name} />
           </TabsContent>
 
-          <TabsContent value="sales">
+          <TabsContent value="invoices">
+            <Card>
+              <CardHeader><CardTitle>Bill Invoices</CardTitle></CardHeader>
+              <CardContent>
+                {customerBills.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No invoices found for this customer</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Month</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Paid Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {customerBills.map((bill: any) => (
+                        <TableRow key={bill.id}>
+                          <TableCell className="font-medium">{bill.month}</TableCell>
+                          <TableCell className="text-right">৳{Number(bill.amount).toLocaleString()}</TableCell>
+                          <TableCell>{bill.due_date || "—"}</TableCell>
+                          <TableCell>
+                            <Badge variant={bill.status === "paid" ? "default" : bill.status === "unpaid" ? "destructive" : "secondary"}>
+                              {bill.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{bill.paid_date || "—"}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="icon" title="Print Invoice" onClick={async () => {
+                                await generateBillInvoicePDF(bill, customer);
+                              }}>
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Edit" onClick={() => {
+                                setEditBillData(bill);
+                                setEditBillForm({
+                                  amount: Number(bill.amount),
+                                  due_date: bill.due_date || "",
+                                  status: bill.status,
+                                });
+                                setEditBillOpen(true);
+                              }}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
             <Card>
               <CardHeader><CardTitle>Sales Invoices</CardTitle></CardHeader>
               <CardContent>
