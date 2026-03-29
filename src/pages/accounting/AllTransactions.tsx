@@ -119,7 +119,7 @@ export default function AllTransactions() {
                     <TableCell>{safeFormat(t.date, "dd MMM yyyy")}</TableCell>
                     <TableCell className="font-medium">{t.description}</TableCell>
                     <TableCell className="text-sm">{getAccName(t.account_id)}</TableCell>
-                    <TableCell><Badge variant="outline">{t.reference_type || t.journal_ref || "—"}</Badge></TableCell>
+                    <TableCell><Badge variant="outline">{t.reference || "—"}</Badge></TableCell>
                     <TableCell className="text-right font-mono">{Number(t.debit) > 0 ? `৳${Number(t.debit).toLocaleString()}` : "—"}</TableCell>
                     <TableCell className="text-right font-mono">{Number(t.credit) > 0 ? `৳${Number(t.credit).toLocaleString()}` : "—"}</TableCell>
                     <TableCell><Badge variant={t.type === "income" ? "default" : "secondary"}>{t.type}</Badge></TableCell>
