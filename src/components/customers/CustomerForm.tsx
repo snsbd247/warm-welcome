@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadCustomerPhoto } from "@/lib/storage";
@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { generateCustomerPDF } from "@/lib/pdf";
 import { customersApi } from "@/lib/api";
 import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
-import { DIVISIONS, DISTRICTS, UPAZILAS } from "@/lib/bangladeshGeo";
+import { useGeoDivisions, useGeoDistricts, useGeoUpazilas, useGeoDivisionByName, useGeoDistrictByName } from "@/hooks/useGeoData";
 
 interface CustomerFormProps {
   customer?: any;
@@ -119,6 +119,29 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
       return data;
     },
   });
+
+  // ─── Geo data from DB (cascading) ───
+  const [divisionId, setDivisionId] = useState("");
+  const [districtId, setDistrictId] = useState("");
+  const [permDivisionId, setPermDivisionId] = useState("");
+  const [permDistrictId, setPermDistrictId] = useState("");
+
+  const { data: geoDivisions } = useGeoDivisions();
+  const { data: geoDistricts } = useGeoDistricts(divisionId || undefined);
+  const { data: geoUpazilas } = useGeoUpazilas(districtId || undefined);
+  const { data: permGeoDistricts } = useGeoDistricts(permDivisionId || undefined);
+  const { data: permGeoUpazilas } = useGeoUpazilas(permDistrictId || undefined);
+
+  // Resolve IDs from names when editing
+  const { data: foundDivision } = useGeoDivisionByName(isEdit && !divisionId ? form.division : undefined);
+  const { data: foundDistrict } = useGeoDistrictByName(isEdit && !districtId ? form.district : undefined);
+  const { data: foundPermDivision } = useGeoDivisionByName(isEdit && !permDivisionId ? form.perm_division : undefined);
+  const { data: foundPermDistrict } = useGeoDistrictByName(isEdit && !permDistrictId ? form.perm_district : undefined);
+
+  useEffect(() => { if (foundDivision?.id && !divisionId) setDivisionId(foundDivision.id); }, [foundDivision]);
+  useEffect(() => { if (foundDistrict?.id && !districtId) setDistrictId(foundDistrict.id); }, [foundDistrict]);
+  useEffect(() => { if (foundPermDivision?.id && !permDivisionId) setPermDivisionId(foundPermDivision.id); }, [foundPermDivision]);
+  useEffect(() => { if (foundPermDistrict?.id && !permDistrictId) setPermDistrictId(foundPermDistrict.id); }, [foundPermDistrict]);
 
   const update = (key: string, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -511,22 +534,27 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
           <div className="space-y-1">
             <Label className="text-xs">Division</Label>
             <Select value={form.division} onValueChange={(v) => {
+              const div = geoDivisions?.find(d => d.name === v);
+              setDivisionId(div?.id || "");
+              setDistrictId("");
               setForm(prev => ({ ...prev, division: v, district: "", upazila: "" }));
             }}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Select division" /></SelectTrigger>
               <SelectContent>
-                {DIVISIONS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                {geoDivisions?.map((d) => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">District</Label>
             <Select value={form.district} onValueChange={(v) => {
+              const dist = geoDistricts?.find(d => d.name === v);
+              setDistrictId(dist?.id || "");
               setForm(prev => ({ ...prev, district: v, upazila: "" }));
             }} disabled={!form.division}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Select district" /></SelectTrigger>
               <SelectContent>
-                {(DISTRICTS[form.division] || []).map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                {(geoDistricts || []).map((d) => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -535,7 +563,7 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
             <Select value={form.upazila} onValueChange={(v) => update("upazila", v)} disabled={!form.district}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Select upazila" /></SelectTrigger>
               <SelectContent>
-                {(UPAZILAS[form.district] || []).map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                {(geoUpazilas || []).map((u) => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -564,22 +592,27 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
           <div className="space-y-1">
             <Label className="text-xs">Division</Label>
             <Select value={form.perm_division} onValueChange={(v) => {
+              const div = geoDivisions?.find(d => d.name === v);
+              setPermDivisionId(div?.id || "");
+              setPermDistrictId("");
               setForm(prev => ({ ...prev, perm_division: v, perm_district: "", perm_upazila: "" }));
             }}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Select division" /></SelectTrigger>
               <SelectContent>
-                {DIVISIONS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                {geoDivisions?.map((d) => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">District</Label>
             <Select value={form.perm_district} onValueChange={(v) => {
+              const dist = permGeoDistricts?.find(d => d.name === v);
+              setPermDistrictId(dist?.id || "");
               setForm(prev => ({ ...prev, perm_district: v, perm_upazila: "" }));
             }} disabled={!form.perm_division}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Select district" /></SelectTrigger>
               <SelectContent>
-                {(DISTRICTS[form.perm_division] || []).map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                {(permGeoDistricts || []).map((d) => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -588,7 +621,7 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
             <Select value={form.perm_upazila} onValueChange={(v) => update("perm_upazila", v)} disabled={!form.perm_district}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Select upazila" /></SelectTrigger>
               <SelectContent>
-                {(UPAZILAS[form.perm_district] || []).map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                {(permGeoUpazilas || []).map((u) => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
