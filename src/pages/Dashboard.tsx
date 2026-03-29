@@ -237,7 +237,7 @@ export default function Dashboard() {
     setRefreshingMikrotik(true);
     await refetchMikrotik();
     setRefreshingMikrotik(false);
-    toast.success("MikroTik stats refreshed");
+    toast.success(t.dashboard.mikrotikRefreshed);
   }, [refetchMikrotik]);
 
   const runBillControl = async () => {
@@ -245,9 +245,9 @@ export default function Dashboard() {
     try {
       const { data } = await api.post('/mikrotik/bill-control', {});
       const r = data?.results;
-      toast.success(`Bill control: ${r?.suspended || 0} suspended, ${r?.reactivated || 0} reactivated`);
+      toast.success(`${t.dashboard.billControlResult}: ${r?.suspended || 0} suspended, ${r?.reactivated || 0} reactivated`);
     } catch (e: any) {
-      toast.error("Bill control failed: " + (e.message || "Unknown error"));
+      toast.error(t.dashboard.billControlFailed + ": " + (e.message || "Unknown error"));
     } finally {
       setRunningBillControl(false);
     }
@@ -269,7 +269,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{t.dashboard.title}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{t.dashboard.title}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{t.dashboard.subtitle}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleRefreshMikrotik} disabled={refreshingMikrotik || loadingMikrotik}>
@@ -278,7 +278,7 @@ export default function Dashboard() {
           </Button>
           <Button size="sm" onClick={runBillControl} disabled={runningBillControl}>
             {runningBillControl ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Router className="h-3.5 w-3.5 mr-1.5" />}
-            {t.sidebar.billing}
+            {t.dashboard.billControl}
           </Button>
         </div>
       </div>
@@ -297,12 +297,12 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         <StatCard title={t.dashboard.monthCollection} value={`৳${collectedAmount.toLocaleString()}`} icon={<CircleDollarSign className="h-5 w-5" />} variant="success" />
         <StatCard title={t.dashboard.totalDue} value={`৳${dueAmount.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="destructive" />
-        <StatCard title={t.dashboard.totalDue} value={`৳${totalDue.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="warning" />
+        <StatCard title={t.dashboard.allTimeDue} value={`৳${totalDue.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="warning" />
         <StatCard title={t.dashboard.totalCollection} value={`৳${monthlyRevenue.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5" />} variant="default" />
         <StatCard
-          title="SMS Balance"
+          title={t.dashboard.smsBalance}
           value={smsBalance?.balance != null ? `৳${smsBalance.balance.toLocaleString()}` : "—"}
-          subtitle={smsBalance?.expiry ? `মেয়াদ: ${smsBalance.expiry} | রেট: ৳${smsBalance.rate}` : undefined}
+          subtitle={smsBalance?.expiry ? `${t.dashboard.expiry}: ${smsBalance.expiry} | ${t.dashboard.rate}: ৳${smsBalance.rate}` : undefined}
           icon={<MessageSquare className="h-5 w-5" />}
           variant="accent"
         />
@@ -332,8 +332,8 @@ export default function Dashboard() {
             <div>
               <Progress value={collectionRate} className={`h-2.5 ${collectionRate < 50 && targetAmount > 0 ? "[&>div]:bg-destructive" : ""}`} />
               <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                <span>{collectionRate}% collected</span>
-                <span>৳{dueAmount.toLocaleString()} remaining</span>
+                <span>{collectionRate}% {t.dashboard.collected}</span>
+                <span>৳{dueAmount.toLocaleString()} {t.dashboard.remaining}</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border">
@@ -363,7 +363,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {revenueChartData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-10">No revenue data</p>
+              <p className="text-sm text-muted-foreground text-center py-10">{t.dashboard.noRevenueData}</p>
             ) : (
               <div className="h-[240px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -372,8 +372,8 @@ export default function Dashboard() {
                     <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`৳${v.toLocaleString()}`, undefined]} />
-                    <Bar dataKey="paid" name="Collected" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="due" name="Due" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="paid" name={t.dashboard.totalCollection} fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="due" name={t.dashboard.totalDue} fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -390,7 +390,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-primary" />
-                Today's Merchant Payments
+                {t.dashboard.todayMerchantPayments}
               </CardTitle>
               <span className="text-xs text-muted-foreground">{format(new Date(), "dd MMM yyyy")}</span>
             </div>
@@ -399,15 +399,15 @@ export default function Dashboard() {
             {loadingMerchant ? (
               <div className="flex items-center justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
             ) : merchantTotal === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">No merchant payments today</p>
+              <p className="text-sm text-muted-foreground text-center py-6">{t.dashboard.noMerchantPayments}</p>
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
-                    { label: "Total", val: merchantTotal, cls: "bg-muted/50 text-foreground" },
-                    { label: "Matched", val: merchantMatched, cls: "bg-success/10 text-success" },
-                    { label: "Review", val: merchantPayments?.filter(p => p.status === "manual_review").length ?? 0, cls: "bg-warning/10 text-warning" },
-                    { label: "Unmatched", val: merchantPayments?.filter(p => p.status === "unmatched").length ?? 0, cls: "bg-destructive/10 text-destructive" },
+                    { label: t.common.total, val: merchantTotal, cls: "bg-muted/50 text-foreground" },
+                    { label: t.dashboard.matched, val: merchantMatched, cls: "bg-success/10 text-success" },
+                    { label: t.dashboard.review, val: merchantPayments?.filter(p => p.status === "manual_review").length ?? 0, cls: "bg-warning/10 text-warning" },
+                    { label: t.common.unpaid, val: merchantPayments?.filter(p => p.status === "unmatched").length ?? 0, cls: "bg-destructive/10 text-destructive" },
                   ].map(s => (
                     <div key={s.label} className={`rounded-xl p-3 text-center ${s.cls}`}>
                       <p className="text-2xl font-bold">{s.val}</p>
@@ -416,7 +416,7 @@ export default function Dashboard() {
                   ))}
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border text-sm">
-                  <span className="text-muted-foreground">Total Amount</span>
+                  <span className="text-muted-foreground">{t.common.total} {t.common.amount}</span>
                   <span className="font-bold text-foreground">৳{merchantAmount.toLocaleString()}</span>
                 </div>
               </div>
@@ -453,7 +453,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-6">No routers configured</p>
+              <p className="text-sm text-muted-foreground text-center py-6">{t.dashboard.noRouters}</p>
             )}
           </CardContent>
         </Card>
@@ -462,14 +462,14 @@ export default function Dashboard() {
       {/* ══════ Section 5: Payment Gateways (bKash + Nagad) ══════ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <PaymentSummaryCard
-          title="bKash Payments"
+          title={t.dashboard.bkashPayments}
           icon={<CreditCard className="h-4 w-4 text-primary" />}
           chartColor="hsl(var(--primary))"
           chartLabel="bKash"
           {...bkash}
         />
         <PaymentSummaryCard
-          title="Nagad Payments"
+          title={t.dashboard.nagadPayments}
           icon={<Wallet className="h-4 w-4 text-accent" />}
           chartColor="hsl(var(--accent))"
           chartLabel="Nagad"
@@ -503,13 +503,13 @@ export default function Dashboard() {
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                       <Tooltip formatter={(v: number) => `৳${v.toLocaleString()}`} />
-                      <Bar dataKey="income" fill="hsl(var(--primary))" name="Income" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="expense" fill="hsl(var(--destructive))" name="Expense" radius={[4, 4, 0, 0]} />
+                       <Bar dataKey="income" fill="hsl(var(--primary))" name={t.accounting.income} radius={[4, 4, 0, 0]} />
+                       <Bar dataKey="expense" fill="hsl(var(--destructive))" name={t.accounting.expense} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-10">No data yet</p>
+                <p className="text-center text-muted-foreground py-10">{t.dashboard.noDataYet}</p>
               )}
             </CardContent>
           </Card>
@@ -529,7 +529,7 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-10">No expenses recorded</p>
+                <p className="text-center text-muted-foreground py-10">{t.dashboard.noExpenses}</p>
               )}
             </CardContent>
           </Card>
@@ -541,7 +541,7 @@ export default function Dashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
-                Low Stock Alerts ({lowStockProducts.length})
+                {t.dashboard.lowStockAlerts} ({lowStockProducts.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -549,9 +549,9 @@ export default function Dashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead className="text-right">Stock</TableHead>
+                      <TableHead>{t.dashboard.product}</TableHead>
+                      <TableHead>{t.dashboard.sku}</TableHead>
+                      <TableHead className="text-right">{t.dashboard.stock}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

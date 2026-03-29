@@ -119,7 +119,7 @@ export default function Payments() {
     <DashboardLayout>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">{t.payments.title}</h1>
-        <p className="text-muted-foreground mt-1">{t.payments.title}</p>
+         <p className="text-muted-foreground mt-1">{t.payments.title}</p>
       </div>
 
       <div className="glass-card rounded-xl">
@@ -127,13 +127,13 @@ export default function Payments() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search customer or TrxID..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input placeholder={t.payments.searchPlaceholder} className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             <Select value={methodFilter} onValueChange={setMethodFilter}>
-              <SelectTrigger><SelectValue placeholder="Payment method" /></SelectTrigger>
-              <SelectContent><SelectItem value="all">All Methods</SelectItem><SelectItem value="bkash">bKash</SelectItem><SelectItem value="nagad">Nagad</SelectItem><SelectItem value="bank">Bank</SelectItem><SelectItem value="cash">Cash</SelectItem></SelectContent>
+               <SelectTrigger><SelectValue placeholder={t.payments.paymentMethod} /></SelectTrigger>
+               <SelectContent><SelectItem value="all">{t.payments.allMethods}</SelectItem><SelectItem value="bkash">{t.payments.bkash}</SelectItem><SelectItem value="nagad">{t.payments.nagad}</SelectItem><SelectItem value="bank">{t.payments.bank}</SelectItem><SelectItem value="cash">{t.payments.cash}</SelectItem></SelectContent>
             </Select>
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function Payments() {
               </TableHeader>
               <TableBody>
                 {filtered?.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">No payments found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">{t.payments.noPaymentsFound}</TableCell></TableRow>
                 ) : (
                   filtered?.map((payment) => (
                     <TableRow key={payment.id}>
@@ -189,15 +189,15 @@ export default function Payments() {
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{t.common.edit} {t.payments.title}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t.payments.editPayment}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5"><Label>{t.common.amount}</Label><Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} /></div>
             <div className="space-y-1.5"><Label>{t.payments.paymentMethod}</Label>
-              <Select value={editMethod} onValueChange={setEditMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">Cash</SelectItem><SelectItem value="bkash">bKash</SelectItem><SelectItem value="nagad">Nagad</SelectItem><SelectItem value="bank">Bank</SelectItem><SelectItem value="bkash_merchant">bKash Merchant</SelectItem></SelectContent></Select>
+              <Select value={editMethod} onValueChange={setEditMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">{t.payments.cash}</SelectItem><SelectItem value="bkash">{t.payments.bkash}</SelectItem><SelectItem value="nagad">{t.payments.nagad}</SelectItem><SelectItem value="bank">{t.payments.bank}</SelectItem><SelectItem value="bkash_merchant">{t.payments.bkashMerchant}</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-1.5"><Label>{t.payments.transactionId}</Label><Input value={editTrxId} onChange={(e) => setEditTrxId(e.target.value)} /></div>
             <div className="space-y-1.5"><Label>{t.common.status}</Label>
-              <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="completed">Completed</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="failed">Failed</SelectItem></SelectContent></Select>
+              <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="completed">{t.common.completed}</SelectItem><SelectItem value="pending">{t.common.pending}</SelectItem><SelectItem value="failed">{t.sms.failed}</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-1.5"><Label>{t.common.date}</Label><Input type="datetime-local" value={editDate} onChange={(e) => setEditDate(e.target.value)} /></div>
             <div className="flex justify-end"><Button onClick={handleEditSave}>{t.common.save}</Button></div>

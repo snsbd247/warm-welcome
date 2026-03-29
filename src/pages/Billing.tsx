@@ -213,7 +213,7 @@ export default function Billing() {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">{formatMonthLabel(selectedMonth)}</h1>
-                <p className="text-muted-foreground mt-1">{selectedBills.length} bills generated</p>
+                <p className="text-muted-foreground mt-1">{selectedBills.length} {t.billing.billsGenerated}</p>
               </div>
             </div>
           ) : (
@@ -226,12 +226,12 @@ export default function Billing() {
         <div className="flex gap-2">
           {selectedMonth && (
             <Button variant="outline" onClick={handlePrintAll}>
-              <Printer className="h-4 w-4 mr-2" /> Print All
+              <Printer className="h-4 w-4 mr-2" /> {t.billing.printAll}
             </Button>
           )}
           {!selectedMonth && canCreateBill && (
             <>
-              <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-2" /> Upload Excel</Button>
+              <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-2" /> {t.billing.uploadExcel}</Button>
               <Button onClick={() => setGenerateOpen(true)}><FileText className="h-4 w-4 mr-2" /> {t.billing.generateBills}</Button>
             </>
           )}
@@ -246,8 +246,8 @@ export default function Billing() {
           {sortedMonths.length === 0 ? (
             <div className="col-span-full text-center text-muted-foreground py-16">
               <Receipt className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <p className="text-lg font-medium">No bills generated yet</p>
-              <p className="text-sm mt-1">Click "Generate Bills" to create monthly bills</p>
+               <p className="text-lg font-medium">{t.billing.noBillsYet}</p>
+               <p className="text-sm mt-1">{t.billing.noBillsYetDesc}</p>
             </div>
           ) : (
             sortedMonths.map((month) => {
@@ -275,7 +275,7 @@ export default function Billing() {
 
                     <div className="flex items-center gap-2 mb-3">
                       <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">{stats.total} customers</span>
+                      <span className="text-sm text-muted-foreground">{stats.total} {t.billing.customers}</span>
                     </div>
 
                     {/* Progress bar */}
@@ -361,7 +361,7 @@ export default function Billing() {
               </TableHeader>
               <TableBody>
                 {filteredBills.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">No bills found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">{t.billing.noBillsFound}</TableCell></TableRow>
                 ) : (
                   filteredBills.map((bill) => (
                     <TableRow key={bill.id}>
@@ -406,11 +406,11 @@ export default function Billing() {
       {/* Generate Dialog */}
       <Dialog open={generateOpen} onOpenChange={setGenerateOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Generate Monthly Bills</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5"><Label>Month</Label><Input type="month" value={genMonth} onChange={(e) => setGenMonth(e.target.value)} /></div>
-            <p className="text-sm text-muted-foreground">This will generate bills for all active customers who don't already have a bill for this month.</p>
-            <div className="flex justify-end"><Button onClick={handleGenerate} disabled={genLoading}>{genLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Generate</Button></div>
+           <DialogHeader><DialogTitle>{t.billing.generateMonthlyBills}</DialogTitle></DialogHeader>
+           <div className="space-y-4">
+             <div className="space-y-1.5"><Label>{t.billing.month}</Label><Input type="month" value={genMonth} onChange={(e) => setGenMonth(e.target.value)} /></div>
+             <p className="text-sm text-muted-foreground">{t.billing.generateDesc}</p>
+             <div className="flex justify-end"><Button onClick={handleGenerate} disabled={genLoading}>{genLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />} {t.reports.generate}</Button></div>
           </div>
         </DialogContent>
       </Dialog>
@@ -418,14 +418,14 @@ export default function Billing() {
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Edit Bill</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5"><Label>Month</Label><Input type="month" value={editMonth} onChange={(e) => setEditMonth(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label>Amount</Label><Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label>Status</Label>
-              <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unpaid">Unpaid</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="partial">Partial</SelectItem></SelectContent></Select>
-            </div>
-            <div className="flex justify-end"><Button onClick={handleEditSave}>Save Changes</Button></div>
+           <DialogHeader><DialogTitle>{t.billing.editBill}</DialogTitle></DialogHeader>
+           <div className="space-y-4">
+             <div className="space-y-1.5"><Label>{t.billing.month}</Label><Input type="month" value={editMonth} onChange={(e) => setEditMonth(e.target.value)} /></div>
+             <div className="space-y-1.5"><Label>{t.common.amount}</Label><Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} /></div>
+             <div className="space-y-1.5"><Label>{t.common.status}</Label>
+               <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unpaid">{t.common.unpaid}</SelectItem><SelectItem value="paid">{t.common.paid}</SelectItem><SelectItem value="partial">{t.billing.partial}</SelectItem></SelectContent></Select>
+             </div>
+             <div className="flex justify-end"><Button onClick={handleEditSave}>{t.billing.saveChanges}</Button></div>
           </div>
         </DialogContent>
       </Dialog>

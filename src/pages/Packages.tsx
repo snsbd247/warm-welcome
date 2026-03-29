@@ -221,21 +221,21 @@ export default function Packages() {
       <div className="flex items-center justify-between mb-6">
         <div>
            <h1 className="text-2xl font-bold text-foreground">{t.sidebar.packages}</h1>
-           <p className="text-muted-foreground mt-1">{t.sidebar.packages}</p>
+            <p className="text-muted-foreground mt-1">{t.sidebar.packages}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={bulkSyncPackages} disabled={bulkSyncing}>
             {bulkSyncing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-            Sync All to MikroTik
+            {t.customers.syncAll}
           </Button>
-          <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Package</Button>
+          <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> {t.common.add} {t.customers.package}</Button>
         </div>
       </div>
 
       <div className="mb-4 max-w-sm">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search packages..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder={t.table.searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
       </div>
 
@@ -246,15 +246,15 @@ export default function Packages() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">SL#</TableHead>
-                <TableHead>Package Name</TableHead>
-                <TableHead>Speed</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Bandwidth</TableHead>
-                <TableHead>Router</TableHead>
-                <TableHead>MikroTik Profile</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">{t.common.actions}</TableHead>
+                 <TableHead className="w-16">SL#</TableHead>
+                 <TableHead>{t.common.name}</TableHead>
+                 <TableHead>{t.portal.speed}</TableHead>
+                 <TableHead>{t.billing.billAmount}</TableHead>
+                 <TableHead>Bandwidth</TableHead>
+                 <TableHead>Router</TableHead>
+                 <TableHead>MikroTik Profile</TableHead>
+                 <TableHead>{t.common.status}</TableHead>
+                 <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -281,7 +281,7 @@ export default function Packages() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={pkg.is_active ? "default" : "secondary"}>
-                      {pkg.is_active ? "Active" : "Disabled"}
+                      {pkg.is_active ? t.common.active : t.common.inactive}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -299,7 +299,7 @@ export default function Packages() {
                 </TableRow>
               ))}
               {filtered?.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No packages found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">{t.common.noData}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -308,7 +308,7 @@ export default function Packages() {
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editPkg ? "Edit Package" : "Add Package"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editPkg ? `${t.common.edit} ${t.customers.package}` : `${t.common.add} ${t.customers.package}`}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -359,7 +359,7 @@ export default function Packages() {
             <div className="flex justify-end">
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                {editPkg ? "Update" : "Create"}
+                {editPkg ? t.common.update : t.common.create}
               </Button>
             </div>
           </form>

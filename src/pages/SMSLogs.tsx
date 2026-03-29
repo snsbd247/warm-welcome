@@ -63,11 +63,11 @@ export default function SMSLogs() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">{t.sms.title}</h1>
-            <p className="text-muted-foreground">{t.sms.title}</p>
+            <p className="text-muted-foreground">{t.sms.recentMessages}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setGroupSmsOpen(true)}>
-              <Users className="h-4 w-4 mr-2" /> Group SMS
+              <Users className="h-4 w-4 mr-2" /> {t.sms.groupSms}
             </Button>
             <Button onClick={() => setSendOpen(true)}>
               <Send className="h-4 w-4 mr-2" /> {t.sms.sendSms}
@@ -77,8 +77,8 @@ export default function SMSLogs() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" /> Recent Messages
+             <CardTitle className="flex items-center gap-2">
+               <MessageSquare className="h-5 w-5" /> {t.sms.recentMessages}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -89,13 +89,13 @@ export default function SMSLogs() {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Message</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
+                   <TableRow>
+                     <TableHead>{t.common.phone}</TableHead>
+                     <TableHead>{t.tickets.customer}</TableHead>
+                     <TableHead>{t.sms.smsType}</TableHead>
+                     <TableHead>{t.sms.message}</TableHead>
+                     <TableHead>{t.common.status}</TableHead>
+                     <TableHead>{t.common.date}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -125,11 +125,11 @@ export default function SMSLogs() {
       <Dialog open={sendOpen} onOpenChange={setSendOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Send SMS</DialogTitle>
+            <DialogTitle>{t.sms.sendSms}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Phone Number</Label>
+              <Label>{t.sms.phoneNumber}</Label>
               <Input
                 value={smsForm.phone}
                 onChange={(e) => setSmsForm({ ...smsForm, phone: e.target.value })}
@@ -137,16 +137,16 @@ export default function SMSLogs() {
               />
             </div>
             <div>
-              <Label>Message</Label>
+              <Label>{t.sms.message}</Label>
               <Textarea
                 value={smsForm.message}
                 onChange={(e) => setSmsForm({ ...smsForm, message: e.target.value })}
-                placeholder="Type your message..."
+                placeholder={t.sms.typeMessage}
               />
             </div>
             <Button onClick={handleSend} disabled={sending} className="w-full">
               {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-              Send SMS
+              {t.sms.sendSms}
             </Button>
           </div>
         </DialogContent>

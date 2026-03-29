@@ -128,18 +128,18 @@ export default function Tickets() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">{t.tickets.title}</h1>
-            <p className="text-muted-foreground">{t.tickets.title}</p>
+            <p className="text-muted-foreground">{t.portal.supportTicketsDesc}</p>
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Tickets</SelectItem>
-              <SelectItem value="open">Open</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="resolved">Resolved</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
+               <SelectItem value="all">{t.tickets.allTickets}</SelectItem>
+               <SelectItem value="open">{t.tickets.open}</SelectItem>
+               <SelectItem value="in_progress">{t.tickets.inProgress}</SelectItem>
+               <SelectItem value="resolved">{t.tickets.resolved}</SelectItem>
+               <SelectItem value="closed">{t.tickets.closed}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -152,7 +152,7 @@ export default function Tickets() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Ticket className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No tickets found</p>
+              <p className="text-muted-foreground">{t.tickets.noTicketsFound}</p>
             </CardContent>
           </Card>
         ) : (
@@ -202,15 +202,15 @@ export default function Tickets() {
               {/* Ticket Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">Customer</Label>
+                  <Label className="text-muted-foreground">{t.tickets.customer}</Label>
                   <p className="font-medium">{viewTicket.customers?.name}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Category</Label>
+                  <Label className="text-muted-foreground">{t.portal.category}</Label>
                   <p className="font-medium">{viewTicket.category}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Status</Label>
+                  <Label className="text-muted-foreground">{t.common.status}</Label>
                   <Select
                     value={viewTicket.status}
                     onValueChange={(v) => updateTicket(viewTicket.id, { status: v })}
@@ -219,15 +219,15 @@ export default function Tickets() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="open">Open</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
+                       <SelectItem value="open">{t.tickets.open}</SelectItem>
+                       <SelectItem value="in_progress">{t.tickets.inProgress}</SelectItem>
+                       <SelectItem value="resolved">{t.tickets.resolved}</SelectItem>
+                       <SelectItem value="closed">{t.tickets.closed}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Priority</Label>
+                  <Label className="text-muted-foreground">{t.tickets.priority}</Label>
                   <Select
                     value={viewTicket.priority}
                     onValueChange={(v) => updateTicket(viewTicket.id, { priority: v })}
@@ -236,15 +236,15 @@ export default function Tickets() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
+                       <SelectItem value="low">{t.tickets.low}</SelectItem>
+                       <SelectItem value="medium">{t.tickets.medium}</SelectItem>
+                       <SelectItem value="high">{t.tickets.high}</SelectItem>
+                       <SelectItem value="urgent">{t.portal.urgent}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="col-span-2">
-                  <Label className="text-muted-foreground">Assign To</Label>
+                  <Label className="text-muted-foreground">{t.tickets.assignTo}</Label>
                   <Select
                     value={viewTicket.assigned_to || "unassigned"}
                     onValueChange={(v) =>
@@ -255,7 +255,7 @@ export default function Tickets() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      <SelectItem value="unassigned">{t.tickets.unassigned}</SelectItem>
                       {profiles.map((p: any) => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.full_name}
@@ -269,11 +269,11 @@ export default function Tickets() {
               {/* Replies Thread */}
               <div className="border rounded-lg">
                 <div className="p-3 border-b bg-muted/50">
-                  <h4 className="font-medium text-sm">Conversation</h4>
+                  <h4 className="font-medium text-sm">{t.tickets.conversation}</h4>
                 </div>
                 <div className="p-3 space-y-3 max-h-60 overflow-y-auto">
                   {replies.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">No replies yet</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">{t.tickets.noRepliesYet}</p>
                   ) : (
                     replies.map((reply: any) => (
                       <div
@@ -297,7 +297,7 @@ export default function Tickets() {
                 </div>
                 <div className="p-3 border-t flex gap-2">
                   <Textarea
-                    placeholder="Type your reply..."
+                    placeholder={t.tickets.typeReply}
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     className="min-h-[60px]"
@@ -318,7 +318,7 @@ export default function Tickets() {
                     setViewTicket(null);
                   }}
                 >
-                  <X className="h-4 w-4 mr-1" /> Close Ticket
+                  <X className="h-4 w-4 mr-1" /> {t.tickets.closeTicket}
                 </Button>
               </div>
             </div>
