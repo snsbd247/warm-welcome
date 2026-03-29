@@ -129,27 +129,58 @@ export default function Dashboard() {
   const nagad = usePaymentStats("nagad");
 
   // SMS Balance
-  const { data: smsBalance } = useQuery({
+  const { data: smsBalanceRaw } = useQuery({
     queryKey: ["sms-balance"],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("sms-balance");
       if (error) throw error;
-      // API returns array: [{action:"balance",response:"781.64"},{action:"expiry",response:"19-09-2026"},{action:"rate",response:"0.38"}]
-      if (Array.isArray(data)) {
-        const balanceEntry = data.find((d: any) => d.action === "balance");
-        const expiryEntry = data.find((d: any) => d.action === "expiry");
-        const rateEntry = data.find((d: any) => d.action === "rate");
-        return {
-          balance: balanceEntry?.response ? parseFloat(balanceEntry.response) : null,
-          expiry: expiryEntry?.response || null,
-          rate: rateEntry?.response ? parseFloat(rateEntry.response) : null,
-        };
-      }
       return data;
     },
     refetchInterval: 300000, // 5 min
+    refetchOnMount: "always",
     retry: 1,
   });
+
+  const smsBalance = useMemo(() => {
+    const parsePayload = (payload: any) => {
+      if (Array.isArray(payload)) {
+        const balanceEntry = payload.find((d: any) => d?.action === "balance");
+        const expiryEntry = payload.find((d: any) => d?.action === "expiry");
+        const rateEntry = payload.find((d: any) => d?.action === "rate");
+
+        const balance = Number.parseFloat(String(balanceEntry?.response ?? ""));
+        const rate = Number.parseFloat(String(rateEntry?.response ?? ""));
+
+        return {
+          balance: Number.isFinite(balance) ? balance : null,
+          expiry: expiryEntry?.response || null,
+          rate: Number.isFinite(rate) ? rate : null,
+        };
+      }
+
+      if (payload && typeof payload === "object") {
+        const balance = Number.parseFloat(String((payload as any).balance ?? ""));
+        const rate = Number.parseFloat(String((payload as any).rate ?? ""));
+        return {
+          balance: Number.isFinite(balance) ? balance : null,
+          expiry: (payload as any).expiry || null,
+          rate: Number.isFinite(rate) ? rate : null,
+        };
+      }
+
+      if (typeof payload === "string") {
+        try {
+          return parsePayload(JSON.parse(payload));
+        } catch {
+          return { balance: null, expiry: null, rate: null };
+        }
+      }
+
+      return { balance: null, expiry: null, rate: null };
+    };
+
+    return parsePayload(smsBalanceRaw);
+  }, [smsBalanceRaw]);
 
   // ── Derived calculations ──
   const total = customers?.length ?? 0;
