@@ -393,8 +393,8 @@ export function generateTransactionVoucherPDF(txn: any, account?: any) {
   doc.setTextColor(...PDF_COLORS.text);
   doc.setFontSize(PDF_FONT.heading);
   doc.text(txn.description || "Transaction", m + 4, y);
-  doc.text(Number(txn.debit) > 0 ? Number(txn.debit).toLocaleString() : "—", pw - m - 50, y, { align: "right" });
-  doc.text(Number(txn.credit) > 0 ? Number(txn.credit).toLocaleString() : "—", pw - m - 4, y, { align: "right" });
+  doc.text(Number(txn.debit) > 0 ? Number(txn.debit).toLocaleString() : "-", pw - m - 50, y, { align: "right" });
+  doc.text(Number(txn.credit) > 0 ? Number(txn.credit).toLocaleString() : "-", pw - m - 4, y, { align: "right" });
   y += 12;
 
   doc.setDrawColor(...PDF_COLORS.border);
