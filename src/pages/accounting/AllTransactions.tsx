@@ -39,10 +39,8 @@ export default function AllTransactions() {
 
   const updateMutation = useMutation({
     mutationFn: async (txn: any) => {
-      const { data, error } = await ( supabase as any).from("transactions").update({
+      const { data, error } = await (supabase as any).from("transactions").update({
         type: txn.type,
-        category: txn.category,
-        amount: Number(txn.amount),
         debit: Number(txn.debit),
         credit: Number(txn.credit),
         date: txn.date,
