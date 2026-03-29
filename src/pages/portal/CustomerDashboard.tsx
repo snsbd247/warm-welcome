@@ -7,13 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { safeFormat } from "@/lib/utils";
 import {
-  Receipt,
-  AlertCircle,
-  Package,
-  Wifi,
-  WifiOff,
-  CreditCard,
-  Loader2,
+  Receipt, AlertCircle, Package, Wifi, WifiOff, CreditCard, Loader2,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -110,7 +104,7 @@ export default function CustomerDashboard() {
     <PortalLayout>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">
-          Welcome, {customer?.name}
+          {t.portal.welcome}, {customer?.name}
         </h1>
         <div className="flex items-center gap-2 mt-1">
           <p className="text-muted-foreground font-mono text-sm">{customer?.customer_id}</p>
@@ -118,28 +112,28 @@ export default function CustomerDashboard() {
             {customer?.status}
           </Badge>
           <Badge variant="outline" className={connectionColor}>
-            {isConnected ? "Online" : "Suspended (Due Bill)"}
+            {isConnected ? t.portal.online : t.portal.suspendedConnection}
           </Badge>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <StatCard
-          title="Current Bill"
+          title={t.portal.currentBill}
           value={currentBill ? `৳${Number(currentBill.amount).toLocaleString()}` : "—"}
           icon={Receipt}
           color="text-primary"
           bgColor="bg-primary/10"
         />
         <StatCard
-          title="Total Due"
+          title={t.portal.totalDue}
           value={`৳${totalDue.toLocaleString()}`}
           icon={AlertCircle}
           color="text-destructive"
           bgColor="bg-destructive/10"
         />
         <StatCard
-          title="Package"
+          title={t.portal.package}
           value={pkg?.name ?? "—"}
           icon={Package}
           color="text-accent"
@@ -155,19 +149,19 @@ export default function CustomerDashboard() {
                 {isConnected ? <Wifi className="h-5 w-5 text-success" /> : <WifiOff className="h-5 w-5 text-destructive" />}
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Connection Status</p>
+                <p className="text-sm font-medium text-muted-foreground">{t.portal.connectionStatus}</p>
                 <p className={`text-lg font-bold capitalize ${isConnected ? "text-success" : "text-destructive"}`}>
-                  {isConnected ? "Active" : "Suspended (Due Bill)"}
+                  {isConnected ? t.portal.activeConnection : t.portal.suspendedConnection}
                 </p>
               </div>
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Speed</span>
+                <span className="text-muted-foreground">{t.portal.speed}</span>
                 <span className="font-medium text-foreground">{pkg?.speed ?? "—"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Monthly Bill</span>
+                <span className="text-muted-foreground">{t.portal.monthlyBill}</span>
                 <span className="font-medium text-foreground">৳{customer?.monthly_bill.toLocaleString()}</span>
               </div>
             </div>
@@ -181,22 +175,22 @@ export default function CustomerDashboard() {
                 <CreditCard className="h-5 w-5 text-warning" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Last Payment</p>
+                <p className="text-sm font-medium text-muted-foreground">{t.portal.lastPayment}</p>
                 <p className="text-lg font-bold text-card-foreground">
-                  {lastPayment ? `৳${Number(lastPayment.amount).toLocaleString()}` : "No payments yet"}
+                  {lastPayment ? `৳${Number(lastPayment.amount).toLocaleString()}` : t.portal.noPaymentsYet}
                 </p>
               </div>
             </div>
             {lastPayment && (
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date</span>
+                  <span className="text-muted-foreground">{t.common.date}</span>
                   <span className="font-medium text-foreground">
                     {safeFormat(lastPayment.paid_at, "dd MMM yyyy")}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Method</span>
+                  <span className="text-muted-foreground">{t.portal.method}</span>
                   <span className="font-medium text-foreground capitalize">{lastPayment.payment_method}</span>
                 </div>
               </div>

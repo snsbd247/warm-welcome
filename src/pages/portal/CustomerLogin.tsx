@@ -22,16 +22,16 @@ export default function CustomerLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pppoeUsername.trim() || !pppoePassword.trim()) {
-      toast.error("Please enter PPPoE username and password");
+      toast.error(t.portal.loginSubtitle);
       return;
     }
     setLoading(true);
     try {
       await signIn(pppoeUsername.trim(), pppoePassword.trim());
       navigate("/portal");
-      toast.success("Welcome to your portal!");
+      toast.success(t.portal.welcome + "!");
     } catch (error: any) {
-      toast.error(error.message || "Login failed");
+      toast.error(error.message || t.common.error);
     } finally {
       setLoading(false);
     }
@@ -52,39 +52,39 @@ export default function CustomerLogin() {
           )}
           <div>
             <h1 className="text-2xl font-bold text-foreground">{branding.site_name}</h1>
-            <p className="text-sm text-muted-foreground">Customer Portal</p>
+            <p className="text-sm text-muted-foreground">{t.portal.customerPortal}</p>
           </div>
         </div>
 
         <Card className="glass-card">
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">Customer Login</CardTitle>
-            <CardDescription>Enter your PPPoE credentials to access your account</CardDescription>
+            <CardTitle className="text-xl">{t.portal.customerLogin}</CardTitle>
+            <CardDescription>{t.portal.loginSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="pppoe-username">PPPoE Username</Label>
-                <Input id="pppoe-username" placeholder="Your PPPoE username" value={pppoeUsername} onChange={(e) => setPppoeUsername(e.target.value)} required />
+                <Label htmlFor="pppoe-username">{t.portal.pppoeUsername}</Label>
+                <Input id="pppoe-username" placeholder={t.portal.pppoeUsernamePlaceholder} value={pppoeUsername} onChange={(e) => setPppoeUsername(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pppoe-password">PPPoE Password</Label>
+                <Label htmlFor="pppoe-password">{t.portal.pppoePassword}</Label>
                 <Input id="pppoe-password" type="password" placeholder="••••••••" value={pppoePassword} onChange={(e) => setPppoePassword(e.target.value)} required />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Sign In
+                {t.portal.signIn}
               </Button>
             </form>
             <div className="mt-4 text-center">
-              <a href="/admin/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">Admin Login →</a>
+              <a href="/admin/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t.portal.adminLogin} →</a>
             </div>
           </CardContent>
         </Card>
 
         {branding.support_email || branding.support_phone ? (
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            <p>Need help? Contact support</p>
+            <p>{t.portal.needHelp}</p>
             {branding.support_email && <p>{branding.support_email}</p>}
             {branding.support_phone && <p>{branding.support_phone}</p>}
           </div>

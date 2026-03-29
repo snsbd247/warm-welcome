@@ -29,7 +29,6 @@ export default function PaymentCallback() {
       return;
     }
 
-    // Execute payment
     const executePayment = async () => {
       try {
         const res = await fetch(
@@ -66,8 +65,8 @@ export default function PaymentCallback() {
           {status === "loading" && (
             <>
               <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-foreground">Processing Payment</h2>
-              <p className="text-muted-foreground mt-2">Please wait while we verify your payment...</p>
+              <h2 className="text-xl font-bold text-foreground">{t.portal.processingPayment}</h2>
+              <p className="text-muted-foreground mt-2">{t.portal.pleaseWaitPayment}</p>
             </>
           )}
 
@@ -76,15 +75,15 @@ export default function PaymentCallback() {
               <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-10 w-10 text-success" />
               </div>
-              <h2 className="text-xl font-bold text-foreground">Payment Successful!</h2>
-              <p className="text-muted-foreground mt-2">Your payment has been processed successfully.</p>
+              <h2 className="text-xl font-bold text-foreground">{t.portal.paymentSuccessful}</h2>
+              <p className="text-muted-foreground mt-2">{t.portal.paymentSuccessDesc}</p>
               {trxID && (
                 <p className="text-sm font-mono mt-3 text-muted-foreground">
-                  Transaction ID: <span className="font-semibold text-foreground">{trxID}</span>
+                  {t.portal.transactionId}: <span className="font-semibold text-foreground">{trxID}</span>
                 </p>
               )}
               <Button className="mt-6" onClick={() => navigate("/portal/bills")}>
-                Back to Bills
+                {t.portal.backToBills}
               </Button>
             </>
           )}
@@ -94,12 +93,10 @@ export default function PaymentCallback() {
               <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
                 <XCircle className="h-10 w-10 text-destructive" />
               </div>
-              <h2 className="text-xl font-bold text-foreground">Payment Failed</h2>
-              <p className="text-muted-foreground mt-2">
-                Your payment could not be processed. Please try again.
-              </p>
+              <h2 className="text-xl font-bold text-foreground">{t.portal.paymentFailed}</h2>
+              <p className="text-muted-foreground mt-2">{t.portal.paymentFailedDesc}</p>
               <Button className="mt-6" onClick={() => navigate("/portal/bills")}>
-                Back to Bills
+                {t.portal.backToBills}
               </Button>
             </>
           )}
