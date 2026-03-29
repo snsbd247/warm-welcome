@@ -21,8 +21,23 @@ export default function CustomerProfile() {
   // Fetch full profile from server (sensitive data never stored locally)
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["customer-full-profile", customer?.id],
-    queryFn: fetchProfile,
-    enabled: !!customer,
+    queryFn: async () => {
+      // Try edge function first
+      try {
+        const result = await fetchProfile();
+        if (result) return result;
+      } catch (e) {
+        console.log("Profile fetch via edge function failed, using direct query");
+      }
+      // Fallback: direct Supabase query
+      const { data } = await supabase
+        .from("customers")
+        .select("id, customer_id, name, phone, area, road, house, city, email, package_id, monthly_bill, ip_address, pppoe_username, onu_mac, router_mac, installation_date, status, username, father_name, mother_name, occupation, nid, alt_phone, permanent_address, gateway, subnet, discount, connectivity_fee, due_date_day, photo_url")
+        .eq("id", customer!.id)
+        .single();
+      return data as CustomerProfileType | null;
+    },
+    enabled: !!customer?.id,
   });
 
   const { data: pkg, isLoading: pkgLoading } = useQuery({
