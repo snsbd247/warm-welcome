@@ -13,7 +13,7 @@ export function generateSupplierPurchaseInvoicePDF(purchase: any, supplier: any,
     docTitle: "PURCHASE INVOICE",
     docMeta: [
       purchase.purchase_no || "",
-      `Date: ${purchase.date ? format(new Date(purchase.date), "dd MMM yyyy") : "—"}`,
+      `Date: ${purchase.date ? format(new Date(purchase.date), "dd MMM yyyy") : "-"}`,
     ],
     style: "banner",
   });
