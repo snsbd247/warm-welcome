@@ -34,7 +34,7 @@ import SystemSettings from "@/pages/settings/SystemSettings";
 import IntegrationManagement from "@/pages/settings/IntegrationManagement";
 import BkashApiManagement from "@/pages/settings/BkashApiManagement";
 import NagadApiManagement from "@/pages/settings/NagadApiManagement";
-import ZoneManagement from "@/pages/settings/ZoneManagement";
+
 import MikroTikRouters from "@/pages/settings/MikroTikRouters";
 import CustomerLogin from "@/pages/portal/CustomerLogin";
 import CustomerDashboard from "@/pages/portal/CustomerDashboard";
@@ -198,7 +198,7 @@ function App() {
                 <Route path="/settings/general" element={<PermissionGuard module="settings"><GeneralSettings /></PermissionGuard>} />
                 <Route path="/settings/system" element={<PermissionGuard module="settings"><SystemSettings /></PermissionGuard>} />
                 <Route path="/settings/packages" element={<PermissionGuard module="settings"><Packages /></PermissionGuard>} />
-                <Route path="/settings/zones" element={<PermissionGuard module="settings"><ZoneManagement /></PermissionGuard>} />
+                
                 <Route path="/settings/locations" element={<PermissionGuard module="settings"><GeoManagement /></PermissionGuard>} />
                 <Route path="/settings/mikrotik" element={<PermissionGuard module="settings"><MikroTikRouters /></PermissionGuard>} />
                 <Route path="/settings/roles" element={<PermissionGuard module="roles"><RoleManagement /></PermissionGuard>} />
