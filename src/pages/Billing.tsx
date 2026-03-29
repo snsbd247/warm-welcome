@@ -213,7 +213,7 @@ export default function Billing() {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">{formatMonthLabel(selectedMonth)}</h1>
-                <p className="text-muted-foreground mt-1">{selectedBills.length} bills generated</p>
+                <p className="text-muted-foreground mt-1">{selectedBills.length} {t.billing.billsGenerated}</p>
               </div>
             </div>
           ) : (
