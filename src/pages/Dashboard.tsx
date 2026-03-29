@@ -22,6 +22,7 @@ import { Progress } from "@/components/ui/progress";
 import NotificationCenter from "@/components/NotificationCenter";
 import StatCard from "@/components/dashboard/StatCard";
 import PaymentSummaryCard from "@/components/dashboard/PaymentSummaryCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "hsl(var(--accent))", "#f59e0b", "#10b981", "#6366f1"];
 
