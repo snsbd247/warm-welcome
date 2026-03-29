@@ -3,9 +3,17 @@ import bcryptjs from "https://esm.sh/bcryptjs@2.4.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -16,61 +24,70 @@ Deno.serve(async (req) => {
     const { pppoe_username, pppoe_password } = await req.json();
 
     if (!pppoe_username || !pppoe_password) {
-      return new Response(
-        JSON.stringify({ error: "PPPoE username and password are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "PPPoE username and password are required" }, 400);
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    // Find customer by pppoe_username — select hash column + needed fields (never return plaintext password)
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+      return jsonResponse({ error: "Server configuration error" }, 500);
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Find customer by pppoe_username
     const { data: customer, error } = await supabase
       .from("customers")
-      .select("id, customer_id, name, phone, area, road, house, city, email, package_id, monthly_bill, ip_address, pppoe_username, pppoe_password_hash, onu_mac, router_mac, installation_date, status, username, father_name, mother_name, occupation, nid, alt_phone, permanent_address, gateway, subnet, discount, connectivity_fee, due_date_day, photo_url")
+      .select(
+        "id, customer_id, name, phone, area, road, house, city, email, package_id, monthly_bill, ip_address, pppoe_username, pppoe_password_hash, onu_mac, router_mac, installation_date, status, username, father_name, mother_name, occupation, nid, alt_phone, permanent_address, gateway, subnet, discount, connectivity_fee, due_date_day, photo_url"
+      )
       .eq("pppoe_username", pppoe_username)
-      .single();
+      .maybeSingle();
 
-    if (error || !customer) {
-      return new Response(
-        JSON.stringify({ error: "Invalid PPPoE username or password" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (error) {
+      console.error("DB query error:", error.message);
+      return jsonResponse({ error: "Internal server error" }, 500);
+    }
+
+    if (!customer) {
+      return jsonResponse({ error: "Invalid PPPoE username or password" }, 401);
     }
 
     // Compare password using bcrypt hash
     const storedHash = customer.pppoe_password_hash;
     if (!storedHash) {
-      return new Response(
-        JSON.stringify({ error: "Account requires password reset. Please contact support." }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      return jsonResponse(
+        { error: "Account requires password reset. Please contact support." },
+        401
       );
     }
 
-    const passwordValid = bcryptjs.compareSync(pppoe_password, storedHash);
+    let passwordValid = false;
+    try {
+      passwordValid = bcryptjs.compareSync(pppoe_password, storedHash);
+    } catch (e) {
+      console.error("bcrypt compare error:", e);
+      return jsonResponse({ error: "Internal server error" }, 500);
+    }
+
     if (!passwordValid) {
-      return new Response(
-        JSON.stringify({ error: "Invalid PPPoE username or password" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Invalid PPPoE username or password" }, 401);
     }
 
-    // Allow suspended users to login (they can view bills/profile but service is off)
     if (customer.status === "disconnected") {
-      return new Response(
-        JSON.stringify({ error: "Your account has been disconnected. Please contact support." }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      return jsonResponse(
+        { error: "Your account has been disconnected. Please contact support." },
+        403
       );
     }
 
     // Create a session token
     const sessionToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(); // 8 hours
+    const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
 
-    // Invalidate any existing sessions for this customer
+    // Invalidate existing sessions
     await supabase
       .from("customer_sessions")
       .delete()
@@ -87,14 +104,9 @@ Deno.serve(async (req) => {
 
     if (sessionError) {
       console.error("Session creation failed:", sessionError);
-      return new Response(
-        JSON.stringify({ error: "Internal server error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Internal server error" }, 500);
     }
 
-    // Return ONLY minimal non-sensitive fields + session token
-    // Sensitive PII (NID, gateway, subnet, IP, etc.) stays server-side
     const safeCustomer = {
       id: customer.id,
       customer_id: customer.customer_id,
@@ -107,14 +119,13 @@ Deno.serve(async (req) => {
       photo_url: customer.photo_url,
     };
 
-    return new Response(
-      JSON.stringify({ customer: safeCustomer, session_token: sessionToken, expires_at: expiresAt }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({
+      customer: safeCustomer,
+      session_token: sessionToken,
+      expires_at: expiresAt,
+    });
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.error("Unhandled error:", err);
+    return jsonResponse({ error: "Internal server error" }, 500);
   }
 });
