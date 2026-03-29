@@ -189,7 +189,7 @@ export default function Payments() {
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{t.common.edit} {t.payments.title}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t.payments.editPayment}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5"><Label>{t.common.amount}</Label><Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} /></div>
             <div className="space-y-1.5"><Label>{t.payments.paymentMethod}</Label>
