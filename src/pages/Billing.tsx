@@ -361,7 +361,7 @@ export default function Billing() {
               </TableHeader>
               <TableBody>
                 {filteredBills.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">No bills found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">{t.billing.noBillsFound}</TableCell></TableRow>
                 ) : (
                   filteredBills.map((bill) => (
                     <TableRow key={bill.id}>
