@@ -388,6 +388,7 @@ function SmsTab() {
               { key: "sms_on_payment", label: "Payment Confirmation" },
               { key: "sms_on_registration", label: "New Registration" },
               { key: "sms_on_suspension", label: "Account Suspension" },
+              { key: "sms_on_reminder", label: "Bill Reminder" },
             ].map(({ key, label }) => (
               <div key={key} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <span className="text-sm">{label}</span>
