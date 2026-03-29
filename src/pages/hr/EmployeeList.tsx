@@ -66,11 +66,11 @@ export default function EmployeeList() {
         </Dialog>
       </div>
       <Card>
-        <CardHeader><CardTitle>Employees ({rows.length})</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t.sidebar.employees} ({rows.length})</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> : (
+          {isLoading ? <p className="text-center py-8 text-muted-foreground">{t.common.loading}</p> : (
             <Table>
-              <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Name</TableHead><TableHead>Phone</TableHead><TableHead>Designation</TableHead><TableHead>Salary</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>{t.common.name}</TableHead><TableHead>{t.common.phone}</TableHead><TableHead>{t.hr.designation}</TableHead><TableHead>{t.hr.salary}</TableHead><TableHead>{t.common.status}</TableHead><TableHead>{t.common.actions}</TableHead></TableRow></TableHeader>
               <TableBody>
                 {rows.map((e: any) => (
                   <TableRow key={e.id}>
