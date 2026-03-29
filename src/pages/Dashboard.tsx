@@ -509,7 +509,7 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-10">No data yet</p>
+                <p className="text-center text-muted-foreground py-10">{t.dashboard.noDataYet}</p>
               )}
             </CardContent>
           </Card>
