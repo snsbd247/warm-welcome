@@ -55,21 +55,41 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Invalid PPPoE username or password" }, 401);
     }
 
-    // Compare password using bcrypt hash
+    // Compare password: try bcrypt hash first, then plaintext fallback
     const storedHash = customer.pppoe_password_hash;
-    if (!storedHash) {
-      return jsonResponse(
-        { error: "Account requires password reset. Please contact support." },
-        401
-      );
+    let passwordValid = false;
+
+    if (storedHash) {
+      try {
+        passwordValid = bcryptjs.compareSync(pppoe_password, storedHash);
+      } catch (e) {
+        console.error("bcrypt compare error:", e);
+      }
     }
 
-    let passwordValid = false;
-    try {
-      passwordValid = bcryptjs.compareSync(pppoe_password, storedHash);
-    } catch (e) {
-      console.error("bcrypt compare error:", e);
-      return jsonResponse({ error: "Internal server error" }, 500);
+    // Fallback: check against plaintext pppoe_password field
+    if (!passwordValid) {
+      const { data: fullCustomer } = await supabase
+        .from("customers")
+        .select("pppoe_password")
+        .eq("id", customer.id)
+        .single();
+
+      if (fullCustomer?.pppoe_password && fullCustomer.pppoe_password === pppoe_password) {
+        passwordValid = true;
+
+        // Auto-hash the password for future logins
+        try {
+          const hash = bcryptjs.hashSync(pppoe_password, 10);
+          await supabase
+            .from("customers")
+            .update({ pppoe_password_hash: hash })
+            .eq("id", customer.id);
+          console.log("Auto-hashed password for customer:", customer.customer_id);
+        } catch (e) {
+          console.error("Auto-hash failed:", e);
+        }
+      }
     }
 
     if (!passwordValid) {
