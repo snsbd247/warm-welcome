@@ -118,8 +118,8 @@ export default function Payments() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Payments</h1>
-        <p className="text-muted-foreground mt-1">View and filter all payment transactions</p>
+        <h1 className="text-2xl font-bold text-foreground">{t.payments.title}</h1>
+        <p className="text-muted-foreground mt-1">{t.payments.title}</p>
       </div>
 
       <div className="glass-card rounded-xl">
