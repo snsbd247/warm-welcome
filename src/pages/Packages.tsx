@@ -228,7 +228,7 @@ export default function Packages() {
             {bulkSyncing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
             {t.customers.syncAll}
           </Button>
-          <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Package</Button>
+          <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> {t.common.add} {t.customers.package}</Button>
         </div>
       </div>
 
