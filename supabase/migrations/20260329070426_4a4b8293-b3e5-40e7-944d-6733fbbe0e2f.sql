@@ -1,0 +1,44 @@
+-- Reset all transactional & operational data
+TRUNCATE TABLE transactions CASCADE;
+TRUNCATE TABLE customer_ledger CASCADE;
+TRUNCATE TABLE payments CASCADE;
+TRUNCATE TABLE bills CASCADE;
+TRUNCATE TABLE merchant_payments CASCADE;
+TRUNCATE TABLE customers CASCADE;
+TRUNCATE TABLE expenses CASCADE;
+TRUNCATE TABLE sale_items CASCADE;
+TRUNCATE TABLE sales CASCADE;
+TRUNCATE TABLE purchase_items CASCADE;
+TRUNCATE TABLE purchases CASCADE;
+TRUNCATE TABLE products CASCADE;
+TRUNCATE TABLE suppliers CASCADE;
+TRUNCATE TABLE supplier_payments CASCADE;
+TRUNCATE TABLE sms_logs CASCADE;
+TRUNCATE TABLE reminder_logs CASCADE;
+TRUNCATE TABLE audit_logs CASCADE;
+TRUNCATE TABLE admin_login_logs CASCADE;
+TRUNCATE TABLE admin_sessions CASCADE;
+TRUNCATE TABLE customer_sessions CASCADE;
+TRUNCATE TABLE support_tickets CASCADE;
+TRUNCATE TABLE ticket_replies CASCADE;
+TRUNCATE TABLE backup_logs CASCADE;
+TRUNCATE TABLE daily_reports CASCADE;
+TRUNCATE TABLE salary_sheets CASCADE;
+TRUNCATE TABLE attendance CASCADE;
+TRUNCATE TABLE loans CASCADE;
+TRUNCATE TABLE employee_provident_fund CASCADE;
+TRUNCATE TABLE employee_savings_fund CASCADE;
+TRUNCATE TABLE employee_salary_structure CASCADE;
+TRUNCATE TABLE employee_education CASCADE;
+TRUNCATE TABLE employee_emergency_contacts CASCADE;
+TRUNCATE TABLE employee_experience CASCADE;
+TRUNCATE TABLE employees CASCADE;
+TRUNCATE TABLE designations CASCADE;
+TRUNCATE TABLE onus CASCADE;
+TRUNCATE TABLE olts CASCADE;
+TRUNCATE TABLE expense_heads CASCADE;
+TRUNCATE TABLE income_heads CASCADE;
+TRUNCATE TABLE other_heads CASCADE;
+
+-- Reset all account balances to 0
+UPDATE accounts SET balance = 0;
