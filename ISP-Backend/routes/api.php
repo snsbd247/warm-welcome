@@ -148,6 +148,9 @@ Route::middleware(['admin.auth', 'tenant'])->group(function () {
     // ══════════════════════════════════════════════════════
     Route::middleware('check.permission:settings,edit')->group(function () {
         Route::post('/bkash/create-payment', [BkashController::class, 'createPayment']);
+        Route::post('/bkash/refund', [BkashController::class, 'refund']);
+        Route::post('/bkash/query-transaction', [BkashController::class, 'queryTransaction']);
+        Route::post('/bkash/test-connection', [BkashController::class, 'testConnection']);
         Route::post('/nagad/create-payment', [NagadController::class, 'createPayment']);
     });
 
