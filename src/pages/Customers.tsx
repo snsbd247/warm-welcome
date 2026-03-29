@@ -86,6 +86,20 @@ export default function Customers() {
     },
   });
 
+  // Fetch customers with unpaid bills for Due List
+  const { data: dueCustomerIds } = useQuery({
+    queryKey: ["due-customer-ids"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bills")
+        .select("customer_id")
+        .eq("status", "unpaid");
+      if (error) throw error;
+      return [...new Set(data?.map((b) => b.customer_id) || [])];
+    },
+    enabled: miscFilter === "due",
+  });
+
   const filtered = customers?.filter(
     (c) => {
       const s = search.toLowerCase();
