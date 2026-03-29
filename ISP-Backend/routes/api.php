@@ -189,7 +189,7 @@ Route::middleware(['admin.auth', 'tenant'])->group(function () {
         Route::get('/accounting/balances', [AccountingController::class, 'accountBalances']);
         Route::get('/accounting/profit-loss', [AccountingController::class, 'profitLoss']);
         Route::get('/accounting/balance-sheet', [AccountingController::class, 'balanceSheet']);
-        // New accounting reports
+        // Accounting Reports
         Route::get('/accounting/trial-balance', [AccountingController::class, 'trialBalance']);
         Route::get('/accounting/cash-flow', [AccountingController::class, 'cashFlow']);
         Route::get('/accounting/daybook', [AccountingController::class, 'daybook']);
