@@ -347,7 +347,7 @@ export default function Dashboard() {
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-foreground">{active}</p>
-                <p className="text-[10px] text-muted-foreground">Active</p>
+                <p className="text-[10px] text-muted-foreground">{t.common.active}</p>
               </div>
             </div>
           </CardContent>
