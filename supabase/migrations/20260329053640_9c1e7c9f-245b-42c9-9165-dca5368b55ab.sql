@@ -1,0 +1,1 @@
+ALTER TABLE public.support_tickets DROP CONSTRAINT support_tickets_assigned_to_fkey;
