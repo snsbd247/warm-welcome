@@ -664,8 +664,9 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="disconnected">Disconnected</SelectItem>
+                <SelectItem value="inactive">Inactive (বিল বাকি)</SelectItem>
+                <SelectItem value="suspended">Suspended (ডিউ ডেট পার)</SelectItem>
+                <SelectItem value="left">Left (লাইন ছেড়ে দিয়েছে)</SelectItem>
               </SelectContent>
             </Select>
           </div>
