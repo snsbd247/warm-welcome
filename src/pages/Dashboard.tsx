@@ -363,7 +363,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {revenueChartData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-10">No revenue data</p>
+              <p className="text-sm text-muted-foreground text-center py-10">{t.dashboard.noRevenueData}</p>
             ) : (
               <div className="h-[240px]">
                 <ResponsiveContainer width="100%" height="100%">
