@@ -385,8 +385,8 @@ export function generateTransactionVoucherPDF(txn: any, account?: any) {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...PDF_COLORS.white);
   doc.text("Description", m + 4, y + 6);
-  doc.text("Debit (৳)", pw - m - 50, y + 6, { align: "right" });
-  doc.text("Credit (৳)", pw - m - 4, y + 6, { align: "right" });
+  doc.text("Debit (Tk)", pw - m - 50, y + 6, { align: "right" });
+  doc.text("Credit (Tk)", pw - m - 4, y + 6, { align: "right" });
   y += 13;
 
   doc.setFillColor(...PDF_COLORS.bgRow);
