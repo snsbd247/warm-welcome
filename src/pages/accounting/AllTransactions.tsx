@@ -151,29 +151,22 @@ export default function AllTransactions() {
             <DialogTitle>Edit Transaction</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <Select value={editForm.type} onValueChange={(v) => setEditForm({ ...editForm, type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
-                    <SelectItem value="transfer">Transfer</SelectItem>
-                    <SelectItem value="journal">Journal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Category</Label>
-                <Input value={editForm.category || ""} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} />
-              </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select value={editForm.type} onValueChange={(v) => setEditForm({ ...editForm, type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="sale">Sale</SelectItem>
+                  <SelectItem value="purchase">Purchase</SelectItem>
+                  <SelectItem value="receipt">Receipt</SelectItem>
+                  <SelectItem value="payment">Payment</SelectItem>
+                  <SelectItem value="journal">Journal</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Amount</Label>
-                <Input type="number" step="0.01" value={editForm.amount || ""} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} />
-              </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Debit</Label>
                 <Input type="number" step="0.01" value={editForm.debit || ""} onChange={(e) => setEditForm({ ...editForm, debit: e.target.value })} />

@@ -59,7 +59,10 @@ export default function BalanceSheet() {
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><Scale className="h-6 w-6" /> Balance Sheet</h1>
             <p className="text-muted-foreground text-sm">Assets = Liabilities + Equity</p>
           </div>
-          <p className="text-sm text-muted-foreground">As of: {asOf}</p>
+          <div>
+            <Label className="text-xs">As of Date</Label>
+            <Input type="date" value={asOf} onChange={e => setAsOf(e.target.value)} className="w-44" />
+          </div>
         </div>
 
         {isLoading ? (

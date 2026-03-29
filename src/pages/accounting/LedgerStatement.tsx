@@ -134,7 +134,7 @@ export default function LedgerStatement() {
           <Card>
             <CardContent className="pt-4 pb-3">
               <p className="text-xs text-muted-foreground">Opening Balance</p>
-              <p className="text-lg font-bold">{fmt(0)}</p>
+              <p className="text-lg font-bold">{fmt(openingBalance)}</p>
             </CardContent>
           </Card>
           <Card>
