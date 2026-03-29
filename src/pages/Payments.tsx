@@ -191,7 +191,7 @@ export default function Payments() {
         <DialogContent>
           <DialogHeader><DialogTitle>{t.common.edit} {t.payments.title}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-1.5"><Label>Amount</Label><Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>{t.common.amount}</Label><Input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} /></div>
             <div className="space-y-1.5"><Label>Payment Method</Label>
               <Select value={editMethod} onValueChange={setEditMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">Cash</SelectItem><SelectItem value="bkash">bKash</SelectItem><SelectItem value="nagad">Nagad</SelectItem><SelectItem value="bank">Bank</SelectItem><SelectItem value="bkash_merchant">bKash Merchant</SelectItem></SelectContent></Select>
             </div>
