@@ -390,6 +390,45 @@ export default function CustomerProfilePage() {
               </CardContent>
             </Card>
           </TabsContent>
+          <TabsContent value="payments">
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5" /> Payment History</CardTitle></CardHeader>
+              <CardContent>
+                {customerPayments.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No payment history found for this customer</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Serial</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Month</TableHead>
+                        <TableHead>Payment Method</TableHead>
+                        <TableHead>Transaction ID</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {customerPayments.map((payment: any, idx: number) => (
+                        <TableRow key={payment.id}>
+                          <TableCell className="font-medium text-primary">PMT#{payment.id?.substring(0, 6).toUpperCase()}</TableCell>
+                          <TableCell>{payment.paid_at ? new Date(payment.paid_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</TableCell>
+                          <TableCell>{payment.month || "—"}</TableCell>
+                          <TableCell className="capitalize">{payment.payment_method || "—"}</TableCell>
+                          <TableCell className="font-mono text-xs">{payment.transaction_id || payment.bkash_trx_id || "—"}</TableCell>
+                          <TableCell>
+                            <Badge variant={payment.status === "completed" ? "default" : "secondary"}>{payment.status}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">৳{Number(payment.amount).toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
