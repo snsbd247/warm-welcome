@@ -236,10 +236,10 @@ export default function Tickets() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
+                       <SelectItem value="low">{t.tickets.low}</SelectItem>
+                       <SelectItem value="medium">{t.tickets.medium}</SelectItem>
+                       <SelectItem value="high">{t.tickets.high}</SelectItem>
+                       <SelectItem value="urgent">{t.portal.urgent}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
