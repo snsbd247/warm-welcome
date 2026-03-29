@@ -325,7 +325,7 @@ export default function Dashboard() {
                 <p className={`text-2xl font-bold ${collectionRate < 50 && targetAmount > 0 ? "text-destructive" : "text-success"}`}>৳{collectedAmount.toLocaleString()}</p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">Target</p>
+                <p className="text-xs text-muted-foreground">{t.dashboard.collectionTarget}</p>
                 <p className="text-2xl font-bold text-foreground">৳{targetAmount.toLocaleString()}</p>
               </div>
             </div>
