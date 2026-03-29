@@ -578,6 +578,60 @@ export default function CustomerProfilePage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Payment Dialog */}
+      <Dialog open={editPaymentOpen} onOpenChange={v => { if (!v) setEditPaymentOpen(false); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Edit Payment - PMT#{editPaymentData?.id?.substring(0, 6).toUpperCase()}</DialogTitle></DialogHeader>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              await paymentsApi.update(editPaymentData.id, {
+                amount: parseFloat(editPaymentForm.amount),
+                payment_method: editPaymentForm.payment_method,
+                transaction_id: editPaymentForm.transaction_id || null,
+                status: editPaymentForm.status,
+                paid_at: editPaymentForm.paid_at ? new Date(editPaymentForm.paid_at).toISOString() : undefined,
+              });
+              toast.success("Payment updated");
+              setEditPaymentOpen(false);
+              queryClient.invalidateQueries({ queryKey: ["customer-payments", id] });
+            } catch {
+              toast.error("Failed to update payment");
+            }
+          }} className="space-y-4">
+            <div><Label>Amount (৳)</Label><Input type="number" step="0.01" value={editPaymentForm.amount} onChange={e => setEditPaymentForm({...editPaymentForm, amount: e.target.value})} /></div>
+            <div><Label>Payment Method</Label>
+              <Select value={editPaymentForm.payment_method} onValueChange={v => setEditPaymentForm({...editPaymentForm, payment_method: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="bkash">bKash</SelectItem>
+                  <SelectItem value="nagad">Nagad</SelectItem>
+                  <SelectItem value="bank">Bank Transfer</SelectItem>
+                  <SelectItem value="merchant">Merchant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Transaction ID</Label><Input value={editPaymentForm.transaction_id} onChange={e => setEditPaymentForm({...editPaymentForm, transaction_id: e.target.value})} /></div>
+            <div><Label>Status</Label>
+              <Select value={editPaymentForm.status} onValueChange={v => setEditPaymentForm({...editPaymentForm, status: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Paid At</Label><Input type="datetime-local" value={editPaymentForm.paid_at} onChange={e => setEditPaymentForm({...editPaymentForm, paid_at: e.target.value})} /></div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditPaymentOpen(false)}>Cancel</Button>
+              <Button type="submit">Update Payment</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
