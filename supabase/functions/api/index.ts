@@ -59,15 +59,11 @@ async function createMerchantAccountingEntry(supabase: any, amount: number, tran
       reference: `MERCH-${transactionId}`,
     });
 
-    // Update account balance
-    await supabase.rpc("increment_account_balance", { account_id: accountId, increment_amount: amount }).catch(() => {
-      // If RPC doesn't exist, do manual update
-      supabase.from("accounts").select("balance").eq("id", accountId).single().then(({ data: acc }: any) => {
-        if (acc) {
-          supabase.from("accounts").update({ balance: (acc.balance || 0) + amount }).eq("id", accountId);
-        }
-      });
-    });
+    // Update account balance using fetched account info
+    if (accInfo) {
+      const balanceChange = isDebitNormal ? amount : amount;
+      await supabase.from("accounts").update({ balance: (accInfo.balance || 0) + balanceChange }).eq("id", accountId);
+    }
   } catch (err) {
     console.error("Merchant accounting entry failed:", err);
   }
