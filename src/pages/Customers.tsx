@@ -312,7 +312,7 @@ export default function Customers() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editCustomer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
+            <DialogTitle>{editCustomer ? t.customers.editCustomer : t.customers.addCustomer}</DialogTitle>
           </DialogHeader>
           {formOpen && (
             <CustomerForm
