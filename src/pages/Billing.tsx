@@ -31,8 +31,10 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { logAudit } from "@/lib/auditLog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { generateBillInvoicePDF } from "@/lib/billPdf";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Billing() {
+  const { t } = useLanguage();
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [generateOpen, setGenerateOpen] = useState(false);
@@ -216,8 +218,8 @@ export default function Billing() {
             </div>
           ) : (
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Billing</h1>
-              <p className="text-muted-foreground mt-1">Generate and manage customer bills</p>
+              <h1 className="text-2xl font-bold text-foreground">{t.billing.title}</h1>
+              <p className="text-muted-foreground mt-1">{t.billing.generateBills}</p>
             </div>
           )}
         </div>
@@ -230,7 +232,7 @@ export default function Billing() {
           {!selectedMonth && canCreateBill && (
             <>
               <Button variant="outline" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-2" /> Upload Excel</Button>
-              <Button onClick={() => setGenerateOpen(true)}><FileText className="h-4 w-4 mr-2" /> Generate Bills</Button>
+              <Button onClick={() => setGenerateOpen(true)}><FileText className="h-4 w-4 mr-2" /> {t.billing.generateBills}</Button>
             </>
           )}
         </div>

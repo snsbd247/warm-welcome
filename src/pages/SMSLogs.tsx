@@ -14,10 +14,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import GroupSmsDialog from "@/components/GroupSmsDialog";
 import { safeFormat } from "@/lib/utils";
-
 import api from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SMSLogs() {
+  const { t } = useLanguage();
   const [sendOpen, setSendOpen] = useState(false);
   const [groupSmsOpen, setGroupSmsOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -61,15 +62,15 @@ export default function SMSLogs() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">SMS Logs</h1>
-            <p className="text-muted-foreground">View sent SMS messages and send new ones</p>
+            <h1 className="text-2xl font-bold text-foreground">{t.sms.title}</h1>
+            <p className="text-muted-foreground">{t.sms.title}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setGroupSmsOpen(true)}>
               <Users className="h-4 w-4 mr-2" /> Group SMS
             </Button>
             <Button onClick={() => setSendOpen(true)}>
-              <Send className="h-4 w-4 mr-2" /> Send SMS
+              <Send className="h-4 w-4 mr-2" /> {t.sms.sendSms}
             </Button>
           </div>
         </div>

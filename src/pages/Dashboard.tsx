@@ -22,6 +22,7 @@ import { Progress } from "@/components/ui/progress";
 import NotificationCenter from "@/components/NotificationCenter";
 import StatCard from "@/components/dashboard/StatCard";
 import PaymentSummaryCard from "@/components/dashboard/PaymentSummaryCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "hsl(var(--accent))", "#f59e0b", "#10b981", "#6366f1"];
 
@@ -68,6 +69,7 @@ function usePaymentStats(method: string) {
 }
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   const [runningBillControl, setRunningBillControl] = useState(false);
   const [refreshingMikrotik, setRefreshingMikrotik] = useState(false);
 
@@ -266,37 +268,37 @@ export default function Dashboard() {
       {/* ══════ Header ══════ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Overview of your ISP operations</p>
+          <h1 className="text-2xl font-bold text-foreground">{t.dashboard.title}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t.dashboard.title}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleRefreshMikrotik} disabled={refreshingMikrotik || loadingMikrotik}>
             {refreshingMikrotik ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
-            Refresh
+            {t.common.refresh}
           </Button>
           <Button size="sm" onClick={runBillControl} disabled={runningBillControl}>
             {runningBillControl ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Router className="h-3.5 w-3.5 mr-1.5" />}
-            Bill Control
+            {t.sidebar.billing}
           </Button>
         </div>
       </div>
 
       {/* ══════ Section 1: Customer & Connection Stats ══════ */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        <StatCard title="Total Customers" value={total} icon={<Users className="h-5 w-5" />} variant="default" />
-        <StatCard title="Active" value={active} icon={<Users className="h-5 w-5" />} variant="success" />
-        <StatCard title="Suspended" value={suspended} icon={<Users className="h-5 w-5" />} variant="destructive" />
-        <StatCard title="Online" value={loadingMikrotik ? "..." : onlineCount} icon={<Wifi className="h-5 w-5" />} variant="success" />
-        <StatCard title="Offline" value={loadingMikrotik ? "..." : offlineCount} icon={<WifiOff className="h-5 w-5" />} variant="warning" />
-        <StatCard title="Open Tickets" value={openTickets} icon={<TicketCheck className="h-5 w-5" />} variant="accent" />
+        <StatCard title={t.dashboard.totalCustomers} value={total} icon={<Users className="h-5 w-5" />} variant="default" />
+        <StatCard title={t.common.active} value={active} icon={<Users className="h-5 w-5" />} variant="success" />
+        <StatCard title={t.common.suspended} value={suspended} icon={<Users className="h-5 w-5" />} variant="destructive" />
+        <StatCard title={t.dashboard.onlineNow} value={loadingMikrotik ? "..." : onlineCount} icon={<Wifi className="h-5 w-5" />} variant="success" />
+        <StatCard title={t.dashboard.offlineNow} value={loadingMikrotik ? "..." : offlineCount} icon={<WifiOff className="h-5 w-5" />} variant="warning" />
+        <StatCard title={t.tickets.title} value={openTickets} icon={<TicketCheck className="h-5 w-5" />} variant="accent" />
       </div>
 
       {/* ══════ Section 2: Financial Overview ══════ */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-        <StatCard title="This Month Income" value={`৳${collectedAmount.toLocaleString()}`} icon={<CircleDollarSign className="h-5 w-5" />} variant="success" />
-        <StatCard title="This Month Due" value={`৳${dueAmount.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="destructive" />
-        <StatCard title="Total Due" value={`৳${totalDue.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="warning" />
-        <StatCard title="Total Revenue" value={`৳${monthlyRevenue.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5" />} variant="default" />
+        <StatCard title={t.dashboard.monthCollection} value={`৳${collectedAmount.toLocaleString()}`} icon={<CircleDollarSign className="h-5 w-5" />} variant="success" />
+        <StatCard title={t.dashboard.totalDue} value={`৳${dueAmount.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="destructive" />
+        <StatCard title={t.dashboard.totalDue} value={`৳${totalDue.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="warning" />
+        <StatCard title={t.dashboard.totalCollection} value={`৳${monthlyRevenue.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5" />} variant="default" />
         <StatCard
           title="SMS Balance"
           value={smsBalance?.balance != null ? `৳${smsBalance.balance.toLocaleString()}` : "—"}
@@ -479,14 +481,14 @@ export default function Dashboard() {
       <div className="space-y-4 mb-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
           <DollarSign className="h-5 w-5 text-primary" />
-          Accounting Overview
+          {t.accounting.title}
         </h2>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard title="Total Sales" value={`৳${totalAccSales.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5" />} variant="success" />
-          <StatCard title="Total Purchases" value={`৳${totalAccPurchases.toLocaleString()}`} icon={<ShoppingCart className="h-5 w-5" />} variant="default" />
-          <StatCard title="Total Expenses" value={`৳${totalAccExpenses.toLocaleString()}`} icon={<TrendingDown className="h-5 w-5" />} variant="destructive" />
-          <StatCard title="Net Profit" value={`৳${netProfit.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant={netProfit >= 0 ? "success" : "destructive"} />
+          <StatCard title={t.dashboard.totalSales} value={`৳${totalAccSales.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5" />} variant="success" />
+          <StatCard title={t.dashboard.totalPurchases} value={`৳${totalAccPurchases.toLocaleString()}`} icon={<ShoppingCart className="h-5 w-5" />} variant="default" />
+          <StatCard title={t.dashboard.totalExpenses} value={`৳${totalAccExpenses.toLocaleString()}`} icon={<TrendingDown className="h-5 w-5" />} variant="destructive" />
+          <StatCard title={t.reports.netProfit} value={`৳${netProfit.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant={netProfit >= 0 ? "success" : "destructive"} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

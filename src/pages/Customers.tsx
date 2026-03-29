@@ -25,8 +25,10 @@ import { generateCustomerPDF } from "@/lib/pdf";
 import CustomerImport from "@/components/CustomerImport";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Customers() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const statusFilter = searchParams.get("status");
   const connectionFilter = searchParams.get("connection");
@@ -147,16 +149,16 @@ export default function Customers() {
   };
 
   const pageTitle = useMemo(() => {
-    if (statusFilter === "new") return "New Customers";
-    if (statusFilter === "active") return "Active Customers";
-    if (statusFilter === "inactive") return "Inactive Customers";
-    if (statusFilter === "free") return "Free Customers";
-    if (statusFilter === "left") return "Left Customers";
-    if (connectionFilter === "online") return "Online Customers";
-    if (connectionFilter === "offline") return "Offline Customers";
-    if (miscFilter === "due") return "Due Customers";
-    return "Customers";
-  }, [statusFilter, connectionFilter, miscFilter]);
+    if (statusFilter === "new") return t.sidebar.newCustomers;
+    if (statusFilter === "active") return t.sidebar.activeCustomers;
+    if (statusFilter === "inactive") return t.sidebar.inactiveCustomers;
+    if (statusFilter === "free") return t.sidebar.freeCustomers;
+    if (statusFilter === "left") return t.sidebar.leftCustomers;
+    if (connectionFilter === "online") return t.sidebar.onlineCustomers;
+    if (connectionFilter === "offline") return t.sidebar.offlineCustomers;
+    if (miscFilter === "due") return t.sidebar.dueList;
+    return t.customers.title;
+  }, [statusFilter, connectionFilter, miscFilter, t]);
 
   return (
     <DashboardLayout>
@@ -178,7 +180,7 @@ export default function Customers() {
                 <Upload className="h-4 w-4 mr-2" /> Upload Excel
               </Button>
               <Button onClick={() => { setEditCustomer(null); setFormOpen(true); }}>
-                <Plus className="h-4 w-4 mr-2" /> Add Customer
+                <Plus className="h-4 w-4 mr-2" /> {t.customers.addCustomer}
               </Button>
             </>
           )}
@@ -189,7 +191,7 @@ export default function Customers() {
         <div className="p-4 border-b border-border">
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search customers..." className="pl-9" value={search} onChange={(e) => handleSearchChange(e.target.value)} />
+            <Input placeholder={t.common.search + "..."} className="pl-9" value={search} onChange={(e) => handleSearchChange(e.target.value)} />
           </div>
         </div>
 
@@ -203,15 +205,15 @@ export default function Customers() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Customer ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Area</TableHead>
-                    <TableHead>Package</TableHead>
-                    <TableHead>Monthly Bill</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>MikroTik Sync</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t.customers.customerId}</TableHead>
+                    <TableHead>{t.common.name}</TableHead>
+                    <TableHead>{t.common.phone}</TableHead>
+                    <TableHead>{t.customers.area}</TableHead>
+                    <TableHead>{t.customers.package}</TableHead>
+                    <TableHead>{t.customers.monthlyBill}</TableHead>
+                    <TableHead>{t.common.status}</TableHead>
+                    <TableHead>MikroTik</TableHead>
+                    <TableHead className="text-right">{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -310,7 +312,7 @@ export default function Customers() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editCustomer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
+            <DialogTitle>{editCustomer ? t.customers.editCustomer : t.customers.addCustomer}</DialogTitle>
           </DialogHeader>
           {formOpen && (
             <CustomerForm

@@ -23,8 +23,10 @@ import { Plus, Pencil, Trash2, Loader2, Search, Ban, CheckCircle, RefreshCw } fr
 import { toast } from "sonner";
 
 import api from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Packages() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editPkg, setEditPkg] = useState<any>(null);
@@ -218,8 +220,8 @@ export default function Packages() {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Packages</h1>
-          <p className="text-muted-foreground mt-1">Manage internet packages & bandwidth</p>
+           <h1 className="text-2xl font-bold text-foreground">{t.sidebar.packages}</h1>
+           <p className="text-muted-foreground mt-1">{t.sidebar.packages}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={bulkSyncPackages} disabled={bulkSyncing}>

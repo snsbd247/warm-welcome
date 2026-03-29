@@ -27,8 +27,10 @@ import { logAudit } from "@/lib/auditLog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { paymentsApi } from "@/lib/api";
 import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Payments() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -116,8 +118,8 @@ export default function Payments() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Payments</h1>
-        <p className="text-muted-foreground mt-1">View and filter all payment transactions</p>
+        <h1 className="text-2xl font-bold text-foreground">{t.payments.title}</h1>
+        <p className="text-muted-foreground mt-1">{t.payments.title}</p>
       </div>
 
       <div className="glass-card rounded-xl">
@@ -143,7 +145,7 @@ export default function Payments() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer ID</TableHead><TableHead>Customer</TableHead><TableHead>Amount</TableHead><TableHead>Method</TableHead><TableHead>Transaction ID</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead><TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t.customers.customerId}</TableHead><TableHead>{t.common.name}</TableHead><TableHead>{t.common.amount}</TableHead><TableHead>{t.payments.paymentMethod}</TableHead><TableHead>{t.payments.transactionId}</TableHead><TableHead>{t.common.status}</TableHead><TableHead>{t.common.date}</TableHead><TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

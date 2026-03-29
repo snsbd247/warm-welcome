@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Ticket, Loader2, MessageSquare, Send, X } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const priorityColors: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
@@ -40,6 +41,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Tickets() {
+  const { t } = useLanguage();
   const [viewTicket, setViewTicket] = useState<any>(null);
   const [replyText, setReplyText] = useState("");
   const [replying, setReplying] = useState(false);
@@ -125,8 +127,8 @@ export default function Tickets() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Support Tickets</h1>
-            <p className="text-muted-foreground">Manage customer support requests</p>
+            <h1 className="text-2xl font-bold text-foreground">{t.tickets.title}</h1>
+            <p className="text-muted-foreground">{t.tickets.title}</p>
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-full sm:w-40">
