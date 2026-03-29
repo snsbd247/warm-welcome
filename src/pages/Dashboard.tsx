@@ -274,11 +274,11 @@ export default function Dashboard() {
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleRefreshMikrotik} disabled={refreshingMikrotik || loadingMikrotik}>
             {refreshingMikrotik ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
-            Refresh
+            {t.common.refresh}
           </Button>
           <Button size="sm" onClick={runBillControl} disabled={runningBillControl}>
             {runningBillControl ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Router className="h-3.5 w-3.5 mr-1.5" />}
-            Bill Control
+            {t.sidebar.billing}
           </Button>
         </div>
       </div>
