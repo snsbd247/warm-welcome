@@ -484,7 +484,7 @@ export default function Dashboard() {
           {t.accounting.title}
         </h2>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard title={t.dashboard.totalSales} value={`৳${totalAccSales.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5" />} variant="success" />
           <StatCard title={t.dashboard.totalPurchases} value={`৳${totalAccPurchases.toLocaleString()}`} icon={<ShoppingCart className="h-5 w-5" />} variant="default" />
           <StatCard title={t.dashboard.totalExpenses} value={`৳${totalAccExpenses.toLocaleString()}`} icon={<TrendingDown className="h-5 w-5" />} variant="destructive" />
