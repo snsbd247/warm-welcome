@@ -308,7 +308,7 @@ export default function Packages() {
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editPkg ? "Edit Package" : "Add Package"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editPkg ? `${t.common.edit} ${t.customers.package}` : `${t.common.add} ${t.customers.package}`}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
