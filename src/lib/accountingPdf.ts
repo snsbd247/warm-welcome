@@ -179,6 +179,8 @@ export function generatePurchaseInvoicePDF(purchase: any, supplier?: any) {
     y += 6.5;
   };
   fieldRow("Supplier", supplier?.name || purchase.supplier_name || "-");
+  if (supplier?.company) fieldRow("Company", supplier.company);
+  if (supplier?.phone) fieldRow("Phone", supplier.phone);
   fieldRow("Status", (purchase.status || "unpaid").toUpperCase());
   y += 4;
 
