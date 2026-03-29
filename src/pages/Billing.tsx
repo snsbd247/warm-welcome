@@ -246,8 +246,8 @@ export default function Billing() {
           {sortedMonths.length === 0 ? (
             <div className="col-span-full text-center text-muted-foreground py-16">
               <Receipt className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <p className="text-lg font-medium">No bills generated yet</p>
-              <p className="text-sm mt-1">Click "Generate Bills" to create monthly bills</p>
+               <p className="text-lg font-medium">{t.billing.noBillsYet}</p>
+               <p className="text-sm mt-1">{t.billing.noBillsYetDesc}</p>
             </div>
           ) : (
             sortedMonths.map((month) => {
