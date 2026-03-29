@@ -311,7 +311,7 @@ export default function InitialDataImportTab() {
           count++;
         }
       }
-      setStatus("email", "done", `${count} ইমেইল টেমপ্লেট যোগ হয়েছে`);
+      setStatus("email", "done", `${count} email templates added`);
     } catch (e: any) {
       setStatus("email", "error", e.message);
     }
