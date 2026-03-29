@@ -27,7 +27,7 @@ export default function ReminderLogs() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Reminder Logs</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.sidebar.reminders}</h1>
           <p className="text-muted-foreground">View all bill reminders sent via SMS and WhatsApp</p>
         </div>
 

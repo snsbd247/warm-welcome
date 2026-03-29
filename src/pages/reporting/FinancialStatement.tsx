@@ -18,7 +18,7 @@ export default function FinancialStatement() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6"><h1 className="text-2xl font-bold">Financial Statement</h1></div>
+      <div className="mb-6"><h1 className="text-2xl font-bold">{t.sidebar.financialStatement}</h1></div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card><CardContent className="pt-6"><div className="text-2xl font-bold text-green-600">৳{totalIncome.toLocaleString()}</div><p className="text-sm text-muted-foreground">Total Income</p></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="text-2xl font-bold text-destructive">৳{totalExpense.toLocaleString()}</div><p className="text-sm text-muted-foreground">Total Expense</p></CardContent></Card>

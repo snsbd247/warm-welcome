@@ -22,7 +22,7 @@ export default function TrafficMonitor() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Traffic Monitor</h1>
+        <h1 className="text-2xl font-bold">{t.sidebar.trafficMonitor}</h1>
         <Badge variant="outline" className="gap-1"><Activity className="h-3 w-3" />Auto-refresh: 30s</Badge>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

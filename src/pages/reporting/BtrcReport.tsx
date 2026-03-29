@@ -89,7 +89,7 @@ export default function BtrcReport() {
         th { background: #e0e0e0; font-weight: bold; }
         @media print { body { margin: 0; } }
       </style></head><body>
-      <h1>BTRC Report</h1>
+      <h1>{t.sidebar.btrcReport}</h1>
       ${printContent.innerHTML}
       </body></html>
     `);
@@ -121,7 +121,7 @@ export default function BtrcReport() {
   return (
     <DashboardLayout>
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">BTRC Report</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t.sidebar.btrcReport}</h1>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-1.5" />

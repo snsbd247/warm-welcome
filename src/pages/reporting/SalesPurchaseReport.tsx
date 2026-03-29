@@ -52,7 +52,7 @@ export default function SalesPurchaseReport() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Sales & Purchase Report</h1>
+        <h1 className="text-2xl font-bold">{t.sidebar.salesPurchase}</h1>
 
         <Card>
           <CardContent className="pt-4 pb-4">

@@ -124,7 +124,7 @@ export default function GeneralSettings() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">General Settings</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t.settings.general}</h1>
         <p className="text-muted-foreground mt-1">Configure system information and branding</p>
       </div>
 
