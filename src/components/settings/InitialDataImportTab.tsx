@@ -391,6 +391,37 @@ export default function InitialDataImportTab() {
     toast.success("Import completed!");
   };
 
+  const RESET_TABLES = [
+    "admin_login_logs", "admin_sessions", "backup_logs", "audit_logs",
+    "reminder_logs", "customer_ledger", "customer_sessions", "merchant_payments",
+    "payments", "bills", "sms_logs",
+    "sale_items", "sales", "purchase_items", "purchases",
+    "onus", "olts",
+    "employee_education", "employee_emergency_contacts", "employee_experience",
+    "employee_provident_fund", "employee_salary_structure", "employee_savings_fund",
+    "salary_sheets", "loans", "attendance",
+    "customers", "employees", "designations",
+    "products", "expenses", "daily_reports",
+    "expense_heads", "income_heads", "other_heads",
+    "packages", "mikrotik_routers", "payment_gateways",
+    "geo_upazilas", "geo_districts", "geo_divisions",
+  ];
+
+  const handleResetAll = async () => {
+    setResetting(true);
+    try {
+      for (const table of RESET_TABLES) {
+        await (supabase as any).from(table).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      }
+      queryClient.invalidateQueries();
+      toast.success("All data has been reset successfully! Profiles, roles, permissions, settings & accounts preserved.");
+    } catch (e: any) {
+      toast.error("Reset failed: " + e.message);
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -404,10 +435,43 @@ export default function InitialDataImportTab() {
                 Import all default data required for first-time ISP software setup — individually or all at once.
               </CardDescription>
             </div>
-            <Button onClick={handleSeedAll} disabled={allLoading} size="lg" className="gap-2">
-              {allLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
-              Import All
-            </Button>
+            <div className="flex items-center gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="lg" className="gap-2" disabled={resetting || allLoading}>
+                    {resetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    Reset All
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to reset all data?</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-2">
+                      <p>This will permanently delete all transactional and master data including:</p>
+                      <p className="font-medium">Customers, Bills, Payments, Sales, Purchases, Employees, Attendance, SMS logs, Geo data, Packages, and more.</p>
+                      <p className="text-sm mt-2">The following will be <strong>preserved</strong>:</p>
+                      <ul className="list-disc list-inside text-sm">
+                        <li>Profiles & User accounts</li>
+                        <li>Roles & Permissions</li>
+                        <li>General Settings</li>
+                        <li>Chart of Accounts (Ledgers)</li>
+                        <li>System Settings & Ledger Mappings</li>
+                      </ul>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleResetAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Yes, Reset All Data
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button onClick={handleSeedAll} disabled={allLoading || resetting} size="lg" className="gap-2">
+                {allLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+                Import All
+              </Button>
+            </div>
           </div>
         </CardHeader>
       </Card>
