@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { generatePaySlipPdf } from "@/lib/salaryPaySlipPdf";
 
 export default function SalarySheet() {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const now = new Date();
   const [month, setMonth] = useState(format(now, "yyyy-MM"));
