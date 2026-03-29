@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 const VARIABLE_HINTS = [
   "{CustomerName}", "{Month}", "{Amount}", "{DueDate}", "{CustomerID}", "{PaymentDate}",
+  "{PPPoEUsername}", "{PPPoEPassword}",
 ];
 
 const DEFAULT_TEMPLATES = [
@@ -19,7 +20,7 @@ const DEFAULT_TEMPLATES = [
   { name: "Due Reminder", message: "Dear {CustomerName}, your bill of {Amount} BDT for {Month} is due. Please pay before {DueDate}." },
   { name: "Payment Confirmation", message: "Dear {CustomerName}, we received your payment of {Amount} BDT on {PaymentDate}. Thank you!" },
   { name: "Account Suspension", message: "Dear {CustomerName}, your account has been suspended due to non-payment. Please pay your dues." },
-  { name: "Customer Registration", message: "Dear {CustomerName}, welcome to Smart ISP! Your Customer ID: {CustomerID}." },
+  { name: "Customer Registration", message: "Dear {CustomerName}, welcome to Smart ISP! Your Customer ID: {CustomerID}. PPPoE Username: {PPPoEUsername}, Password: {PPPoEPassword}." },
 ];
 
 export default function SmsTemplatesTab() {

@@ -758,6 +758,39 @@ export const customersApi = {
 
     const { data, error } = await supabaseClient.from("customers").insert(customer as any).select().single();
     if (error) throw error;
+
+    // Send welcome SMS after successful creation
+    if (data?.phone) {
+      try {
+        // Load SMS template for "Customer Registration"
+        const { data: tpl } = await supabaseClient
+          .from("sms_templates")
+          .select("message")
+          .eq("name", "Customer Registration")
+          .limit(1)
+          .single();
+
+        const templateMsg = tpl?.message || "Dear {CustomerName}, welcome! Your Customer ID: {CustomerID}. PPPoE Username: {PPPoEUsername}, Password: {PPPoEPassword}.";
+        
+        const smsMessage = templateMsg
+          .replace(/\{CustomerName\}/g, data.name || "")
+          .replace(/\{CustomerID\}/g, data.customer_id || "")
+          .replace(/\{PPPoEUsername\}/g, data.pppoe_username || data.customer_id || "")
+          .replace(/\{PPPoEPassword\}/g, customer.pppoe_password || data.pppoe_password || "");
+
+        await supabaseClient.functions.invoke("send-sms", {
+          body: {
+            to: data.phone,
+            message: smsMessage,
+            sms_type: "registration",
+            customer_id: data.id,
+          },
+        });
+      } catch (smsErr) {
+        console.warn("Welcome SMS failed:", smsErr);
+      }
+    }
+
     return { customer: data };
   },
 };
