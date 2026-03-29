@@ -285,12 +285,12 @@ export default function Dashboard() {
 
       {/* ══════ Section 1: Customer & Connection Stats ══════ */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        <StatCard title="Total Customers" value={total} icon={<Users className="h-5 w-5" />} variant="default" />
-        <StatCard title="Active" value={active} icon={<Users className="h-5 w-5" />} variant="success" />
-        <StatCard title="Suspended" value={suspended} icon={<Users className="h-5 w-5" />} variant="destructive" />
-        <StatCard title="Online" value={loadingMikrotik ? "..." : onlineCount} icon={<Wifi className="h-5 w-5" />} variant="success" />
-        <StatCard title="Offline" value={loadingMikrotik ? "..." : offlineCount} icon={<WifiOff className="h-5 w-5" />} variant="warning" />
-        <StatCard title="Open Tickets" value={openTickets} icon={<TicketCheck className="h-5 w-5" />} variant="accent" />
+        <StatCard title={t.dashboard.totalCustomers} value={total} icon={<Users className="h-5 w-5" />} variant="default" />
+        <StatCard title={t.common.active} value={active} icon={<Users className="h-5 w-5" />} variant="success" />
+        <StatCard title={t.common.suspended} value={suspended} icon={<Users className="h-5 w-5" />} variant="destructive" />
+        <StatCard title={t.dashboard.onlineNow} value={loadingMikrotik ? "..." : onlineCount} icon={<Wifi className="h-5 w-5" />} variant="success" />
+        <StatCard title={t.dashboard.offlineNow} value={loadingMikrotik ? "..." : offlineCount} icon={<WifiOff className="h-5 w-5" />} variant="warning" />
+        <StatCard title={t.tickets.title} value={openTickets} icon={<TicketCheck className="h-5 w-5" />} variant="accent" />
       </div>
 
       {/* ══════ Section 2: Financial Overview ══════ */}
