@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadCustomerPhoto } from "@/lib/storage";
@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { generateCustomerPDF } from "@/lib/pdf";
 import { customersApi } from "@/lib/api";
 import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
-import { DIVISIONS, DISTRICTS, UPAZILAS } from "@/lib/bangladeshGeo";
+import { useGeoDivisions, useGeoDistricts, useGeoUpazilas, useGeoDivisionByName, useGeoDistrictByName } from "@/hooks/useGeoData";
 
 interface CustomerFormProps {
   customer?: any;
