@@ -77,8 +77,8 @@ export default function SMSLogs() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" /> Recent Messages
+             <CardTitle className="flex items-center gap-2">
+               <MessageSquare className="h-5 w-5" /> {t.sms.recentMessages}
             </CardTitle>
           </CardHeader>
           <CardContent>
