@@ -161,7 +161,7 @@ export function generatePurchaseInvoicePDF(purchase: any, supplier?: any) {
     companyName: "Smart ISP",
     subtitle: "Internet Service Provider",
     docTitle: "PURCHASE INVOICE",
-    docMeta: [`Invoice: ${purchase.purchase_no || "—"}`, `Date: ${purchase.date ? new Date(purchase.date).toLocaleDateString("en-GB") : "—"}`],
+    docMeta: [`Invoice: ${purchase.purchase_no || "-"}`, `Date: ${purchase.date ? new Date(purchase.date).toLocaleDateString("en-GB") : "-"}`],
     style: "banner",
   });
 
