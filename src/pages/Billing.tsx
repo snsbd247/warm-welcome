@@ -293,7 +293,7 @@ export default function Billing() {
                       </div>
                       <div className="p-2 rounded-lg bg-destructive/10">
                         <p className="text-lg font-bold text-destructive">{stats.unpaid}</p>
-                        <p className="text-[10px] text-destructive/80">Unpaid</p>
+                        <p className="text-[10px] text-destructive/80">{t.common.unpaid}</p>
                       </div>
                       <div className="p-2 rounded-lg bg-muted">
                         <p className="text-lg font-bold text-foreground">৳{(stats.totalAmount / 1000).toFixed(1)}k</p>
