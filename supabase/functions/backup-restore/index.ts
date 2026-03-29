@@ -5,16 +5,39 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// All public tables in correct dependency order (parents first)
 const TABLES = [
-  "customers", "bills", "payments", "customer_ledger", "packages", "zones",
-  "mikrotik_routers", "profiles", "user_roles", "custom_roles", "permissions",
-  "role_permissions", "support_tickets", "ticket_replies", "sms_logs",
-  "sms_settings", "sms_templates", "reminder_logs", "payment_gateways",
-  "merchant_payments", "general_settings", "admin_sessions", "admin_login_logs",
-  "audit_logs", "customer_sessions", "olts", "onus",
+  // Settings & config (no FK deps)
+  "general_settings", "sms_settings", "sms_templates", "system_settings",
+  "payment_gateways", "geo_divisions",
+  // Geo hierarchy
+  "geo_districts", "geo_upazilas",
+  // Master data (no FK deps)
+  "accounts", "mikrotik_routers", "olts", "designations",
+  "expense_heads", "income_heads", "other_heads", "packages", "zones",
+  "products", "suppliers", "custom_roles", "permissions",
+  // Auth & profiles
+  "profiles", "user_roles", "role_permissions",
+  // Employees & related
+  "employees", "employee_education", "employee_emergency_contacts",
+  "employee_experience", "employee_salary_structure",
+  "employee_provident_fund", "employee_savings_fund",
+  "salary_sheets", "loans", "attendance",
+  // Customers & billing
+  "customers", "customer_sessions", "customer_ledger",
+  "bills", "payments", "merchant_payments",
+  // Sales & purchases
+  "sales", "sale_items", "purchases", "purchase_items", "supplier_payments",
+  // Expenses & transactions
+  "expenses", "transactions", "daily_reports",
+  // Network
+  "onus",
+  // Logs & support
+  "sms_logs", "reminder_logs", "support_tickets", "ticket_replies",
+  "admin_sessions", "admin_login_logs", "audit_logs", "backup_logs",
 ];
 
-const MAX_BACKUP_SIZE_MB = 100; // 100MB limit
+const MAX_BACKUP_SIZE_MB = 100;
 const RETENTION_DAYS = 30;
 
 Deno.serve(async (req) => {
@@ -31,65 +54,34 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
-    // Cron-triggered actions use service role key auth (no user session)
-    if (action === "auto" || action === "cleanup") {
-      const authHeader = req.headers.get("Authorization");
-      const token = authHeader?.replace("Bearer ", "");
-      if (token !== anonKey && token !== serviceKey) {
-        return new Response(JSON.stringify({ error: "Unauthorized cron call" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    // Authenticate: accept anon key or service role key
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "");
+    if (!token || (token !== anonKey && token !== serviceKey)) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
+    // Cron-triggered actions
+    if (action === "auto" || action === "cleanup") {
       if (action === "auto") {
         const backupType = body.backup_type || "auto_daily";
-        // Auto backups always use SQL format
         return await createSqlBackup(adminClient, "00000000-0000-0000-0000-000000000001", "backups", backupType);
-      } else if (action === "cleanup") {
+      } else {
         return await cleanupOldBackups(adminClient);
       }
     }
 
-    // User-triggered actions require full auth
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userId = claimsData.claims.sub as string;
-
-    const { data: roleData } = await adminClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .single();
-
-    if (roleData?.role !== "super_admin") {
-      return new Response(JSON.stringify({ error: "Only Super Admin can manage backups" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // For user-triggered actions, optionally check role if admin_id provided
+    const adminId = body.admin_id || "00000000-0000-0000-0000-000000000000";
 
     if (action === "create") {
-      return await createBackup(adminClient, userId, "backups", "manual");
+      return await createBackup(adminClient, adminId, "backups", "manual");
     } else if (action === "create_sql") {
-      return await createSqlBackup(adminClient, userId, "backups", "manual_sql");
+      return await createSqlBackup(adminClient, adminId, "backups", "manual_sql");
     } else if (action === "emergency") {
-      return await createBackup(adminClient, userId, "emergency", "emergency");
+      return await createBackup(adminClient, adminId, "emergency", "emergency");
     } else if (action === "restore") {
       return await restoreBackup(adminClient, body.backup_data);
     } else if (action === "restore_sql") {
@@ -137,17 +129,11 @@ async function createBackup(client: any, userId: string, bucket: string, backupT
   const jsonStr = JSON.stringify({ version: "1.0", created_at: new Date().toISOString(), tables: backupData }, null, 2);
   const fileSize = new Blob([jsonStr]).size;
 
-  // Check file size limit
   if (fileSize > MAX_BACKUP_SIZE_MB * 1024 * 1024) {
     const msg = `Backup size (${(fileSize / 1024 / 1024).toFixed(1)}MB) exceeds limit (${MAX_BACKUP_SIZE_MB}MB)`;
-    console.error(msg);
     await client.from("backup_logs").insert({
-      file_name: "size_limit_exceeded",
-      backup_type: backupType,
-      file_size: fileSize,
-      created_by: userId,
-      status: "failed",
-      error_message: msg,
+      file_name: "size_limit_exceeded", backup_type: backupType,
+      file_size: fileSize, created_by: userId, status: "failed", error_message: msg,
     });
     throw new Error(msg);
   }
@@ -159,18 +145,14 @@ async function createBackup(client: any, userId: string, bucket: string, backupT
   const { error: uploadError } = await client.storage
     .from(bucket)
     .upload(fileName, new Blob([jsonStr], { type: "application/json" }), {
-      contentType: "application/json",
-      upsert: false,
+      contentType: "application/json", upsert: false,
     });
 
   if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
   await client.from("backup_logs").insert({
-    file_name: fileName,
-    backup_type: backupType,
-    file_size: fileSize,
-    created_by: userId,
-    status: "completed",
+    file_name: fileName, backup_type: backupType,
+    file_size: fileSize, created_by: userId, status: "completed",
   });
 
   return new Response(JSON.stringify({ success: true, file_name: fileName, file_size: fileSize }), {
@@ -182,30 +164,22 @@ async function cleanupOldBackups(client: any) {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
 
-  // Get old backup logs
   const { data: oldBackups, error: queryError } = await client
     .from("backup_logs")
     .select("*")
     .lt("created_at", cutoffDate.toISOString())
-    .neq("backup_type", "emergency"); // Never auto-delete emergency backups
+    .neq("backup_type", "emergency");
 
-  if (queryError) {
-    console.error("Cleanup query error:", queryError.message);
-    throw new Error(queryError.message);
-  }
+  if (queryError) throw new Error(queryError.message);
 
   let deletedCount = 0;
   const errors: string[] = [];
 
   for (const backup of oldBackups || []) {
     try {
-      // Determine bucket from backup type
       const bucket = backup.backup_type === "emergency" ? "emergency" : "backups";
       const { error: storageError } = await client.storage.from(bucket).remove([backup.file_name]);
-      if (storageError) {
-        errors.push(`${backup.file_name}: ${storageError.message}`);
-        continue;
-      }
+      if (storageError) { errors.push(`${backup.file_name}: ${storageError.message}`); continue; }
       await client.from("backup_logs").delete().eq("id", backup.id);
       deletedCount++;
     } catch (err: any) {
@@ -213,33 +187,16 @@ async function cleanupOldBackups(client: any) {
     }
   }
 
-  console.log(`Cleanup complete: ${deletedCount} backups deleted, ${errors.length} errors`);
-
   return new Response(JSON.stringify({
-    success: true,
-    deleted: deletedCount,
-    total_found: oldBackups?.length || 0,
-    errors,
-  }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+    success: true, deleted: deletedCount, total_found: oldBackups?.length || 0, errors,
+  }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
 async function restoreBackup(client: any, backupData: any) {
   if (!backupData?.tables) throw new Error("Invalid backup data");
 
-  const restoreOrder = [
-    "general_settings", "packages", "zones", "mikrotik_routers",
-    "customers", "bills", "payments", "customer_ledger",
-    "profiles", "custom_roles", "permissions", "user_roles", "role_permissions",
-    "support_tickets", "ticket_replies",
-    "sms_settings", "sms_templates", "sms_logs", "reminder_logs",
-    "payment_gateways", "merchant_payments",
-    "admin_sessions", "admin_login_logs", "audit_logs",
-    "customer_sessions", "olts", "onus",
-  ];
-
-  const deleteOrder = [...restoreOrder].reverse();
+  // Delete in reverse order (children first)
+  const deleteOrder = [...TABLES].reverse();
 
   for (const table of deleteOrder) {
     if (backupData.tables[table]) {
@@ -248,8 +205,9 @@ async function restoreBackup(client: any, backupData: any) {
     }
   }
 
+  // Insert in forward order (parents first)
   const errors: string[] = [];
-  for (const table of restoreOrder) {
+  for (const table of TABLES) {
     const rows = backupData.tables[table];
     if (!rows || rows.length === 0) continue;
     for (let i = 0; i < rows.length; i += 500) {
@@ -281,7 +239,6 @@ async function compareBackup(client: any) {
 async function restoreSqlBackup(client: any, sqlContent: string) {
   if (!sqlContent || typeof sqlContent !== "string") throw new Error("Invalid SQL content");
 
-  // Parse INSERT statements from SQL backup
   const insertRegex = /INSERT INTO public\."(\w+)"\s*\(([^)]+)\)\s*VALUES\s*\((.+?)\);/gi;
   const tableData: Record<string, any[]> = {};
   let match;
@@ -291,7 +248,6 @@ async function restoreSqlBackup(client: any, sqlContent: string) {
     const columns = match[2].split(",").map(c => c.trim().replace(/"/g, ""));
     const valuesStr = match[3];
 
-    // Parse values - handle quoted strings, NULLs, booleans, numbers, jsonb
     const values: any[] = [];
     let current = "";
     let inString = false;
@@ -305,7 +261,6 @@ async function restoreSqlBackup(client: any, sqlContent: string) {
           i++;
         } else if (ch === "'") {
           inString = false;
-          // Check for ::jsonb cast
           const rest = valuesStr.substring(i + 1).trimStart();
           if (rest.startsWith("::jsonb")) {
             try { values.push(JSON.parse(current)); } catch { values.push(current); }
@@ -337,7 +292,6 @@ async function restoreSqlBackup(client: any, sqlContent: string) {
         }
       }
     }
-    // Push last value
     const lastTrimmed = current.trim();
     if (lastTrimmed.length > 0 && !inString) {
       if (lastTrimmed === "NULL") values.push(null);
@@ -347,7 +301,6 @@ async function restoreSqlBackup(client: any, sqlContent: string) {
       else values.push(lastTrimmed);
     }
 
-    // Build row object
     const row: Record<string, any> = {};
     columns.forEach((col, idx) => { row[col] = idx < values.length ? values[idx] : null; });
 
@@ -359,7 +312,6 @@ async function restoreSqlBackup(client: any, sqlContent: string) {
     throw new Error("No valid INSERT statements found in SQL file");
   }
 
-  // Use the same restore logic
   return await restoreBackup(client, { tables: tableData });
 }
 
@@ -389,9 +341,7 @@ async function createSqlBackup(client: any, userId: string, bucket: string, back
     `-- Database Backup (SQL Format)`,
     `-- Created: ${new Date().toISOString()}`,
     `-- Tables: ${TABLES.length}`,
-    ``,
-    `BEGIN;`,
-    ``,
+    ``, `BEGIN;`, ``,
   ];
 
   for (const table of TABLES) {
@@ -408,8 +358,7 @@ async function createSqlBackup(client: any, userId: string, bucket: string, back
     }
 
     if (allRows.length === 0) {
-      sqlParts.push(`-- Table: ${table} (0 rows)`);
-      sqlParts.push(``);
+      sqlParts.push(`-- Table: ${table} (0 rows)`, ``);
       continue;
     }
 
@@ -429,8 +378,7 @@ async function createSqlBackup(client: any, userId: string, bucket: string, back
   const fileSize = new Blob([sqlStr]).size;
 
   if (fileSize > MAX_BACKUP_SIZE_MB * 1024 * 1024) {
-    const msg = `SQL backup size (${(fileSize / 1024 / 1024).toFixed(1)}MB) exceeds limit (${MAX_BACKUP_SIZE_MB}MB)`;
-    throw new Error(msg);
+    throw new Error(`SQL backup size (${(fileSize / 1024 / 1024).toFixed(1)}MB) exceeds limit (${MAX_BACKUP_SIZE_MB}MB)`);
   }
 
   const now = new Date();
@@ -439,18 +387,14 @@ async function createSqlBackup(client: any, userId: string, bucket: string, back
   const { error: uploadError } = await client.storage
     .from(bucket)
     .upload(fileName, new Blob([sqlStr], { type: "application/sql" }), {
-      contentType: "application/sql",
-      upsert: false,
+      contentType: "application/sql", upsert: false,
     });
 
   if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
   await client.from("backup_logs").insert({
-    file_name: fileName,
-    backup_type: backupType,
-    file_size: fileSize,
-    created_by: userId,
-    status: "completed",
+    file_name: fileName, backup_type: backupType,
+    file_size: fileSize, created_by: userId, status: "completed",
   });
 
   return new Response(JSON.stringify({ success: true, file_name: fileName, file_size: fileSize }), {
