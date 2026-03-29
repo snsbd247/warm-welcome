@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, endOfMonth } from "date-fns";
 
 export default function MonthlyAttendance() {
+  const { t } = useLanguage();
   const now = new Date();
   const [month, setMonth] = useState(format(now, "yyyy-MM"));
   const { data: employees = [] } = useQuery({ queryKey: ["employees-active"], queryFn: async () => { const { data } = await ( supabase as any).from("employees").select("*").eq("status", "active").order("employee_id"); return data || []; } });
