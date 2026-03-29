@@ -15,6 +15,7 @@ import { generateLedgerStatementPdf } from "@/lib/ledgerStatementPdf";
 import { useBranding } from "@/contexts/TenantBrandingContext";
 
 export default function ReportLedgerStatement() {
+  const { branding } = useBranding();
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date();
