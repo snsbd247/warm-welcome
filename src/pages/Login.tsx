@@ -99,8 +99,8 @@ export default function Login() {
 
           {/* Form header */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
-            <p className="text-muted-foreground mt-1">Sign in to your admin account</p>
+            <h2 className="text-2xl font-bold text-foreground">{t.auth.loginTitle}</h2>
+            <p className="text-muted-foreground mt-1">{t.auth.loginSubtitle}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
