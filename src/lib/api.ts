@@ -763,12 +763,14 @@ export const customersApi = {
     if (data?.phone) {
       try {
         // Load SMS template for "Customer Registration"
-        const { data: tpl } = await supabaseClient
+        const { data: tpl, error: tplErr } = await supabaseClient
           .from("sms_templates")
           .select("message")
           .eq("name", "Customer Registration")
           .limit(1)
           .single();
+
+        console.log("[WelcomeSMS] Template loaded:", tpl?.message ? "yes" : "no", tplErr?.message || "");
 
         const templateMsg = tpl?.message || "Dear {CustomerName}, welcome! Your Customer ID: {CustomerID}. PPPoE Username: {PPPoEUsername}, Password: {PPPoEPassword}.";
         
@@ -778,7 +780,9 @@ export const customersApi = {
           .replace(/\{PPPoEUsername\}/g, data.pppoe_username || data.customer_id || "")
           .replace(/\{PPPoEPassword\}/g, customer.pppoe_password || data.pppoe_password || "");
 
-        await supabaseClient.functions.invoke("send-sms", {
+        console.log("[WelcomeSMS] Sending to:", data.phone, "Message:", smsMessage.substring(0, 50));
+
+        const { data: smsResult, error: smsError } = await supabaseClient.functions.invoke("send-sms", {
           body: {
             to: data.phone,
             message: smsMessage,
@@ -786,8 +790,10 @@ export const customersApi = {
             customer_id: data.id,
           },
         });
+
+        console.log("[WelcomeSMS] Result:", smsResult, "Error:", smsError);
       } catch (smsErr) {
-        console.warn("Welcome SMS failed:", smsErr);
+        console.warn("[WelcomeSMS] Failed:", smsErr);
       }
     }
 
