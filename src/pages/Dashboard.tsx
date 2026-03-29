@@ -300,9 +300,9 @@ export default function Dashboard() {
         <StatCard title={t.dashboard.allTimeDue} value={`৳${totalDue.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="warning" />
         <StatCard title={t.dashboard.totalCollection} value={`৳${monthlyRevenue.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5" />} variant="default" />
         <StatCard
-          title="SMS Balance"
+          title={t.dashboard.smsBalance}
           value={smsBalance?.balance != null ? `৳${smsBalance.balance.toLocaleString()}` : "—"}
-          subtitle={smsBalance?.expiry ? `মেয়াদ: ${smsBalance.expiry} | রেট: ৳${smsBalance.rate}` : undefined}
+          subtitle={smsBalance?.expiry ? `${t.dashboard.expiry}: ${smsBalance.expiry} | ${t.dashboard.rate}: ৳${smsBalance.rate}` : undefined}
           icon={<MessageSquare className="h-5 w-5" />}
           variant="accent"
         />
