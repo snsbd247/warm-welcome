@@ -160,15 +160,15 @@ export default function Billing() {
     }
   };
 
-  const handlePrintBill = (bill: any) => {
-    generateBillInvoicePDF(bill, bill.customers);
+  const handlePrintBill = async (bill: any) => {
+    await generateBillInvoicePDF(bill, bill.customers);
   };
 
-  const handlePrintAll = () => {
+  const handlePrintAll = async () => {
     if (!filteredBills.length) return;
-    filteredBills.forEach((bill) => {
-      generateBillInvoicePDF(bill, bill.customers);
-    });
+    for (const bill of filteredBills) {
+      await generateBillInvoicePDF(bill, bill.customers);
+    }
     toast.success(`${filteredBills.length} invoices generated`);
   };
 
