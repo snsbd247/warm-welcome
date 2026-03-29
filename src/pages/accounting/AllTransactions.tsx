@@ -62,6 +62,34 @@ export default function AllTransactions() {
     onError: () => toast.error("Failed to update transaction"),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // Find the transaction to reverse account balance
+      const txn = transactions.find((t: any) => t.id === id);
+      if (txn?.account_id) {
+        const acc = accounts.find((a: any) => a.id === txn.account_id);
+        if (acc) {
+          const isDebitNormal = ["asset", "expense"].includes(acc.type);
+          const balanceChange = isDebitNormal
+            ? -(Number(txn.debit) - Number(txn.credit))
+            : -(Number(txn.credit) - Number(txn.debit));
+          await (supabase as any).from("accounts").update({ balance: acc.balance + balanceChange }).eq("id", acc.id);
+        }
+      }
+      const { error } = await (supabase as any).from("transactions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts-flat"] });
+      queryClient.invalidateQueries({ queryKey: ["all-transactions-summary"] });
+      toast.success("Transaction deleted successfully");
+      setDeleteId(null);
+    },
+    onError: () => toast.error("Failed to delete transaction"),
+  });
+
   const getAccName = (id: string) => {
     const a = accounts.find((x: any) => x.id === id);
     return a ? `${a.code} - ${a.name}` : "—";
