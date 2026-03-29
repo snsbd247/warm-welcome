@@ -103,7 +103,29 @@ export default function ReportLedgerStatement() {
   };
 
   const handlePrint = () => {
-    window.print();
+    if (!selectedAccount || rows.length === 0) return;
+    generateLedgerStatementPdf({
+      accountName: selectedAccount.name,
+      accountCode: selectedAccount.code || "",
+      accountType: selectedAccount.type || "",
+      dateFrom,
+      dateTo,
+      companyName: branding?.site_name || "Company",
+      rows: rows.map((t: any) => ({
+        sn: t.sn,
+        date: safeFormat(t.date, "dd/MM/yyyy") || "",
+        type: getVoucherType(t.type),
+        reference: t.reference || "",
+        description: t.description || "",
+        note: t.journal_ref || "",
+        debit: Number(t.debit || 0),
+        credit: Number(t.credit || 0),
+        running_balance: t.running_balance,
+      })),
+      totalDebit,
+      totalCredit,
+      closingBalance,
+    });
   };
 
   return (
