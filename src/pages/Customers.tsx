@@ -28,6 +28,7 @@ import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Customers() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const statusFilter = searchParams.get("status");
   const connectionFilter = searchParams.get("connection");
