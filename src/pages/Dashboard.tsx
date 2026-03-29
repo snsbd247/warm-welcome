@@ -332,8 +332,8 @@ export default function Dashboard() {
             <div>
               <Progress value={collectionRate} className={`h-2.5 ${collectionRate < 50 && targetAmount > 0 ? "[&>div]:bg-destructive" : ""}`} />
               <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                <span>{collectionRate}% collected</span>
-                <span>৳{dueAmount.toLocaleString()} remaining</span>
+                <span>{collectionRate}% {t.dashboard.collected}</span>
+                <span>৳{dueAmount.toLocaleString()} {t.dashboard.remaining}</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border">
