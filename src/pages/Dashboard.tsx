@@ -269,7 +269,7 @@ export default function Dashboard() {
         <StatCard
           title="SMS Balance"
           value={smsBalance?.balance != null ? `৳${smsBalance.balance.toLocaleString()}` : "—"}
-          description={smsBalance?.expiry ? `মেয়াদ: ${smsBalance.expiry} | রেট: ৳${smsBalance.rate}` : undefined}
+          subtitle={smsBalance?.expiry ? `মেয়াদ: ${smsBalance.expiry} | রেট: ৳${smsBalance.rate}` : undefined}
           icon={<MessageSquare className="h-5 w-5" />}
           variant="accent"
         />
