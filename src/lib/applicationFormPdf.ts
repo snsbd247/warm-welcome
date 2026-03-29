@@ -57,7 +57,7 @@ export async function generateApplicationFormPDF(customer: any, pkg: any, settin
   doc.text("APPLICATION FORM", pw - m, 11, { align: "right" });
   doc.setFontSize(PDF_FONT.tiny);
   doc.setFont("helvetica", "normal");
-  doc.text(`ID: ${customer.customer_id || "—"}  |  Date: ${new Date().toLocaleDateString("en-GB")}`, pw - m, 18, { align: "right" });
+  doc.text(`ID: ${customer.customer_id || "-"}  |  Date: ${new Date().toLocaleDateString("en-GB")}`, pw - m, 18, { align: "right" });
 
   y = 32;
 
