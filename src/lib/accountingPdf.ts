@@ -115,9 +115,9 @@ export function generateProfitLossPDF(
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...PDF_COLORS.white);
   doc.text("Month", cols[0], y + 6);
-  doc.text("Income (৳)", cols[1], y + 6);
-  doc.text("Expense (৳)", cols[2], y + 6);
-  doc.text("Profit/Loss (৳)", cols[3], y + 6);
+  doc.text("Income (Tk)", cols[1], y + 6);
+  doc.text("Expense (Tk)", cols[2], y + 6);
+  doc.text("Profit/Loss (Tk)", cols[3], y + 6);
   y += 12;
 
   doc.setFont("helvetica", "normal");
