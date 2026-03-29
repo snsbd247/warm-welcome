@@ -87,7 +87,7 @@ export default function EmployeeList() {
                     </div></TableCell>
                   </TableRow>
                 ))}
-                {rows.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No employees</TableCell></TableRow>}
+                {rows.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">{t.common.noData}</TableCell></TableRow>}
               </TableBody>
             </Table>
           )}
