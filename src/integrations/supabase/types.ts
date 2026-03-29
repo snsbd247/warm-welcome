@@ -426,6 +426,7 @@ export type Database = {
           customer_id: string
           discount: number | null
           district: string | null
+          division: string | null
           due_date_day: number | null
           email: string | null
           father_name: string | null
@@ -443,6 +444,13 @@ export type Database = {
           occupation: string | null
           onu_mac: string | null
           package_id: string | null
+          perm_district: string | null
+          perm_division: string | null
+          perm_house: string | null
+          perm_post_office: string | null
+          perm_road: string | null
+          perm_upazila: string | null
+          perm_village: string | null
           permanent_address: string | null
           phone: string
           photo_url: string | null
@@ -456,6 +464,7 @@ export type Database = {
           router_mac: string | null
           status: string
           subnet: string | null
+          upazila: string | null
           updated_at: string
           username: string | null
           village: string | null
@@ -472,6 +481,7 @@ export type Database = {
           customer_id: string
           discount?: number | null
           district?: string | null
+          division?: string | null
           due_date_day?: number | null
           email?: string | null
           father_name?: string | null
@@ -489,6 +499,13 @@ export type Database = {
           occupation?: string | null
           onu_mac?: string | null
           package_id?: string | null
+          perm_district?: string | null
+          perm_division?: string | null
+          perm_house?: string | null
+          perm_post_office?: string | null
+          perm_road?: string | null
+          perm_upazila?: string | null
+          perm_village?: string | null
           permanent_address?: string | null
           phone: string
           photo_url?: string | null
@@ -502,6 +519,7 @@ export type Database = {
           router_mac?: string | null
           status?: string
           subnet?: string | null
+          upazila?: string | null
           updated_at?: string
           username?: string | null
           village?: string | null
@@ -518,6 +536,7 @@ export type Database = {
           customer_id?: string
           discount?: number | null
           district?: string | null
+          division?: string | null
           due_date_day?: number | null
           email?: string | null
           father_name?: string | null
@@ -535,6 +554,13 @@ export type Database = {
           occupation?: string | null
           onu_mac?: string | null
           package_id?: string | null
+          perm_district?: string | null
+          perm_division?: string | null
+          perm_house?: string | null
+          perm_post_office?: string | null
+          perm_road?: string | null
+          perm_upazila?: string | null
+          perm_village?: string | null
           permanent_address?: string | null
           phone?: string
           photo_url?: string | null
@@ -548,6 +574,7 @@ export type Database = {
           router_mac?: string | null
           status?: string
           subnet?: string | null
+          upazila?: string | null
           updated_at?: string
           username?: string | null
           village?: string | null
