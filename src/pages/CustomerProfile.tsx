@@ -102,6 +102,15 @@ export default function CustomerProfilePage() {
     enabled: !!id,
   });
 
+  const { data: customerPayments = [] } = useQuery({
+    queryKey: ["customer-payments", id],
+    queryFn: async () => {
+      const { data } = await supabase.from("payments").select("*").eq("customer_id", id!).order("paid_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!id,
+  });
+
   const { data: products = [] } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
