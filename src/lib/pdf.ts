@@ -262,10 +262,10 @@ export function generateCustomerPDF(customer: any, invoiceFooter?: string) {
   const discount = Number(customer.discount || 0);
   fieldRow([
     { label: "Connection Date", value: customer.installation_date || "" },
-    { label: "Monthly Bill", value: `${monthlyBill.toLocaleString()} BDT` },
-    { label: "Due Date (Day)", value: customer.due_date_day ? `${customer.due_date_day}th` : "—" },
+    { label: "Monthly Bill", value: `Tk ${monthlyBill.toLocaleString()}` },
+    { label: "Due Date (Day)", value: customer.due_date_day ? `${customer.due_date_day}th` : "---" },
   ]);
-  fieldRow([{ label: "Discount", value: `${discount.toLocaleString()} BDT` }, { label: "Total Amount", value: `${(monthlyBill - discount).toLocaleString()} BDT` }]);
+  fieldRow([{ label: "Discount", value: `Tk ${discount.toLocaleString()}` }, { label: "Total Amount", value: `Tk ${(monthlyBill - discount).toLocaleString()}` }]);
   y += 3;
 
   sectionHeader("Office Use Only");

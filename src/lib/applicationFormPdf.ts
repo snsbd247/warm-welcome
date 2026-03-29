@@ -189,10 +189,10 @@ export async function generateApplicationFormPDF(customer: any, pkg: any, settin
 
   row([
     { label: "Connection Date", value: customer.installation_date || "" },
-    { label: "Monthly Bill", value: `৳${monthlyBill.toLocaleString()}` },
-    { label: "Discount", value: `৳${discount.toLocaleString()}` },
-    { label: "Net Amount", value: `৳${total.toLocaleString()}` },
-    { label: "Due Date", value: customer.due_date_day ? `${customer.due_date_day}th` : "—" },
+    { label: "Monthly Bill", value: `Tk ${monthlyBill.toLocaleString()}` },
+    { label: "Discount", value: `Tk ${discount.toLocaleString()}` },
+    { label: "Net Amount", value: `Tk ${total.toLocaleString()}` },
+    { label: "Due Date", value: customer.due_date_day ? `${customer.due_date_day}th` : "---" },
   ]);
 
   y += 1.5;
