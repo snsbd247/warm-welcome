@@ -390,7 +390,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-primary" />
-                Today's Merchant Payments
+                {t.dashboard.todayMerchantPayments}
               </CardTitle>
               <span className="text-xs text-muted-foreground">{format(new Date(), "dd MMM yyyy")}</span>
             </div>
