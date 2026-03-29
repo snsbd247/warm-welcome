@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useModuleSettings, ALL_MODULES } from "@/hooks/useModuleSettings";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ToggleLeft, Save } from "lucide-react";
+import { Loader2, ToggleLeft, Save, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ModuleSettingsTab() {
   const { enabledModules, updateModules, isLoading } = useModuleSettings();
+  const { isSuperAdmin } = usePermissions();
   const [localModules, setLocalModules] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
