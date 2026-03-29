@@ -205,15 +205,15 @@ export default function Customers() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Customer ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Area</TableHead>
-                    <TableHead>Package</TableHead>
-                    <TableHead>Monthly Bill</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>MikroTik Sync</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t.customers.customerId}</TableHead>
+                    <TableHead>{t.common.name}</TableHead>
+                    <TableHead>{t.common.phone}</TableHead>
+                    <TableHead>{t.customers.area}</TableHead>
+                    <TableHead>{t.customers.package}</TableHead>
+                    <TableHead>{t.customers.monthlyBill}</TableHead>
+                    <TableHead>{t.common.status}</TableHead>
+                    <TableHead>MikroTik</TableHead>
+                    <TableHead className="text-right">{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
