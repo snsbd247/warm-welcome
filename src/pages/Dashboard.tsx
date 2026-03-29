@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Users, Loader2, RefreshCw, Router, Target, Wallet, CreditCard,
   TrendingUp, TrendingDown, ShoppingCart, AlertTriangle, DollarSign,
-  Wifi, WifiOff, CircleDollarSign, TicketCheck, Package,
+  Wifi, WifiOff, CircleDollarSign, TicketCheck, Package, MessageSquare,
 } from "lucide-react";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -128,6 +128,18 @@ export default function Dashboard() {
   const bkash = usePaymentStats("bkash");
   const nagad = usePaymentStats("nagad");
 
+  // SMS Balance
+  const { data: smsBalance } = useQuery({
+    queryKey: ["sms-balance"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("sms-balance");
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 300000, // 5 min
+    retry: 1,
+  });
+
   // ── Derived calculations ──
   const total = customers?.length ?? 0;
   const active = customers?.filter(c => c.status === "active").length ?? 0;
@@ -238,11 +250,17 @@ export default function Dashboard() {
       </div>
 
       {/* ══════ Section 2: Financial Overview ══════ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         <StatCard title="This Month Income" value={`৳${collectedAmount.toLocaleString()}`} icon={<CircleDollarSign className="h-5 w-5" />} variant="success" />
         <StatCard title="This Month Due" value={`৳${dueAmount.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="destructive" />
         <StatCard title="Total Due" value={`৳${totalDue.toLocaleString()}`} icon={<DollarSign className="h-5 w-5" />} variant="warning" />
         <StatCard title="Total Revenue" value={`৳${monthlyRevenue.toLocaleString()}`} icon={<TrendingUp className="h-5 w-5" />} variant="default" />
+        <StatCard
+          title="SMS Balance"
+          value={smsBalance?.balance != null ? `৳${Number(smsBalance.balance).toLocaleString()}` : "—"}
+          icon={<MessageSquare className="h-5 w-5" />}
+          variant="accent"
+        />
       </div>
 
       {/* ══════ Section 3: Collection Progress + Revenue Chart ══════ */}
