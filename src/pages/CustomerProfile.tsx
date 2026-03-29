@@ -415,10 +415,11 @@ export default function CustomerProfilePage() {
                         <TableHead>Transaction ID</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {customerPayments.map((payment: any, idx: number) => (
+                      {customerPayments.map((payment: any) => (
                         <TableRow key={payment.id}>
                           <TableCell className="font-medium text-primary">PMT#{payment.id?.substring(0, 6).toUpperCase()}</TableCell>
                           <TableCell>{payment.paid_at ? new Date(payment.paid_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</TableCell>
@@ -429,6 +430,26 @@ export default function CustomerProfilePage() {
                             <Badge variant={payment.status === "completed" ? "default" : "secondary"}>{payment.status}</Badge>
                           </TableCell>
                           <TableCell className="text-right font-semibold">৳{Number(payment.amount).toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="icon" title="Print Receipt" onClick={() => generatePaymentReceiptPDF(payment, customer, invoiceFooter)}>
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Edit" onClick={() => {
+                                setEditPaymentData(payment);
+                                setEditPaymentForm({
+                                  amount: String(payment.amount),
+                                  payment_method: payment.payment_method || "cash",
+                                  transaction_id: payment.transaction_id || "",
+                                  status: payment.status || "completed",
+                                  paid_at: payment.paid_at ? new Date(payment.paid_at).toISOString().slice(0, 16) : "",
+                                });
+                                setEditPaymentOpen(true);
+                              }}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
