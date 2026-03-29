@@ -2,7 +2,7 @@ import { useState } from "react";
 import { safeFormat } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { postPaymentToLedger } from "@/lib/ledger";
+import { postPaymentToLedger, postCustomerLedgerCredit } from "@/lib/ledger";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import BillingImport from "@/components/BillingImport";
@@ -137,6 +137,8 @@ export default function Billing() {
 
       const customerName = bill.customers?.name || "Customer";
       await postPaymentToLedger(customerName, Number(bill.amount), "cash", undefined, new Date().toISOString());
+      // Update customer ledger (credit)
+      await postCustomerLedgerCredit(bill.customer_id, Number(bill.amount), `Payment - Cash`, bill.id);
       toast.success("Bill marked as paid & posted to ledger");
       queryClient.invalidateQueries({ queryKey: ["bills"] });
       queryClient.invalidateQueries({ queryKey: ["bills-stats"] });

@@ -9,6 +9,7 @@ import CustomerLedger from "@/components/customers/CustomerLedger";
 import CustomerForm from "@/components/customers/CustomerForm";
 import { generateSalesInvoicePDF } from "@/lib/accountingPdf";
 import { generateBillInvoicePDF } from "@/lib/billPdf";
+import { generatePaymentReceiptPDF } from "@/lib/pdf";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,8 @@ import { ArrowLeft, Loader2, Download, Pencil, FileDown, CreditCard, Plus, Trash
 import { generateApplicationFormPDF } from "@/lib/applicationFormPdf";
 import { postSalePaymentToLedger } from "@/lib/ledger";
 import { toast } from "sonner";
+import { paymentsApi } from "@/lib/api";
+import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
 
 interface SaleItem { product_id: string; quantity: number; unit_price: number; }
 
@@ -42,6 +45,9 @@ export default function CustomerProfilePage() {
   const [editBillOpen, setEditBillOpen] = useState(false);
   const [editBillData, setEditBillData] = useState<any>(null);
   const [editBillForm, setEditBillForm] = useState({ amount: 0, due_date: "", status: "unpaid" });
+  const [editPaymentOpen, setEditPaymentOpen] = useState(false);
+  const [editPaymentData, setEditPaymentData] = useState<any>(null);
+  const [editPaymentForm, setEditPaymentForm] = useState({ amount: "", payment_method: "cash", transaction_id: "", status: "completed", paid_at: "" });
 
   const { data: customer, isLoading } = useQuery({
     queryKey: ["customer-profile", id],
@@ -110,6 +116,8 @@ export default function CustomerProfilePage() {
     },
     enabled: !!id,
   });
+
+  const { data: invoiceFooter } = useInvoiceFooter();
 
   const { data: products = [] } = useQuery({
     queryKey: ["products"],
@@ -407,10 +415,11 @@ export default function CustomerProfilePage() {
                         <TableHead>Transaction ID</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {customerPayments.map((payment: any, idx: number) => (
+                      {customerPayments.map((payment: any) => (
                         <TableRow key={payment.id}>
                           <TableCell className="font-medium text-primary">PMT#{payment.id?.substring(0, 6).toUpperCase()}</TableCell>
                           <TableCell>{payment.paid_at ? new Date(payment.paid_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</TableCell>
@@ -421,6 +430,26 @@ export default function CustomerProfilePage() {
                             <Badge variant={payment.status === "completed" ? "default" : "secondary"}>{payment.status}</Badge>
                           </TableCell>
                           <TableCell className="text-right font-semibold">৳{Number(payment.amount).toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="icon" title="Print Receipt" onClick={() => generatePaymentReceiptPDF(payment, customer, invoiceFooter)}>
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Edit" onClick={() => {
+                                setEditPaymentData(payment);
+                                setEditPaymentForm({
+                                  amount: String(payment.amount),
+                                  payment_method: payment.payment_method || "cash",
+                                  transaction_id: payment.transaction_id || "",
+                                  status: payment.status || "completed",
+                                  paid_at: payment.paid_at ? new Date(payment.paid_at).toISOString().slice(0, 16) : "",
+                                });
+                                setEditPaymentOpen(true);
+                              }}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -545,6 +574,60 @@ export default function CustomerProfilePage() {
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setEditBillOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={editBillMutation.isPending}>Update Bill</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Payment Dialog */}
+      <Dialog open={editPaymentOpen} onOpenChange={v => { if (!v) setEditPaymentOpen(false); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Edit Payment - PMT#{editPaymentData?.id?.substring(0, 6).toUpperCase()}</DialogTitle></DialogHeader>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              await paymentsApi.update(editPaymentData.id, {
+                amount: parseFloat(editPaymentForm.amount),
+                payment_method: editPaymentForm.payment_method,
+                transaction_id: editPaymentForm.transaction_id || null,
+                status: editPaymentForm.status,
+                paid_at: editPaymentForm.paid_at ? new Date(editPaymentForm.paid_at).toISOString() : undefined,
+              });
+              toast.success("Payment updated");
+              setEditPaymentOpen(false);
+              queryClient.invalidateQueries({ queryKey: ["customer-payments", id] });
+            } catch {
+              toast.error("Failed to update payment");
+            }
+          }} className="space-y-4">
+            <div><Label>Amount (৳)</Label><Input type="number" step="0.01" value={editPaymentForm.amount} onChange={e => setEditPaymentForm({...editPaymentForm, amount: e.target.value})} /></div>
+            <div><Label>Payment Method</Label>
+              <Select value={editPaymentForm.payment_method} onValueChange={v => setEditPaymentForm({...editPaymentForm, payment_method: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="bkash">bKash</SelectItem>
+                  <SelectItem value="nagad">Nagad</SelectItem>
+                  <SelectItem value="bank">Bank Transfer</SelectItem>
+                  <SelectItem value="merchant">Merchant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Transaction ID</Label><Input value={editPaymentForm.transaction_id} onChange={e => setEditPaymentForm({...editPaymentForm, transaction_id: e.target.value})} /></div>
+            <div><Label>Status</Label>
+              <Select value={editPaymentForm.status} onValueChange={v => setEditPaymentForm({...editPaymentForm, status: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Paid At</Label><Input type="datetime-local" value={editPaymentForm.paid_at} onChange={e => setEditPaymentForm({...editPaymentForm, paid_at: e.target.value})} /></div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditPaymentOpen(false)}>Cancel</Button>
+              <Button type="submit">Update Payment</Button>
             </div>
           </form>
         </DialogContent>

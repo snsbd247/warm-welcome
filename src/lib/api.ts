@@ -724,6 +724,9 @@ export const merchantPaymentsApi = {
         payment_method: "merchant", transaction_id: mp.transaction_id,
         status: "completed",
       });
+      // Update customer ledger (credit)
+      const { postCustomerLedgerCredit } = await import("@/lib/ledger");
+      await postCustomerLedgerCredit(customer_id, Number(mp.amount), `Payment - Merchant (${mp.transaction_id})`, bill_id);
     }
     return { success: true };
   },
