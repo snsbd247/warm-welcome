@@ -194,8 +194,10 @@ export default function AppSidebar() {
 
   const filterItems = (items: NavItem[]) =>
     items.filter((item) => {
+      // Module enable/disable applies to ALL users including super admins
+      if (item.module && !isModuleEnabled(item.module)) return false;
+      // Permission check - super admins bypass this
       if (item.module && !isSuperAdmin && !hasModuleAccess(item.module)) return false;
-      if (item.module && !isSuperAdmin && !isModuleEnabled(item.module)) return false;
       return true;
     });
 
