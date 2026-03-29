@@ -2031,6 +2031,7 @@ export type Database = {
           id: string
           sender_id: string | null
           sms_on_bill_generate: boolean | null
+          sms_on_new_customer_bill: boolean | null
           sms_on_payment: boolean | null
           sms_on_registration: boolean | null
           sms_on_reminder: boolean | null
@@ -2045,6 +2046,7 @@ export type Database = {
           id?: string
           sender_id?: string | null
           sms_on_bill_generate?: boolean | null
+          sms_on_new_customer_bill?: boolean | null
           sms_on_payment?: boolean | null
           sms_on_registration?: boolean | null
           sms_on_reminder?: boolean | null
@@ -2059,6 +2061,7 @@ export type Database = {
           id?: string
           sender_id?: string | null
           sms_on_bill_generate?: boolean | null
+          sms_on_new_customer_bill?: boolean | null
           sms_on_payment?: boolean | null
           sms_on_registration?: boolean | null
           sms_on_reminder?: boolean | null

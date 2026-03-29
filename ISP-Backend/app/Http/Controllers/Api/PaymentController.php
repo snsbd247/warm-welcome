@@ -7,15 +7,18 @@ use App\Http\Requests\StorePaymentRequest;
 use App\Models\Payment;
 use App\Models\Bill;
 use App\Models\Customer;
+use App\Models\SmsTemplate;
 use App\Services\BillingService;
 use App\Services\LedgerService;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
     public function __construct(
         protected BillingService $billingService,
-        protected LedgerService $ledgerService
+        protected LedgerService $ledgerService,
+        protected SmsService $smsService
     ) {}
 
     public function store(StorePaymentRequest $request)
@@ -63,6 +66,22 @@ class PaymentController extends Controller
                 ->sum('amount');
             if ($totalDue <= 0) {
                 $customer->update(['status' => 'pending_reactivation']);
+            }
+        }
+
+        // Send Payment Confirmation SMS
+        if ($customer && $customer->phone) {
+            try {
+                $tpl = SmsTemplate::where('name', 'Payment Confirmation')->first();
+                $templateMsg = $tpl->message ?? 'Dear {CustomerName}, we received your payment of {Amount} BDT on {PaymentDate}. Thank you!';
+                $smsMessage = str_replace(
+                    ['{CustomerName}', '{Amount}', '{PaymentDate}', '{Month}', '{CustomerID}'],
+                    [$customer->name, $request->amount, now()->format('d/m/Y'), $request->month ?? '', $customer->customer_id],
+                    $templateMsg
+                );
+                $this->smsService->send($customer->phone, $smsMessage, 'payment', $customer->id);
+            } catch (\Exception $e) {
+                // SMS failure should not block payment
             }
         }
 

@@ -12,7 +12,7 @@ class SmsSetting extends Model
     protected $fillable = [
         'id', 'api_token', 'sender_id',
         'sms_on_bill_generate', 'sms_on_payment', 'sms_on_registration', 'sms_on_suspension',
-        'sms_on_reminder',
+        'sms_on_reminder', 'sms_on_new_customer_bill',
         'whatsapp_enabled', 'whatsapp_token', 'whatsapp_phone_id',
     ];
 
@@ -24,6 +24,7 @@ class SmsSetting extends Model
         'sms_on_registration' => 'boolean',
         'sms_on_suspension' => 'boolean',
         'sms_on_reminder' => 'boolean',
+        'sms_on_new_customer_bill' => 'boolean',
         'whatsapp_enabled' => 'boolean',
     ];
 }

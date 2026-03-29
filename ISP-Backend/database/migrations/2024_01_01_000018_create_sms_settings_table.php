@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->boolean('sms_on_payment')->default(false);
             $table->boolean('sms_on_registration')->default(false);
             $table->boolean('sms_on_suspension')->default(false);
+            $table->boolean('sms_on_new_customer_bill')->default(true);
             $table->boolean('whatsapp_enabled')->default(false);
             $table->string('whatsapp_token')->nullable();
             $table->string('whatsapp_phone_id')->nullable();
