@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
     });
 
     // Also log to reminder_logs if it's a reminder type
-    if (["bill_generate", "bill_reminder", "due_date", "overdue"].includes(sms_type)) {
+    if (["bill_generate", "bill_reminder", "due_date", "overdue", "new_customer_bill"].includes(sms_type)) {
       await supabase.from("reminder_logs").insert({
         phone: to,
         message,
