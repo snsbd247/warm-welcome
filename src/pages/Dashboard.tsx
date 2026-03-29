@@ -416,7 +416,7 @@ export default function Dashboard() {
                   ))}
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border text-sm">
-                  <span className="text-muted-foreground">Total Amount</span>
+                  <span className="text-muted-foreground">{t.common.total} {t.common.amount}</span>
                   <span className="font-bold text-foreground">৳{merchantAmount.toLocaleString()}</span>
                 </div>
               </div>
