@@ -26,7 +26,7 @@ class AutoSuspend extends Command
         $count = 0;
         foreach ($overdueCustomerIds as $customerId) {
             $customer = Customer::find($customerId);
-            if ($customer && $customer->status === 'active') {
+            if ($customer && in_array($customer->status, ['active', 'inactive'])) {
                 $customer->update(['status' => 'suspended']);
                 $count++;
 

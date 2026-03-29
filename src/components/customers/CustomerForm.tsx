@@ -9,7 +9,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Upload, X, User, MapPin, Wifi, Receipt, Building, Settings } from "lucide-react";
+import { Loader2, Upload, X, User, MapPin, Wifi, Receipt, Building, Settings, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { generateCustomerPDF } from "@/lib/pdf";
 import { customersApi } from "@/lib/api";
 import { useInvoiceFooter } from "@/hooks/useInvoiceFooter";
@@ -79,6 +80,7 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
     cable_length: customer?.cable_length ?? "",
     connection_charge_amount: "",
     first_month_bill_amount: "",
+    is_free: customer ? Number(customer.monthly_bill) === 0 : false,
   });
 
   const { data: packages } = useQuery({
@@ -583,7 +585,24 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label className="text-xs">Monthly Bill *</Label>
-            <Input type="number" value={form.monthly_bill} onChange={(e) => update("monthly_bill", e.target.value)} required className="h-9" />
+            <Input type="number" value={form.monthly_bill} onChange={(e) => update("monthly_bill", e.target.value)} required className="h-9" disabled={form.is_free} />
+          </div>
+          <div className="flex items-end pb-1">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="is_free"
+                checked={form.is_free}
+                onCheckedChange={(checked) => {
+                  const isFree = !!checked;
+                  setForm((prev) => ({
+                    ...prev,
+                    is_free: isFree,
+                    monthly_bill: isFree ? "0" : prev.monthly_bill === "0" ? "" : prev.monthly_bill,
+                  }));
+                }}
+              />
+              <Label htmlFor="is_free" className="text-xs cursor-pointer">Free Line (বিল জেনারেট হবে না)</Label>
+            </div>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Discount</Label>
@@ -645,8 +664,9 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="disconnected">Disconnected</SelectItem>
+                <SelectItem value="inactive">Inactive (বিল বাকি)</SelectItem>
+                <SelectItem value="suspended">Suspended (ডিউ ডেট পার)</SelectItem>
+                <SelectItem value="left">Left (লাইন ছেড়ে দিয়েছে)</SelectItem>
               </SelectContent>
             </Select>
           </div>

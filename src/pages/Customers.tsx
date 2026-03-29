@@ -86,6 +86,20 @@ export default function Customers() {
     },
   });
 
+  // Fetch customers with unpaid bills for Due List
+  const { data: dueCustomerIds } = useQuery({
+    queryKey: ["due-customer-ids"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bills")
+        .select("customer_id")
+        .eq("status", "unpaid");
+      if (error) throw error;
+      return [...new Set(data?.map((b) => b.customer_id) || [])];
+    },
+    enabled: miscFilter === "due",
+  });
+
   const filtered = customers?.filter(
     (c) => {
       const s = search.toLowerCase();
@@ -97,13 +111,16 @@ export default function Customers() {
   )?.filter((c) => {
     if (statusFilter) {
       if (statusFilter === "new") {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 30);
-        return new Date(c.created_at) >= sevenDaysAgo;
+        // Current month only
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        return new Date(c.created_at) >= startOfMonth;
       }
-      if (statusFilter === "inactive") return c.status === "suspended" || c.status === "inactive";
+      if (statusFilter === "active") return c.status === "active";
+      if (statusFilter === "inactive") return c.status === "inactive";
+      if (statusFilter === "suspended") return c.status === "suspended";
       if (statusFilter === "free") return Number(c.monthly_bill) === 0;
-      if (statusFilter === "left") return c.status === "left" || c.status === "disconnected";
+      if (statusFilter === "left") return c.status === "left";
       return c.status === statusFilter;
     }
     if (connectionFilter) {
@@ -111,7 +128,7 @@ export default function Customers() {
       if (connectionFilter === "offline") return c.connection_status === "offline" || c.connection_status === "disconnected";
     }
     if (miscFilter === "due") {
-      return c.status === "active" && Number(c.monthly_bill) > 0;
+      return dueCustomerIds?.includes(c.id) ?? false;
     }
     return true;
   });
