@@ -17,7 +17,8 @@ class PaymentController extends Controller
 {
     public function __construct(
         protected BillingService $billingService,
-        protected LedgerService $ledgerService
+        protected LedgerService $ledgerService,
+        protected SmsService $smsService
     ) {}
 
     public function store(StorePaymentRequest $request)
