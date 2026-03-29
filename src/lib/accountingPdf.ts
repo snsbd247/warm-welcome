@@ -175,12 +175,10 @@ export function generatePurchaseInvoicePDF(purchase: any, supplier?: any) {
     doc.setFontSize(PDF_FONT.body);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...PDF_COLORS.text);
-    doc.text(value || "—", m + 40, y);
+    doc.text(value || "-", m + 40, y);
     y += 6.5;
   };
-  fieldRow("Supplier", supplier?.name || purchase.supplier_name || "—");
-  if (supplier?.company) fieldRow("Company", supplier.company);
-  if (supplier?.phone) fieldRow("Phone", supplier.phone);
+  fieldRow("Supplier", supplier?.name || purchase.supplier_name || "-");
   fieldRow("Status", (purchase.status || "unpaid").toUpperCase());
   y += 4;
 
