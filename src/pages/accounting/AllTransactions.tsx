@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Pencil, FileDown } from "lucide-react";
+import { Pencil, FileDown, Trash2 } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import { generateTransactionVoucherPDF } from "@/lib/accountingPdf";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -22,6 +23,7 @@ export default function AllTransactions() {
   const queryClient = useQueryClient();
   const [editTxn, setEditTxn] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>({});
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["transactions"],
@@ -58,6 +60,34 @@ export default function AllTransactions() {
       setEditTxn(null);
     },
     onError: () => toast.error("Failed to update transaction"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // Find the transaction to reverse account balance
+      const txn = transactions.find((t: any) => t.id === id);
+      if (txn?.account_id) {
+        const acc = accounts.find((a: any) => a.id === txn.account_id);
+        if (acc) {
+          const isDebitNormal = ["asset", "expense"].includes(acc.type);
+          const balanceChange = isDebitNormal
+            ? -(Number(txn.debit) - Number(txn.credit))
+            : -(Number(txn.credit) - Number(txn.debit));
+          await (supabase as any).from("accounts").update({ balance: acc.balance + balanceChange }).eq("id", acc.id);
+        }
+      }
+      const { error } = await (supabase as any).from("transactions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts-flat"] });
+      queryClient.invalidateQueries({ queryKey: ["all-transactions-summary"] });
+      toast.success("Transaction deleted successfully");
+      setDeleteId(null);
+    },
+    onError: () => toast.error("Failed to delete transaction"),
   });
 
   const getAccName = (id: string) => {
@@ -130,6 +160,9 @@ export default function AllTransactions() {
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => handleDownloadVoucher(t)} title="Download Voucher">
                           <FileDown className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteId(t.id)} title="Delete">
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -207,6 +240,15 @@ export default function AllTransactions() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        onConfirm={() => deleteId && deleteMutation.mutate(deleteId)}
+        title="Delete Transaction"
+        description="এই ট্রানজাকশন ডিলিট করলে সংশ্লিষ্ট অ্যাকাউন্টের ব্যালেন্সও আপডেট হবে। আপনি কি নিশ্চিত?"
+        loading={deleteMutation.isPending}
+      />
     </DashboardLayout>
   );
 }
