@@ -270,7 +270,7 @@ export default function InitialDataImportTab() {
         count++;
       }
 
-      setStatus("coa", "done", `${count} লেজার অ্যাকাউন্ট তৈরি হয়েছে`);
+      setStatus("coa", "done", `${count} ledger accounts created`);
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
       queryClient.invalidateQueries({ queryKey: ["accounts-for-settings"] });
     } catch (e: any) {
