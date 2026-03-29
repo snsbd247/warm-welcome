@@ -154,6 +154,21 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
 
     setCustomer(session);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+
+    // Log customer login to admin_login_logs
+    try {
+      const ua = navigator.userAgent;
+      const browserMatch = ua.match(/(Chrome|Firefox|Safari|Edge|Opera)[/\s](\d+)/);
+      const browser = browserMatch ? `${browserMatch[1]} ${browserMatch[2]}` : "Unknown";
+      const isMobile = /Mobile|Android|iPhone/i.test(ua);
+      await supabase.from("admin_login_logs").insert({
+        admin_id: session.id,
+        action: "customer_login",
+        browser,
+        device_name: isMobile ? "Mobile Device" : "Desktop",
+        ip_address: "client",
+      });
+    } catch {}
   };
 
   const signOut = useCallback(() => {
