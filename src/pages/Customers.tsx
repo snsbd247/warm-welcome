@@ -328,7 +328,7 @@ export default function Customers() {
       </div>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editCustomer ? t.customers.editCustomer : t.customers.addCustomer}</DialogTitle>
           </DialogHeader>
