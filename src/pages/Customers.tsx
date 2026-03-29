@@ -279,7 +279,7 @@ export default function Customers() {
                     <SelectItem value="100">100</SelectItem>
                   </SelectContent>
                 </Select>
-                <span>per page</span>
+                <span>{t.customers.perPage}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Button
