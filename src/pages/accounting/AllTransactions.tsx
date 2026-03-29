@@ -70,8 +70,6 @@ export default function AllTransactions() {
     setEditForm({
       id: t.id,
       type: t.type,
-      category: t.category,
-      amount: t.amount,
       debit: t.debit,
       credit: t.credit,
       date: t.date?.split("T")[0] || "",
