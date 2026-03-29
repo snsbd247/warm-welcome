@@ -228,6 +228,7 @@ function ExperienceTab({ employeeId }: { employeeId: string }) {
 
 /* ── Salary Structure Tab ── */
 function SalaryStructureTab({ employeeId, currentSalary }: { employeeId: string; currentSalary: number }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
