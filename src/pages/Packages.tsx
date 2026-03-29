@@ -281,7 +281,7 @@ export default function Packages() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={pkg.is_active ? "default" : "secondary"}>
-                      {pkg.is_active ? "Active" : "Disabled"}
+                      {pkg.is_active ? t.common.active : t.common.inactive}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
