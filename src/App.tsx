@@ -136,7 +136,7 @@ function App() {
                 <Route path="/merchant-reports" element={<PermissionGuard module="reports"><MerchantPaymentReports /></PermissionGuard>} />
                 <Route path="/tickets" element={<PermissionGuard module="tickets"><Tickets /></PermissionGuard>} />
                 <Route path="/sms" element={<PermissionGuard module="sms"><SMSLogs /></PermissionGuard>} />
-                <Route path="/sms-settings" element={<PermissionGuard module="sms" action="edit"><SMSSettings /></PermissionGuard>} />
+                {/* SMS Settings removed - managed via Integration Management */}
                 <Route path="/reminders" element={<PermissionGuard module="sms"><ReminderLogs /></PermissionGuard>} />
                 <Route path="/profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
                 <Route path="/users" element={<PermissionGuard module="users"><AdminUsers /></PermissionGuard>} />
