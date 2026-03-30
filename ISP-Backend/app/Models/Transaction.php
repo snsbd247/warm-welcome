@@ -11,7 +11,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'id', 'type', 'category', 'amount', 'debit', 'credit',
-        'date', 'description', 'reference_type', 'reference_id',
+        'date', 'description', 'reference', 'reference_type', 'reference_id',
         'account_id', 'customer_id', 'vendor_id', 'created_by',
         'journal_ref',
     ];
@@ -31,5 +31,15 @@ class Transaction extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class);
     }
 }

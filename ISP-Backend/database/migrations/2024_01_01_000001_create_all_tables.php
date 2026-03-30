@@ -2,7 +2,6 @@
 /**
  * Smart ISP — Complete Schema (No Foreign Keys)
  * All relations are enforced at code/application level.
- * Field names match the frontend Supabase types exactly.
  */
 
 use Illuminate\Database\Migrations\Migration;
@@ -35,7 +34,7 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             $table->string('name')->unique();
             $table->string('description')->nullable();
-            $table->string('db_role')->default('staff'); // super_admin, admin, staff, manager, operator, technician, accountant
+            $table->string('db_role')->default('staff');
             $table->boolean('is_system')->default(false);
             $table->timestamps();
         });
@@ -43,7 +42,7 @@ return new class extends Migration {
         Schema::create('user_roles', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('user_id')->index();
-            $table->string('role')->default('staff'); // super_admin, admin, staff, manager, operator, technician, accountant
+            $table->string('role')->default('staff');
             $table->uuid('custom_role_id')->nullable()->index();
             $table->unique(['user_id', 'role']);
         });
@@ -429,13 +428,14 @@ return new class extends Migration {
 
         Schema::create('transactions', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('type');           // income, expense, transfer, journal
-            $table->string('category');       // payment, purchase, sale, salary, journal, etc.
-            $table->decimal('amount', 12, 2);
+            $table->string('type')->default('journal');     // income, expense, transfer, journal
+            $table->string('category')->nullable();         // payment, purchase, sale, salary, journal, etc.
+            $table->decimal('amount', 12, 2)->default(0);
             $table->decimal('debit', 12, 2)->default(0);
             $table->decimal('credit', 12, 2)->default(0);
-            $table->date('date');
+            $table->date('date')->nullable();
             $table->text('description')->nullable();
+            $table->string('reference')->nullable();        // Generic reference string (payment ID, trx ID, etc.)
             $table->string('reference_type')->nullable();
             $table->uuid('reference_id')->nullable();
             $table->uuid('account_id')->nullable()->index();
@@ -445,12 +445,9 @@ return new class extends Migration {
             $table->string('journal_ref')->nullable()->index();
             $table->timestamps();
             $table->index('type');
-            $table->index('category');
             $table->index('date');
-            $table->index(['reference_type', 'reference_id']);
         });
 
-        // Products — field names match Supabase types (buy_price, sell_price, stock)
         Schema::create('products', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
@@ -472,13 +469,13 @@ return new class extends Migration {
             $table->string('email')->nullable();
             $table->string('company')->nullable();
             $table->text('address')->nullable();
+            $table->decimal('total_due', 12, 2)->default(0);
             $table->decimal('balance', 12, 2)->default(0);
             $table->string('status')->default('active');
             $table->text('notes')->nullable();
             $table->timestamps();
         });
 
-        // Purchases — field names match Supabase types (purchase_no, supplier_id, total_amount, date)
         Schema::create('purchases', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('purchase_no')->unique();
@@ -501,7 +498,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // Sales — field names match Supabase types (sale_no, sale_date)
         Schema::create('sales', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('sale_no')->unique();
@@ -529,7 +525,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // Expenses — field names match Supabase types (date, amount, category)
         Schema::create('expenses', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('category')->default('other');
@@ -539,11 +534,10 @@ return new class extends Migration {
             $table->string('payment_method')->default('cash');
             $table->uuid('account_id')->nullable()->index();
             $table->string('reference')->nullable();
-            $table->string('status')->default('approved');
+            $table->string('status')->default('active');
             $table->timestamps();
         });
 
-        // Daily Reports — field names match Supabase types
         Schema::create('daily_reports', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->date('date')->unique();
@@ -566,6 +560,7 @@ return new class extends Migration {
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->string('address')->nullable();
+            $table->decimal('total_due', 12, 2)->default(0);
             $table->decimal('balance', 12, 2)->default(0);
             $table->string('status')->default('active');
             $table->timestamps();
@@ -636,8 +631,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // NOTE: Supabase types use "attendance" (singular) but migration originally created "attendances"
-        // GenericCrudController normalizes names, so both work. Table name = attendance.
         Schema::create('attendance', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('employee_id')->index();

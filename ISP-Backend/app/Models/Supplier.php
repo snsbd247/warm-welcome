@@ -11,11 +11,12 @@ class Supplier extends Model
 
     protected $fillable = [
         'id', 'name', 'company', 'phone', 'email',
-        'address', 'total_due', 'status',
+        'address', 'total_due', 'balance', 'status',
     ];
 
     protected $casts = [
         'total_due' => 'decimal:2',
+        'balance'   => 'decimal:2',
     ];
 
     public function payments()
