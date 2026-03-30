@@ -166,7 +166,7 @@ export default function MerchantPayments() {
     }
   };
 
-  const apiEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sms-receiver`;
+  const apiEndpoint = `${API_BASE_URL.replace(/\/api$/, '')}/sms-receiver`;
   const copyEndpoint = () => { navigator.clipboard.writeText(apiEndpoint); toast.success("API endpoint copied to clipboard"); };
 
   return (
