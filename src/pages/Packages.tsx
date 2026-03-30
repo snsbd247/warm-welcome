@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { IS_LOVABLE } from "@/lib/environment";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,18 @@ import { toast } from "sonner";
 
 import api from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// Helper: call mikrotik-sync edge function or Laravel API
+async function mikrotikCall(path: string, body: any) {
+  if (IS_LOVABLE) {
+    const { data, error } = await supabase.functions.invoke(`mikrotik-sync/${path}`, { body });
+    if (error) throw new Error(error.message || 'MikroTik sync failed');
+    return data;
+  } else {
+    const { data } = await api.post(`/mikrotik/${path}`, body);
+    return data;
+  }
+}
 
 export default function Packages() {
   const { t } = useLanguage();
