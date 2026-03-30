@@ -11,7 +11,7 @@ class MikrotikSyncRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'router_id' => 'required|uuid|exists:mikrotik_routers,id',
+            'customer_id' => 'required|uuid',
         ];
     }
 }
