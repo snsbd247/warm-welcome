@@ -43,7 +43,7 @@ class QueryBuilder<T = any> {
   private _countMode?: string;
   private _headMode = false;
 
-  constructor(table: string) { this._table = table; }
+  constructor(table: string) { this._table = table.replace(/-/g, '_'); }
 
   select(columns = "*", options?: { count?: string; head?: boolean }) {
     if (this._data !== null) { this._returning = columns; }
@@ -108,7 +108,7 @@ class QueryBuilder<T = any> {
 
   private async _execute(): Promise<{ data: any; error: any; count?: number }> {
     try {
-      const tablePath = this._table.replace(/_/g, '-');
+      const tablePath = this._table;
 
       if (this._operation === "select") {
         const params = this._buildParams();
