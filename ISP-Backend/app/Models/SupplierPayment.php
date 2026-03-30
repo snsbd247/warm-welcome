@@ -10,17 +10,22 @@ class SupplierPayment extends Model
     use HasUuid;
 
     protected $fillable = [
-        'id', 'supplier_id', 'amount', 'payment_date',
-        'payment_method', 'reference', 'note', 'status',
+        'id', 'supplier_id', 'purchase_id', 'amount', 'paid_date',
+        'payment_method', 'reference', 'notes', 'status',
     ];
 
     protected $casts = [
-        'amount'       => 'decimal:2',
-        'payment_date' => 'date',
+        'amount'    => 'decimal:2',
+        'paid_date' => 'date',
     ];
 
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function purchase()
+    {
+        return $this->belongsTo(Purchase::class);
     }
 }

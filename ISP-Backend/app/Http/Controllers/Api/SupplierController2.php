@@ -66,7 +66,7 @@ class SupplierController2 extends Controller
 
     public function payments(Request $request)
     {
-        $query = SupplierPayment::with('supplier')->orderByDesc('payment_date');
+        $query = SupplierPayment::with('supplier')->orderByDesc('paid_date');
         if ($request->has('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
         }
@@ -78,18 +78,15 @@ class SupplierController2 extends Controller
         $request->validate([
             'supplier_id'  => 'required|uuid|exists:suppliers,id',
             'amount'       => 'required|numeric|min:0.01',
-            'payment_date' => 'required|date',
+            'paid_date'    => 'required|date',
         ]);
 
         $payment = SupplierPayment::create($request->all());
 
-        // Update supplier balance
+        // Update supplier total_due
         $supplier = Supplier::find($request->supplier_id);
         if ($supplier) {
-            $supplier->balance -= $request->amount;
-            if ($supplier->total_due !== null) {
-                $supplier->total_due = max(0, $supplier->total_due - $request->amount);
-            }
+            $supplier->total_due = max(0, $supplier->total_due - $request->amount);
             $supplier->save();
         }
 
@@ -101,10 +98,7 @@ class SupplierController2 extends Controller
         $payment = SupplierPayment::findOrFail($id);
         $supplier = Supplier::find($payment->supplier_id);
         if ($supplier) {
-            $supplier->balance += $payment->amount;
-            if ($supplier->total_due !== null) {
-                $supplier->total_due += $payment->amount;
-            }
+            $supplier->total_due += $payment->amount;
             $supplier->save();
         }
         $payment->delete();

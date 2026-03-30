@@ -24,7 +24,7 @@ read -p "  Your Domain (e.g. isp.example.com): " DOMAIN
 DOMAIN=${DOMAIN:-localhost}
 
 # ─── Step 1: Check Requirements ───────────────────────────
-echo -e "${BLUE}[1/8] Checking requirements...${NC}"
+echo -e "${BLUE}[1/9] Checking requirements...${NC}"
 
 if ! command -v php &> /dev/null; then
     echo -e "${RED}✗ PHP not found!${NC}"
@@ -44,12 +44,12 @@ else
 fi
 
 # ─── Step 2: Install Dependencies ─────────────────────────
-echo -e "${BLUE}[2/8] Installing dependencies...${NC}"
+echo -e "${BLUE}[2/9] Installing dependencies...${NC}"
 $COMPOSER_CMD install --optimize-autoloader --no-dev --no-interaction 2>&1 | tail -3
 echo -e "${GREEN}  ✓ Dependencies installed${NC}"
 
 # ─── Step 3: Environment Setup ────────────────────────────
-echo -e "${BLUE}[3/8] Setting up environment...${NC}"
+echo -e "${BLUE}[3/9] Setting up environment...${NC}"
 
 if [ ! -f .env ]; then
     cp .env.example .env
@@ -81,12 +81,12 @@ else
 fi
 
 # ─── Step 4: Generate Key ─────────────────────────────────
-echo -e "${BLUE}[4/8] Generating app key...${NC}"
+echo -e "${BLUE}[4/9] Generating app key...${NC}"
 php artisan key:generate --force --no-interaction
 echo -e "${GREEN}  ✓ App key generated${NC}"
 
 # ─── Step 5: Clear caches before migration ────────────────
-echo -e "${BLUE}[5/8] Clearing caches...${NC}"
+echo -e "${BLUE}[5/9] Clearing caches...${NC}"
 php artisan config:clear 2>/dev/null || true
 php artisan cache:clear 2>/dev/null || true
 php artisan route:clear 2>/dev/null || true
@@ -94,22 +94,47 @@ php artisan view:clear 2>/dev/null || true
 echo -e "${GREEN}  ✓ Caches cleared${NC}"
 
 # ─── Step 6: Run Migrations ──────────────────────────────
-echo -e "${BLUE}[6/8] Running migrations...${NC}"
+echo -e "${BLUE}[6/9] Running migrations...${NC}"
 php artisan migrate --force --no-interaction
-echo -e "${GREEN}  ✓ Database tables created (no foreign keys)${NC}"
+echo -e "${GREEN}  ✓ Database tables created (no foreign keys, no DB functions)${NC}"
 
 # ─── Step 7: Seed Data ───────────────────────────────────
-echo -e "${BLUE}[7/8] Seeding default data...${NC}"
-if php artisan db:seed --force --no-interaction 2>&1; then
-    echo -e "${GREEN}  ✓ Data seeded${NC}"
+echo -e "${BLUE}[7/9] Seeding default data...${NC}"
+
+MAX_RETRIES=3
+RETRY=0
+SEED_SUCCESS=false
+
+while [ $RETRY -lt $MAX_RETRIES ]; do
+    if php artisan db:seed --force --no-interaction 2>&1; then
+        SEED_SUCCESS=true
+        break
+    else
+        RETRY=$((RETRY + 1))
+        echo -e "${YELLOW}  ⚠ Seed attempt $RETRY failed, retrying...${NC}"
+        sleep 2
+    fi
+done
+
+if [ "$SEED_SUCCESS" = true ]; then
+    echo -e "${GREEN}  ✓ Data seeded successfully${NC}"
 else
-    echo -e "${YELLOW}  ⚠ Seed warning (may already exist)${NC}"
+    echo -e "${YELLOW}  ⚠ Seed warning (data may already exist)${NC}"
 fi
+
 echo -e "${CYAN}    Admin #1: admin / admin123${NC}"
 echo -e "${CYAN}    Admin #2: ismail / Admin@123${NC}"
 
-# ─── Step 8: Storage & Production Cache ──────────────────
-echo -e "${BLUE}[8/8] Final setup...${NC}"
+# ─── Step 8: Seed Geo Data ───────────────────────────────
+echo -e "${BLUE}[8/9] Seeding Bangladesh geo data...${NC}"
+if php artisan db:seed --class=GeoSeeder --force --no-interaction 2>&1; then
+    echo -e "${GREEN}  ✓ Geo data seeded (divisions, districts, upazilas)${NC}"
+else
+    echo -e "${YELLOW}  ⚠ Geo seeder not found or already seeded${NC}"
+fi
+
+# ─── Step 9: Storage & Production Cache ──────────────────
+echo -e "${BLUE}[9/9] Final setup...${NC}"
 php artisan storage:link 2>/dev/null || true
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
@@ -139,7 +164,26 @@ echo -e "  ${GREEN}Domain:${NC}  https://${DOMAIN}"
 echo -e "  ${GREEN}API:${NC}    https://${DOMAIN}/api/api"
 echo -e "  ${GREEN}Login:${NC}  https://${DOMAIN}/admin/login"
 echo ""
-echo -e "  ${YELLOW}Database:${NC} No foreign keys — all relations at code level"
+echo -e "  ${YELLOW}Database:${NC} No foreign keys, no DB functions — all relations at code level"
+echo ""
+echo -e "  ${YELLOW}Tables Created:${NC}"
+echo -e "    Auth: users, custom_roles, user_roles, permissions, role_permissions"
+echo -e "    Sessions: admin_sessions, admin_login_logs, customer_sessions"
+echo -e "    ISP Core: mikrotik_routers, packages, customers, bills, payments"
+echo -e "    Ledger: customer_ledger, merchant_payments"
+echo -e "    Support: support_tickets, ticket_replies"
+echo -e "    SMS: sms_settings, sms_templates, sms_logs, reminder_logs"
+echo -e "    Settings: general_settings, system_settings, payment_gateways"
+echo -e "    Network: zones, olts, onus"
+echo -e "    Accounting: accounts, transactions, products, vendors, purchases, purchase_items"
+echo -e "    Sales: sales, sale_items, expenses, daily_reports"
+echo -e "    Supplier: suppliers, supplier_payments"
+echo -e "    Heads: income_heads, expense_heads, other_heads"
+echo -e "    HR: designations, employees, attendance, loans, salary_sheets"
+echo -e "    HR Detail: employee_salary_structure, employee_education, employee_experience"
+echo -e "    HR Funds: employee_emergency_contacts, employee_provident_fund, employee_savings_fund"
+echo -e "    Geo: geo_divisions, geo_districts, geo_upazilas"
+echo -e "    Logs: audit_logs, backup_logs"
 echo ""
 echo -e "  ${YELLOW}Cron Job (cPanel → Cron Jobs):${NC}"
 echo -e "  * * * * * cd $(pwd) && php artisan schedule:run >> /dev/null 2>&1"
