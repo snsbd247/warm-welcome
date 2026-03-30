@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { IS_LOVABLE } from "@/lib/environment";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,18 @@ import { toast } from "sonner";
 
 import api from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// Helper: call mikrotik-sync edge function or Laravel API
+async function mikrotikCall(path: string, body: any) {
+  if (IS_LOVABLE) {
+    const { data, error } = await supabase.functions.invoke(`mikrotik-sync/${path}`, { body });
+    if (error) throw new Error(error.message || 'MikroTik sync failed');
+    return data;
+  } else {
+    const { data } = await api.post(`/mikrotik/${path}`, body);
+    return data;
+  }
+}
 
 export default function Packages() {
   const { t } = useLanguage();
@@ -134,7 +147,7 @@ export default function Packages() {
       // Remove profile from MikroTik first
       if (deletePkg.mikrotik_profile_name) {
         try {
-          await api.post('/mikrotik/remove-profile', {
+          await mikrotikCall('remove-profile', {
             package_id: deletePkg.id,
             router_id: deletePkg.router_id,
           });
@@ -160,7 +173,7 @@ export default function Packages() {
     // If disabling, remove profile from MikroTik
     if (!newStatus && pkg.mikrotik_profile_name) {
       try {
-        await api.post('/mikrotik/remove-profile', {
+        await mikrotikCall('remove-profile', {
           package_id: pkg.id,
           router_id: pkg.router_id,
         });
@@ -176,7 +189,7 @@ export default function Packages() {
   const syncToMikrotik = async (packageId: string, routerId?: string) => {
     setSyncing(packageId);
     try {
-      const { data } = await api.post('/mikrotik/sync-profile', {
+      const data = await mikrotikCall('sync-profile', {
         package_id: packageId,
         router_id: routerId || undefined,
       });
@@ -196,7 +209,7 @@ export default function Packages() {
   const bulkSyncPackages = async () => {
     setBulkSyncing(true);
     try {
-      const { data } = await api.post('/mikrotik/bulk-sync-packages', {});
+      const data = await mikrotikCall('bulk-sync-packages', {});
       if (data.success) {
         const r = data.results;
         const parts = [];
