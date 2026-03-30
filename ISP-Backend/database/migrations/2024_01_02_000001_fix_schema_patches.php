@@ -98,6 +98,48 @@ return new class extends Migration {
                 $table->string('photo_url')->nullable()->after('address');
             });
         }
+
+        // ── Ensure customers has created_at index for performance ─
+        // (Handled at application level, no index needed for portability)
+
+        // ── Ensure sms_settings has all newer columns ────────
+        if (Schema::hasTable('sms_settings')) {
+            Schema::table('sms_settings', function (Blueprint $table) {
+                if (!Schema::hasColumn('sms_settings', 'sms_on_reminder')) {
+                    $table->boolean('sms_on_reminder')->default(false);
+                }
+                if (!Schema::hasColumn('sms_settings', 'whatsapp_enabled')) {
+                    $table->boolean('whatsapp_enabled')->default(false);
+                }
+                if (!Schema::hasColumn('sms_settings', 'whatsapp_token')) {
+                    $table->string('whatsapp_token')->nullable();
+                }
+                if (!Schema::hasColumn('sms_settings', 'whatsapp_phone_id')) {
+                    $table->string('whatsapp_phone_id')->nullable();
+                }
+            });
+        }
+
+        // ── Ensure payment_gateways has receiving_account_id ─
+        if (Schema::hasTable('payment_gateways') && !Schema::hasColumn('payment_gateways', 'receiving_account_id')) {
+            Schema::table('payment_gateways', function (Blueprint $table) {
+                $table->uuid('receiving_account_id')->nullable()->index();
+            });
+        }
+
+        // ── Ensure customers has connection_status ───────────
+        if (Schema::hasTable('customers') && !Schema::hasColumn('customers', 'connection_status')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('connection_status')->default('active');
+            });
+        }
+
+        // ── Ensure customers has mikrotik_sync_status ────────
+        if (Schema::hasTable('customers') && !Schema::hasColumn('customers', 'mikrotik_sync_status')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('mikrotik_sync_status')->default('pending');
+            });
+        }
     }
 
     public function down(): void
