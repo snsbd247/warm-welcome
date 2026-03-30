@@ -28,33 +28,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initializeAuth = async () => {
-      if (IS_LOVABLE) {
-        // Supabase auth
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user && mounted) {
-          const { data } = await supabase.from('admin_sessions')
-            .select('*')
-            .eq('admin_id', session.user.id)
-            .eq('status', 'active')
-            .limit(1);
-          
-          // Get user info from users table or use session metadata
-          const adminUser: AdminUser = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name || session.user.email || '',
-            role: session.user.user_metadata?.role || 'admin',
-            avatar_url: session.user.user_metadata?.avatar_url,
-          };
-          setUser(adminUser);
-        }
-      } else {
-        // Laravel auth
-        const token = localStorage.getItem("admin_token");
-        const savedUser = localStorage.getItem("admin_user");
-        if (token && savedUser) {
-          try {
-            const parsedUser = JSON.parse(savedUser) as AdminUser;
+      // Both Lovable and Laravel use token-based auth via profiles/users table
+      const token = localStorage.getItem("admin_token");
+      const savedUser = localStorage.getItem("admin_user");
+      if (token && savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser) as AdminUser;
+          if (IS_LOVABLE) {
+            // Verify session is still active via edge function or direct query
+            const { data, error } = await supabase
+              .from('admin_sessions')
+              .select('id')
+              .eq('session_token', token)
+              .eq('status', 'active')
+              .limit(1);
+            if (!error && data?.length > 0 && mounted) {
+              setUser(parsedUser);
+            } else {
+              localStorage.removeItem("admin_token");
+              localStorage.removeItem("admin_user");
+            }
+          } else {
             try {
               const { data } = await api.get("/admin/me");
               if (data?.id && mounted) setUser(parsedUser);
@@ -66,10 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               localStorage.removeItem("admin_token");
               localStorage.removeItem("admin_user");
             }
-          } catch {
-            localStorage.removeItem("admin_token");
-            localStorage.removeItem("admin_user");
           }
+        } catch {
+          localStorage.removeItem("admin_token");
+          localStorage.removeItem("admin_user");
         }
       }
       if (mounted) setLoading(false);
