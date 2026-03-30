@@ -11,9 +11,12 @@ class MikrotikTestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ip_address' => 'required|ip',
-            'username' => 'required|string|max:100',
-            'password' => 'required|string|max:100',
+            'router_id' => 'required_without_all:host,ip_address|uuid',
+            'host' => 'required_without:router_id|string',
+            'ip_address' => 'sometimes|string',
+            'username' => 'required_without:router_id|string|max:100',
+            'password' => 'required_without:router_id|string|max:100',
+            'port' => 'nullable|integer|min:1|max:65535',
             'api_port' => 'nullable|integer|min:1|max:65535',
         ];
     }

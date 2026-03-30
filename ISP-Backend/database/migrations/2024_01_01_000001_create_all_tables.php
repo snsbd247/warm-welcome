@@ -45,6 +45,7 @@ return new class extends Migration {
             $table->string('role')->default('staff');
             $table->uuid('custom_role_id')->nullable()->index();
             $table->unique(['user_id', 'role']);
+            $table->timestamps();
         });
 
         Schema::create('permissions', function (Blueprint $table) {
