@@ -37,10 +37,7 @@
 
 **আপনার লোকাল মেশিনে:**
 ```bash
-# .env.production ফাইল আপডেট করুন
-echo 'VITE_API_URL="https://yourdomain.com/api/api"' > .env.production
-
-# Build
+# কোনো .env.production সেটআপ লাগবে না — API URL সম্পূর্ণ auto-detect হয়
 npm run build
 ```
 
@@ -74,12 +71,12 @@ Document root এ `.htaccess` ফাইল তৈরি করুন:
 
 **Option A: cPanel File Manager দিয়ে**
 1. Document root এ `api` ফোল্ডার তৈরি করুন
-2. `laravel-backend/` এর সব ফাইল `api/` তে আপলোড করুন (vendor/ বাদে)
+2. `ISP-Backend/` এর সব ফাইল `api/` তে আপলোড করুন (vendor/ বাদে)
 
 **Option B: SSH দিয়ে (faster)**
 ```bash
 cd /home/<cpanel-user>
-cp -r laravel-backend/* public_html/<yourdomain.com>/api/
+cp -r ISP-Backend/* public_html/<yourdomain.com>/api/
 ```
 
 ### Step 4: api/.htaccess তৈরি করুন
@@ -113,6 +110,7 @@ bash setup.sh
 ```
 
 > setup.sh ইন্টারেক্টিভলি domain, DB credentials জিজ্ঞেস করবে এবং সব সেট করবে।
+> সেটআপ স্ক্রিপ্ট অটোমেটিক: মাইগ্রেশন, সিডিং (রোল, পারমিশন, COA, SMS/Email টেমপ্লেট, লেজার ম্যাপিং, প্যাকেজ), স্টোরেজ লিংক, এবং ক্যাশ তৈরি করে।
 
 ### Step 6 (Alternative): Manual Setup (SSH ছাড়া)
 
@@ -190,6 +188,22 @@ php artisan view:cache
 
 ---
 
+## 📦 সিডার দিয়ে যা যা তৈরি হয়
+
+| ক্যাটাগরি | বিবরণ |
+|-----------|--------|
+| Roles | Super Admin, Admin, Staff, Manager, Operator, Technician, Accountant |
+| Admin Users | admin, ismail (Super Admin) |
+| Packages | Basic 10Mbps, Standard 20Mbps, Premium 50Mbps, Ultra 100Mbps |
+| Chart of Accounts | 50+ ISP-স্পেসিফিক লেজার (Assets, Liabilities, Equity, Income, Expenses) |
+| Ledger Mappings | Sales, Purchase, Salary, PF, Vendor, Customer সহ 18টি ম্যাপিং |
+| SMS Templates | Bill Generated, Due Reminder, Payment Confirmation সহ 8টি |
+| Email Templates | Welcome, Password Reset, Payment Confirm সহ 5টি |
+| Permissions | 14 মডিউল × 4 অ্যাকশন = 56টি পারমিশন |
+| System Settings | Enabled modules, footer, invoice, ledger type |
+
+---
+
 ## 🔧 Troubleshooting
 
 ### 500 Error?
@@ -197,7 +211,6 @@ php artisan view:cache
 cd <document-root>/api
 chmod -R 775 storage bootstrap/cache
 php artisan config:clear
-# Debug দেখতে .env তে APP_DEBUG=true করুন, পরে false করুন
 ```
 
 ### CORS Error?
@@ -206,7 +219,6 @@ php artisan config:clear
 ### Login কাজ করছে না?
 - API URL চেক: `https://yourdomain.com/api/api/admin/login`
 - `.env` তে `SANCTUM_STATEFUL_DOMAINS=yourdomain.com`
-- `.env.production` এ `VITE_API_URL` সঠিক কিনা চেক করুন
 
 ### Data দেখা যাচ্ছে না?
 - `php artisan migrate --force` রান হয়েছে কিনা চেক করুন
@@ -216,7 +228,7 @@ php artisan config:clear
 
 ## ✅ Final Checklist
 
-- [ ] `.env.production` এ `VITE_API_URL` সেট করে `npm run build`
+- [ ] `npm run build` সম্পন্ন (কোনো env সেটআপ লাগবে না)
 - [ ] `dist/` ফাইলগুলো document root এ আপলোড
 - [ ] Document root এ SPA `.htaccess` তৈরি
 - [ ] Document root এর `api/` তে Laravel আপলোড
