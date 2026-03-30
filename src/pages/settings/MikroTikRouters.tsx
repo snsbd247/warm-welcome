@@ -130,17 +130,10 @@ export default function MikroTikRouters() {
   };
 
   const testConnection = async (router: any) => {
-    if (!router.password) {
-      toast.error("Router password is not available. Please edit the router and re-enter the password, then test.");
-      return;
-    }
     setTesting(router.id);
     try {
       const { data: resp } = await api.post('/mikrotik/test-connection', {
-        host: router.ip_address,
-        username: router.username,
-        password: router.password,
-        port: router.api_port || 8728,
+        router_id: router.id,
       });
       if (resp?.success) toast.success(resp.message || "Connected successfully!");
       else toast.error(resp?.message || "Connection failed");

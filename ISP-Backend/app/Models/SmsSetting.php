@@ -14,6 +14,7 @@ class SmsSetting extends Model
         'sms_on_bill_generate', 'sms_on_payment', 'sms_on_registration', 'sms_on_suspension',
         'sms_on_reminder', 'sms_on_new_customer_bill',
         'whatsapp_enabled', 'whatsapp_token', 'whatsapp_phone_id',
+        'updated_at',
     ];
 
     protected $hidden = ['api_token', 'whatsapp_token'];

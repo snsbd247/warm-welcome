@@ -338,7 +338,6 @@ const functionRouteMap: Record<string, { method: 'get' | 'post'; path: string }>
   'mikrotik-sync/test-connection': { method: 'post', path: '/mikrotik/test-connection' },
   'mikrotik-sync/sync': { method: 'post', path: '/mikrotik/sync' },
   'mikrotik-sync/sync-all': { method: 'post', path: '/mikrotik/sync-all' },
-  'bkash-payment': { method: 'post', path: '/bkash/create-payment' },
   'bkash-payment/create': { method: 'post', path: '/bkash/create-payment' },
   'bkash-payment/execute': { method: 'post', path: '/bkash/query-transaction' },
   'nagad-payment': { method: 'post', path: '/nagad/create-payment' },
@@ -352,10 +351,28 @@ const functionRouteMap: Record<string, { method: 'get' | 'post'; path: string }>
   'session-expiry': { method: 'post', path: '/admin/cleanup-sessions' },
 };
 
+// ─── bKash action → route mapping ───────────────────────────────
+const bkashActionMap: Record<string, string> = {
+  'test_connection': '/bkash/test-connection',
+  'create_payment': '/bkash/create-payment',
+  'query_transaction': '/bkash/query-transaction',
+  'refund': '/bkash/refund',
+};
+
 // ─── Functions compatibility (maps to Laravel API) ──────────────
 const functionsCompat = {
   invoke: async (name: string, options?: { body?: any; headers?: Record<string, string> }) => {
     try {
+      // Handle bkash-payment with action-based routing
+      if (name === 'bkash-payment' && options?.body?.action) {
+        const route = bkashActionMap[options.body.action];
+        if (route) {
+          const { action, ...payload } = options.body;
+          const { data } = await api.post(route, payload, { headers: options?.headers });
+          return { data, error: null };
+        }
+      }
+
       const mapRoute = functionRouteMap[name];
       if (mapRoute) {
         const { data } = mapRoute.method === 'get'

@@ -305,11 +305,34 @@ class GenericCrudController extends Controller
         }
     }
 
+    // Tables that should only ever have a single row (singleton settings)
+    protected array $singletonTables = ['sms_settings', 'general_settings'];
+
     public function store(Request $request, string $table)
     {
         try {
             $model = $this->getModel($table);
-            $record = $model->create($request->all());
+            $normalizedTable = str_replace('-', '_', $table);
+
+            // Singleton upsert: if this table should only have one row, update-or-create
+            if (in_array($normalizedTable, $this->singletonTables)) {
+                $existing = $model->first();
+                if ($existing) {
+                    $existing->update($request->except(['id', '_upsert']));
+                    return response()->json($existing);
+                }
+            }
+
+            // Generic upsert support: if _upsert flag is set and id is provided
+            if ($request->has('_upsert') && $request->has('id')) {
+                $existing = $model->find($request->id);
+                if ($existing) {
+                    $existing->update($request->except(['_upsert']));
+                    return response()->json($existing);
+                }
+            }
+
+            $record = $model->create($request->except(['_upsert']));
             return response()->json($record, 201);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("GenericCrud store error [{$table}]: " . $e->getMessage());
