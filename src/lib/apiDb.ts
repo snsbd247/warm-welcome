@@ -108,7 +108,7 @@ class QueryBuilder<T = any> {
 
   private async _execute(): Promise<{ data: any; error: any; count?: number }> {
     try {
-      const tablePath = this._table.replace(/_/g, '-');
+      const tablePath = this._table;
 
       if (this._operation === "select") {
         const params = this._buildParams();
