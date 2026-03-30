@@ -105,7 +105,7 @@ export default function ApiHealthMonitor() {
                 Failures: {stats.circuit.failures} / 3
               </p>
               <p className="text-xs text-muted-foreground">
-                Mode: {IS_LOVABLE_RUNTIME ? "Edge Fallback Active" : "Laravel Direct"}
+                Mode: Laravel Direct
               </p>
               {stats.circuit.isOpen && (
                 <p className="text-xs text-orange-500 mt-1">
