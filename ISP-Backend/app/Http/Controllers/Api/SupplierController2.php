@@ -83,13 +83,10 @@ class SupplierController2 extends Controller
 
         $payment = SupplierPayment::create($request->all());
 
-        // Update supplier balance
+        // Update supplier total_due
         $supplier = Supplier::find($request->supplier_id);
         if ($supplier) {
-            $supplier->balance -= $request->amount;
-            if ($supplier->total_due !== null) {
-                $supplier->total_due = max(0, $supplier->total_due - $request->amount);
-            }
+            $supplier->total_due = max(0, $supplier->total_due - $request->amount);
             $supplier->save();
         }
 
