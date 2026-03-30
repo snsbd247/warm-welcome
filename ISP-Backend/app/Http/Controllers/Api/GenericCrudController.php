@@ -10,7 +10,7 @@ class GenericCrudController extends Controller
 {
     protected array $tableModelMap = [
         'users' => \App\Models\User::class,
-        'profiles' => \App\Models\User::class, // backward compat
+        'profiles' => \App\Models\User::class,
         'customers' => \App\Models\Customer::class,
         'bills' => \App\Models\Bill::class,
         'payments' => \App\Models\Payment::class,
@@ -79,7 +79,6 @@ class GenericCrudController extends Controller
 
     protected function getModel(string $table)
     {
-        // Support both hyphens and underscores
         $normalizedTable = str_replace('-', '_', $table);
         $modelClass = $this->tableModelMap[$normalizedTable] ?? $this->tableModelMap[$table] ?? null;
         if (!$modelClass) {
@@ -88,9 +87,6 @@ class GenericCrudController extends Controller
         return new $modelClass;
     }
 
-    /**
-     * Check if a column exists on the model's table (cached per request).
-     */
     protected function tableHasColumn($model, string $column): bool
     {
         static $cache = [];
@@ -101,21 +97,59 @@ class GenericCrudController extends Controller
         return in_array($column, $cache[$tableName]);
     }
 
-    /**
-     * Get a safe default sort column for the model.
-     */
     protected function getDefaultSortColumn($model): string
     {
-        if ($this->tableHasColumn($model, 'created_at')) {
-            return 'created_at';
-        }
-        if ($this->tableHasColumn($model, 'name')) {
-            return 'name';
-        }
-        if ($this->tableHasColumn($model, 'id')) {
-            return 'id';
-        }
+        if ($this->tableHasColumn($model, 'created_at')) return 'created_at';
+        if ($this->tableHasColumn($model, 'name')) return 'name';
+        if ($this->tableHasColumn($model, 'id')) return 'id';
         return $model->getKeyName();
+    }
+
+    /**
+     * Parse Supabase-style select string with relation syntax.
+     * Example: "*, packages(name, speed), mikrotik_routers(name)"
+     * Returns: ['columns' => ['*'], 'relations' => ['packages' => ['name','speed'], ...]]
+     */
+    protected function parseSelectWithRelations(string $selectStr, $model): array
+    {
+        $columns = [];
+        $relations = [];
+
+        // Remove '+' symbols (Supabase-style relation hints)
+        $selectStr = str_replace('+', '', $selectStr);
+
+        // Match relation patterns: relation_name(col1, col2)
+        $remaining = preg_replace_callback(
+            '/([a-z_]+)\(([^)]+)\)/',
+            function ($matches) use ($model, &$relations) {
+                $relationName = trim($matches[1]);
+                $relCols = array_map('trim', explode(',', $matches[2]));
+
+                // Check if this is a valid Eloquent relationship
+                if (method_exists($model, $relationName)) {
+                    $relations[$relationName] = $relCols;
+                }
+                return ''; // Remove from string
+            },
+            $selectStr
+        );
+
+        // Parse remaining columns
+        if ($remaining) {
+            $parts = array_map('trim', explode(',', $remaining));
+            foreach ($parts as $col) {
+                if ($col === '' || $col === ',') continue;
+                if ($col === '*' || $this->tableHasColumn($model, $col)) {
+                    $columns[] = $col;
+                }
+            }
+        }
+
+        if (empty($columns)) {
+            $columns = ['*'];
+        }
+
+        return ['columns' => $columns, 'relations' => $relations];
     }
 
     public function index(Request $request, string $table)
@@ -124,10 +158,9 @@ class GenericCrudController extends Controller
             $model = $this->getModel($table);
             $query = $model->newQuery();
 
-            // Params to exclude from column filtering
             $excluded = ['page', 'per_page', 'order', 'order_by', 'select', 'search', 'limit', 'with', 'paginate', 'sort_by', 'sort_dir', '_or'];
 
-            // Support filtering: ?column=value  or ?column__op=value
+            // Column filtering
             foreach ($request->except($excluded) as $key => $value) {
                 if (str_contains($key, '__')) {
                     [$col, $op] = explode('__', $key, 2);
@@ -167,7 +200,7 @@ class GenericCrudController extends Controller
                 }
             }
 
-            // Support OR filters
+            // OR filters
             if ($request->has('_or')) {
                 $orString = $request->get('_or');
                 $query->where(function ($q) use ($orString, $model) {
@@ -191,52 +224,84 @@ class GenericCrudController extends Controller
                 });
             }
 
-            // Support ordering — safe column detection
+            // Ordering
             $defaultSort = $this->getDefaultSortColumn($model);
             $sortBy = $request->get('sort_by', $request->get('order_by', $defaultSort));
             $sortDir = $request->get('sort_dir', $request->get('order', 'desc'));
 
-            // Handle comma-separated orderBy (e.g. "module, action") — chain them
             $sortColumns = array_map('trim', explode(',', $sortBy));
             foreach ($sortColumns as $sortCol) {
-                // Remove any '+' prefix (Supabase-style ascending)
                 $sortCol = ltrim($sortCol, '+');
                 if ($this->tableHasColumn($model, $sortCol)) {
                     $query->orderBy($sortCol, $sortDir);
                 }
             }
 
-            // Support select — clean '+' symbols from column names
+            // Select with relation parsing (Supabase-compatible)
+            $eagerRelations = [];
             if ($request->has('select')) {
                 $selectStr = $request->get('select');
-                // Remove '+' symbols (Supabase-style relation hints)
-                $selectStr = str_replace('+', '', $selectStr);
-                $columns = array_map('trim', explode(',', $selectStr));
-                // Filter to only valid columns
-                $validColumns = array_filter($columns, fn($col) =>
-                    $this->tableHasColumn($model, $col) || $col === '*'
-                );
-                if (!empty($validColumns)) {
-                    $query->select($validColumns);
-                }
-            }
+                $parsed = $this->parseSelectWithRelations($selectStr, $model);
 
-            // Support eager loading
-            if ($request->has('with')) {
-                $relations = explode(',', $request->get('with'));
-                $validRelations = [];
-                foreach ($relations as $rel) {
-                    $rel = trim($rel);
-                    if ($rel && method_exists($model, $rel)) {
-                        $validRelations[] = $rel;
+                if (!empty($parsed['columns']) && $parsed['columns'] !== ['*']) {
+                    // Always include primary key for relations to work
+                    if (!in_array('*', $parsed['columns']) && !in_array('id', $parsed['columns'])) {
+                        array_unshift($parsed['columns'], 'id');
+                    }
+                    // Include foreign keys for relations
+                    foreach ($parsed['relations'] as $relName => $relCols) {
+                        // Common FK patterns
+                        $fkCol = $relName === 'packages' ? 'package_id' :
+                                ($relName === 'mikrotik_routers' ? 'router_id' :
+                                ($relName === 'router' ? 'router_id' :
+                                ($relName === 'package' ? 'package_id' :
+                                ($relName === 'designation' ? 'designation_id' :
+                                ($relName === 'employee' ? 'employee_id' :
+                                ($relName === 'customer' ? 'customer_id' :
+                                ($relName === 'supplier' ? 'supplier_id' :
+                                ($relName === 'vendor' ? 'vendor_id' :
+                                ($relName === 'olt' ? 'olt_id' :
+                                ($relName === 'sale' ? 'sale_id' :
+                                ($relName === 'purchase' ? 'purchase_id' :
+                                ($relName === 'parent' ? 'parent_id' :
+                                "{$relName}_id"))))))))))));
+                        if ($this->tableHasColumn($model, $fkCol) && !in_array('*', $parsed['columns'])) {
+                            $parsed['columns'][] = $fkCol;
+                        }
+                    }
+                    $query->select(array_unique($parsed['columns']));
+                }
+
+                // Build eager load constraints for relations
+                foreach ($parsed['relations'] as $relName => $relCols) {
+                    if (in_array('*', $relCols)) {
+                        $eagerRelations[] = $relName;
+                    } else {
+                        // Select specific columns from relation (always include id + FK)
+                        $eagerRelations[$relName] = function ($q) use ($relCols) {
+                            $relCols[] = 'id';
+                            $q->select(array_unique($relCols));
+                        };
                     }
                 }
-                if (!empty($validRelations)) {
-                    $query->with($validRelations);
+            }
+
+            // Explicit eager loading via ?with= parameter
+            if ($request->has('with')) {
+                $relations = explode(',', $request->get('with'));
+                foreach ($relations as $rel) {
+                    $rel = trim($rel);
+                    if ($rel && method_exists($model, $rel) && !isset($eagerRelations[$rel]) && !in_array($rel, $eagerRelations)) {
+                        $eagerRelations[] = $rel;
+                    }
                 }
             }
 
-            // Support search
+            if (!empty($eagerRelations)) {
+                $query->with($eagerRelations);
+            }
+
+            // Search
             if ($request->has('search') && method_exists($model, 'getFillable')) {
                 $search = $request->get('search');
                 $searchable = array_intersect($model->getFillable(), [
@@ -272,7 +337,7 @@ class GenericCrudController extends Controller
                 'data' => [],
                 'message' => 'Error loading data',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal error',
-            ], 200); // Return 200 with empty data to prevent frontend crash
+            ], 200);
         }
     }
 
@@ -305,7 +370,6 @@ class GenericCrudController extends Controller
         }
     }
 
-    // Tables that should only ever have a single row (singleton settings)
     protected array $singletonTables = ['sms_settings', 'general_settings'];
 
     public function store(Request $request, string $table)
@@ -314,21 +378,21 @@ class GenericCrudController extends Controller
             $model = $this->getModel($table);
             $normalizedTable = str_replace('-', '_', $table);
 
-            // Singleton upsert: if this table should only have one row, update-or-create
+            // Singleton upsert
             if (in_array($normalizedTable, $this->singletonTables)) {
                 $existing = $model->first();
                 if ($existing) {
                     $existing->update($request->except(['id', '_upsert']));
-                    return response()->json($existing);
+                    return response()->json($existing->fresh());
                 }
             }
 
-            // Generic upsert support: if _upsert flag is set and id is provided
+            // Generic upsert
             if ($request->has('_upsert') && $request->has('id')) {
                 $existing = $model->find($request->id);
                 if ($existing) {
                     $existing->update($request->except(['_upsert']));
-                    return response()->json($existing);
+                    return response()->json($existing->fresh());
                 }
             }
 
@@ -346,7 +410,7 @@ class GenericCrudController extends Controller
             $model = $this->getModel($table);
             $record = $model->findOrFail($id);
             $record->update($request->all());
-            return response()->json($record);
+            return response()->json($record->fresh());
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error updating record', 'error' => config('app.debug') ? $e->getMessage() : 'Internal error'], 500);
         }
