@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { HAS_BACKEND } from "@/lib/environment";
 
 interface Branding {
   site_name: string;
@@ -42,6 +43,12 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Skip API call if no backend is available (Lovable preview)
+    if (!HAS_BACKEND) {
+      setLoading(false);
+      return;
+    }
+
     const load = async () => {
       try {
         const { data } = await supabase
@@ -77,7 +84,8 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (err) {
-        console.error("Failed to load branding:", err);
+        // Silently use defaults if backend unreachable
+        console.warn("Branding: using defaults (backend unavailable)");
       } finally {
         setLoading(false);
       }
