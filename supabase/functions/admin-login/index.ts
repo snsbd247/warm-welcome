@@ -62,7 +62,15 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const passwordValid = bcryptjs.compareSync(password, profile.password_hash);
+    console.log("DEBUG: password_hash exists:", !!profile.password_hash);
+    console.log("DEBUG: hash prefix:", profile.password_hash?.substring(0, 7));
+    let passwordValid = false;
+    try {
+      passwordValid = bcryptjs.compareSync(password, profile.password_hash);
+    } catch (e: any) {
+      console.error("bcrypt compare error:", e.message);
+    }
+    console.log("DEBUG: passwordValid:", passwordValid);
     if (!passwordValid) {
       return new Response(
         JSON.stringify({ error: "Invalid username or password" }),
