@@ -282,7 +282,10 @@ export default function MikroTikRouters() {
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editRouter ? "Edit Router" : "Add Router"}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{editRouter ? "Edit Router" : "Add Router"}</DialogTitle>
+            <DialogDescription>Configure MikroTik router connection settings</DialogDescription>
+          </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
