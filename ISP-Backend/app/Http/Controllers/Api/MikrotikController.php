@@ -29,29 +29,33 @@ class MikrotikController extends Controller
      */
     public function testConnection(Request $request)
     {
-        // Support both formats: existing router ID or ad-hoc credentials
-        if ($request->has('router_id')) {
-            $request->validate(['router_id' => 'required|uuid']);
-            $result = $this->mikrotikService->testConnection($request->router_id);
-            return response()->json($result);
-        }
-
-        // Ad-hoc test with raw credentials
-        $request->validate([
-            'host' => 'required_without:ip_address|string',
-            'ip_address' => 'required_without:host|string',
-            'username' => 'required|string|max:100',
-            'password' => 'required|string|max:100',
-            'port' => 'nullable|integer|min:1|max:65535',
-            'api_port' => 'nullable|integer|min:1|max:65535',
-        ]);
-
-        $host = $request->input('host', $request->input('ip_address'));
-        $username = $request->input('username', 'admin');
-        $password = $request->input('password', '');
-        $port = $request->input('port', $request->input('api_port', 8728));
-
         try {
+            // Support existing router ID lookup
+            if ($request->has('router_id') && !$request->has('host')) {
+                $request->validate(['router_id' => 'required|uuid']);
+                $router = \App\Models\MikrotikRouter::find($request->router_id);
+                if (!$router) {
+                    return response()->json(['success' => false, 'message' => 'Router not found']);
+                }
+                $host = $router->ip_address;
+                $username = $router->username;
+                $password = $router->password;
+                $port = $router->api_port ?? 8728;
+            } else {
+                $request->validate([
+                    'host' => 'required|string',
+                    'username' => 'required|string',
+                    'password' => 'required|string',
+                    'port' => 'required|numeric',
+                ]);
+                $host = $request->input('host');
+                $username = $request->input('username');
+                $password = $request->input('password');
+                $port = (int) $request->input('port', 8728);
+            }
+
+            \Log::info('MikroTik test-connection', ['host' => $host, 'username' => $username, 'port' => $port]);
+
             $socket = @fsockopen($host, $port, $errno, $errstr, 5);
             if (!$socket) {
                 return response()->json([
@@ -81,7 +85,13 @@ class MikrotikController extends Controller
                 'success' => false,
                 'message' => 'Connection established but login failed. Check username/password.',
             ]);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed: ' . implode(', ', $ve->validator->errors()->all()),
+            ], 422);
         } catch (\Exception $e) {
+            \Log::error('MikroTik test-connection error', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Connection error: ' . $e->getMessage(),
