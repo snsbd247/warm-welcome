@@ -99,13 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    if (IS_LOVABLE) {
-      await supabase.auth.signOut();
-    } else {
+    if (!IS_LOVABLE) {
       try { await api.post("/admin/logout"); } catch {}
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("admin_user");
     }
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_user");
     setUser(null);
   };
 
