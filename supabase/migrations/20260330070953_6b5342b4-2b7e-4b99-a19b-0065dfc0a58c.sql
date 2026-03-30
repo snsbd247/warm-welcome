@@ -1,0 +1,1 @@
+UPDATE profiles SET password_hash = '$2b$10$LJxJGh1sRQ9k5YjKxqJ5/.eZB0Y7UZMGKxKvjRbOxYd0MFgLmWkMu' WHERE username = 'superadmin';
