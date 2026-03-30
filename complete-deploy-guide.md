@@ -37,7 +37,7 @@ smart-isp/
 │   │   ├── index-abc123.js
 │   │   └── index-abc123.css
 │   └── favicon.ico
-├── laravel-backend/      ← এটা cPanel এ api/ তে যাবে
+├── ISP-Backend/          ← এটা cPanel এ api/ তে যাবে
 ├── public/
 │   └── .htaccess         ← এটা document root এ যাবে
 ├── src/
