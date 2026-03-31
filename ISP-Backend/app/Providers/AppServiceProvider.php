@@ -15,7 +15,10 @@ class AppServiceProvider extends ServiceProvider
         // Core ISP services
         $this->app->singleton(\App\Services\LedgerService::class);
         $this->app->singleton(\App\Services\BillingService::class, function ($app) {
-            return new \App\Services\BillingService($app->make(\App\Services\LedgerService::class));
+            return new \App\Services\BillingService(
+                $app->make(\App\Services\LedgerService::class),
+                $app->make(\App\Services\SmsService::class)
+            );
         });
         $this->app->singleton(\App\Services\MikrotikService::class);
         $this->app->singleton(\App\Services\SmsService::class);
