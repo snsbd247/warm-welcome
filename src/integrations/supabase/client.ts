@@ -1,10 +1,11 @@
 /**
  * Database client — Uses Laravel API wrapper exclusively.
- * No Supabase dependency in production.
+ * No external Supabase dependency in production.
  */
 import { apiDb, db } from '@/lib/apiDb';
 
-export { apiDb, db };
+// "supabase" kept as legacy alias so existing code compiles without mass-rename
+const supabase = apiDb;
 
-// Legacy default export
+export { apiDb, db, supabase };
 export default apiDb;
