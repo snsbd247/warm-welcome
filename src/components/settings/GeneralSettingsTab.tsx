@@ -69,7 +69,7 @@ export default function GeneralSettingsTab() {
           const path = `system/company-logo.${ext}`;
           const { error: uploadErr } = await db.storage
             .from("avatars")
-            .upload(path, logoFile, { upsert: true, contentType: logoFile.type });
+            .upload(path, logoFile, { upsert: true });
           if (uploadErr) throw uploadErr;
           const { data: urlData } = db.storage.from("avatars").getPublicUrl(path);
           logo_url = urlData.publicUrl;
