@@ -378,11 +378,15 @@ class GenericCrudController extends Controller
             $model = $this->getModel($table);
             $normalizedTable = str_replace('-', '_', $table);
 
+            // Filter input to only fillable fields
+            $fillable = $model->getFillable();
+            $input = $request->only($fillable);
+
             // Singleton upsert
             if (in_array($normalizedTable, $this->singletonTables)) {
                 $existing = $model->first();
                 if ($existing) {
-                    $existing->update($request->except(['id', '_upsert']));
+                    $existing->update(array_intersect_key($request->except(['id', '_upsert']), array_flip($fillable)));
                     return response()->json($existing->fresh());
                 }
             }
@@ -391,12 +395,13 @@ class GenericCrudController extends Controller
             if ($request->has('_upsert') && $request->has('id')) {
                 $existing = $model->find($request->id);
                 if ($existing) {
-                    $existing->update($request->except(['_upsert']));
+                    $existing->update(array_intersect_key($request->except(['_upsert']), array_flip($fillable)));
                     return response()->json($existing->fresh());
                 }
             }
 
-            $record = $model->create($request->except(['_upsert']));
+            // Remove non-fillable fields before create
+            $record = $model->create($input);
             return response()->json($record, 201);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("GenericCrud store error [{$table}]: " . $e->getMessage());
@@ -409,7 +414,8 @@ class GenericCrudController extends Controller
         try {
             $model = $this->getModel($table);
             $record = $model->findOrFail($id);
-            $record->update($request->all());
+            $fillable = $model->getFillable();
+            $record->update(array_intersect_key($request->all(), array_flip($fillable)));
             return response()->json($record->fresh());
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error updating record', 'error' => config('app.debug') ? $e->getMessage() : 'Internal error'], 500);
