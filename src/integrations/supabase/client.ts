@@ -1,7 +1,10 @@
 /**
- * Supabase-compatible client — Always uses Laravel API wrapper.
+ * Database client — Uses Laravel API wrapper exclusively.
  * No Supabase dependency in production.
  */
-import { apiDb } from '@/lib/apiDb';
+import { apiDb, db } from '@/lib/apiDb';
 
-export const supabase: any = apiDb;
+export { apiDb, db };
+
+// Legacy default export
+export default apiDb;

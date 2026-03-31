@@ -404,4 +404,4 @@ export const apiDb = {
   removeChannel: (..._args: any[]) => {},
 };
 
-export { apiDb as supabase };
+export { apiDb as db };
