@@ -209,8 +209,15 @@ class SuperAdminController extends Controller
     public function plans()
     {
         $plans = SaasPlan::withCount('subscriptions')
+            ->with('modules')
             ->orderBy('sort_order')
             ->get();
+
+        // Attach module slugs for each plan
+        $plans->each(function ($plan) {
+            $plan->module_slugs = $plan->modules->pluck('slug')->toArray();
+        });
+
         return response()->json($plans);
     }
 
