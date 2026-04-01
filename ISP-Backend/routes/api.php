@@ -294,7 +294,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     });
 
     // ── Accounting Heads — module: accounting ────────────
-    Route::middleware('check.permission:accounting,view')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,view'])->group(function () {
         Route::get('/accounting/income-heads', [AccountingHeadController::class, 'incomeHeads']);
         Route::get('/accounting/expense-heads', [AccountingHeadController::class, 'expenseHeads']);
         Route::get('/accounting/other-heads', [AccountingHeadController::class, 'otherHeads']);
