@@ -1,0 +1,19 @@
+{
+  "sms": [
+    {"name": "Bill Generated", "message": "Dear {CustomerName}, your bill for {Month} is {Amount} BDT. Due date: {DueDate}. Customer ID: {CustomerID}."},
+    {"name": "Due Reminder", "message": "Dear {CustomerName}, your bill of {Amount} BDT for {Month} is due. Please pay before {DueDate}."},
+    {"name": "Payment Confirmation", "message": "Dear {CustomerName}, we received your payment of {Amount} BDT on {PaymentDate}. Thank you!"},
+    {"name": "Account Suspension", "message": "Dear {CustomerName}, your internet service has been suspended due to overdue payment. Please pay your bill to restore service. Customer ID: {CustomerID}."},
+    {"name": "Customer Registration", "message": "Dear {CustomerName}, welcome to Smart ISP! Your Customer ID: {CustomerID}. PPPoE Username: {PPPoEUsername}, Password: {PPPoEPassword}."},
+    {"name": "Bill Reminder", "message": "Reminder: Your internet bill of {Amount} BDT is due tomorrow ({DueDate}). Please pay to avoid service suspension."},
+    {"name": "Service Restored", "message": "Dear {CustomerName}, your internet service has been restored. Thank you for your payment!"},
+    {"name": "Package Upgrade", "message": "Dear {CustomerName}, your internet package has been upgraded. Enjoy faster speed!"}
+  ],
+  "email": {
+    "email_tpl_welcome": "প্রিয় {CustomerName},\n\n{CompanyName}-এ আপনাকে স্বাগতম! আপনার ইন্টারনেট সংযোগ সফলভাবে চালু করা হয়েছে।\n\nধন্যবাদ,\n{CompanyName} টিম",
+    "email_tpl_password_reset": "প্রিয় {CustomerName},\n\nআপনার পাসওয়ার্ড রিসেট লিংক:\n🔗 {ResetLink}\n\nএই লিংকটি ৩০ মিনিট কার্যকর।\n\nধন্যবাদ,\n{CompanyName} টিম",
+    "email_tpl_payment_confirm": "প্রিয় {CustomerName},\n\n{Month} মাসের ৳{Amount} পেমেন্ট গ্রহণ করা হয়েছে।\nতারিখ: {PaymentDate}\n\nধন্যবাদ,\n{CompanyName} টিম",
+    "email_tpl_ticket_reply": "প্রিয় {CustomerName},\n\nটিকেট #{TicketID}-এ নতুন রিপ্লাই এসেছে। পোর্টালে লগইন করুন।\n\nধন্যবাদ,\n{CompanyName} সাপোর্ট টিম",
+    "email_tpl_account_activation": "প্রিয় {CustomerName},\n\nআপনার একাউন্ট সক্রিয় হয়েছে!\n\nধন্যবাদ,\n{CompanyName} টিম"
+  }
+}

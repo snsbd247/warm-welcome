@@ -1,0 +1,39 @@
+{
+  "mappings": {
+    "sales_income_account": "4003",
+    "sales_cash_account": "1001",
+    "purchase_expense_account": "5006",
+    "purchase_cash_account": "1001",
+    "service_income_account": "4001",
+    "expense_cash_account": "1001",
+    "salary_expense_account": "5002",
+    "salary_payable_account": "2003A",
+    "salary_cash_account": "1001",
+    "pf_expense_account": "5011",
+    "pf_payable_account": "2011",
+    "savings_fund_payable_account": "2012",
+    "customer_receivable_account": "1011",
+    "vendor_payable_account": "2001A",
+    "employee_advance_account": "1012",
+    "merchant_payment_account_id": "1003",
+    "connection_charge_account_id": "4002",
+    "monthly_bill_account_id": "4001"
+  },
+  "expense_heads": [
+    {"name": "Salary & Wages", "description": "Monthly employee salaries"},
+    {"name": "Office Rent", "description": "Monthly office rent"},
+    {"name": "Electricity", "description": "Electricity bill"},
+    {"name": "Internet Bandwidth", "description": "Upstream bandwidth cost"},
+    {"name": "Transport", "description": "Travel and transport"},
+    {"name": "Maintenance", "description": "Equipment maintenance"},
+    {"name": "Stationery", "description": "Office supplies"},
+    {"name": "Miscellaneous", "description": "Other expenses"}
+  ],
+  "income_heads": [
+    {"name": "Monthly Subscription", "description": "Internet monthly fee"},
+    {"name": "Connectivity Fee", "description": "New connection fee"},
+    {"name": "Reconnection Fee", "description": "Reconnection charges"},
+    {"name": "Equipment Sales", "description": "Router/cable sales"},
+    {"name": "Other Income", "description": "Miscellaneous income"}
+  ]
+}
