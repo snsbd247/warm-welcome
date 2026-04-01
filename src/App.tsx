@@ -93,6 +93,7 @@ import TrafficMonitor from "@/pages/reporting/TrafficMonitor";
 import ApiHealthMonitor from "@/pages/settings/ApiHealthMonitor";
 import GeoManagement from "@/pages/settings/GeoManagement";
 import DomainManagement from "@/pages/settings/DomainManagement";
+import LandingPage from "@/pages/LandingPage";
 import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
 import SuperAdminLogin from "@/pages/super/SuperAdminLogin";
 import SuperAdminLayout from "@/components/super/SuperAdminLayout";
