@@ -398,6 +398,19 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/storage/serve/{bucket}/{path}', [StorageController::class, 'serve'])->where('path', '.*');
 
     // ══════════════════════════════════════════════════════
+    // ── DOMAIN MANAGEMENT — module: settings ────────────
+    // ══════════════════════════════════════════════════════
+    Route::middleware('check.permission:settings,view')->group(function () {
+        Route::get('/domains', [\App\Http\Controllers\Api\DomainController::class, 'index']);
+    });
+    Route::middleware('check.permission:settings,edit')->group(function () {
+        Route::post('/domains', [\App\Http\Controllers\Api\DomainController::class, 'store']);
+        Route::post('/domains/{id}/primary', [\App\Http\Controllers\Api\DomainController::class, 'setPrimary']);
+        Route::post('/domains/{id}/verify', [\App\Http\Controllers\Api\DomainController::class, 'verify']);
+        Route::delete('/domains/{id}', [\App\Http\Controllers\Api\DomainController::class, 'destroy']);
+    });
+
+    // ══════════════════════════════════════════════════════
     // ── GENERIC CRUD — catches remaining tables ─────────
     // ══════════════════════════════════════════════════════
     Route::get('/{table}', [GenericCrudController::class, 'index']);
