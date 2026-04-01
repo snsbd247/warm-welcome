@@ -173,6 +173,9 @@ export default function SuperTenants() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/super/tenants/${t.id}`)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     {t.status === "active" ? (
                       <Button variant="ghost" size="sm" onClick={() => suspendMut.mutate(t.id)}>
                         <Ban className="h-4 w-4 text-destructive" />
