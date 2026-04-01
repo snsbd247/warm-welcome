@@ -111,7 +111,7 @@ export default function SuperDashboard() {
               <div key={t.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div>
                   <p className="font-medium">{t.name}</p>
-                  <p className="text-sm text-muted-foreground">{t.subdomain}.smartispsolution.com</p>
+                  <p className="text-sm text-muted-foreground">{t.subdomain}.smartispapp.com</p>
                 </div>
                 <Badge variant={t.status === "active" ? "default" : t.status === "trial" ? "secondary" : "destructive"}>
                   {t.status}

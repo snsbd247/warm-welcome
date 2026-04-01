@@ -15,7 +15,7 @@ class TenantResolver
 
     public function __construct()
     {
-        $this->centralDomains = array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', 'smartispsolution.com,www.smartispsolution.com,localhost'))));
+        $this->centralDomains = array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', 'smartispapp.com,www.smartispapp.com,localhost'))));
     }
 
     /**
@@ -78,7 +78,7 @@ class TenantResolver
 
     /**
      * Extract subdomain from host.
-     * e.g. isp1.smartispsolution.com → isp1
+     * e.g. isp1.smartispapp.com → isp1
      */
     protected function extractSubdomain(string $host): ?string
     {
@@ -122,7 +122,7 @@ class TenantResolver
     {
         // Flush subdomain cache
         if ($tenant->subdomain) {
-            $centralDomains = array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', 'smartispsolution.com'))));
+            $centralDomains = array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', 'smartispapp.com'))));
             foreach ($centralDomains as $central) {
                 Cache::forget("tenant:host:{$tenant->subdomain}.{$central}");
             }

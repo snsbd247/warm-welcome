@@ -54,10 +54,10 @@ Set these values:
 APP_NAME="Smart ISP"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://smartispsolution.com/api
+APP_URL=https://smartispapp.com/api
 APP_TIMEZONE=Asia/Dhaka
 
-FRONTEND_URL=https://smartispsolution.com
+FRONTEND_URL=https://smartispapp.com
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -67,7 +67,7 @@ DB_USER=smartisp_user
 DB_PASSWORD=<password from setup>
 
 # Multi-Tenant
-CENTRAL_DOMAINS=smartispsolution.com,www.smartispsolution.com
+CENTRAL_DOMAINS=smartispapp.com,www.smartispapp.com
 SERVER_IP=<your-vps-ip>
 
 SESSION_DRIVER=database
@@ -86,7 +86,7 @@ sudo /var/www/smartisp/deploy-update.sh
 
 ## 🌐 DNS Configuration
 
-### Wildcard Subdomain (*.smartispsolution.com)
+### Wildcard Subdomain (*.smartispapp.com)
 
 Add these DNS records:
 
@@ -108,7 +108,7 @@ When a client (e.g., Sariul Net Bazar) wants `billing.sariulnetbazar.com`:
 **Or CNAME:**
 | Type | Name | Value |
 |------|------|-------|
-| CNAME | billing | `smartispsolution.com` |
+| CNAME | billing | `smartispapp.com` |
 
 **Admin does:**
 - Go to Settings → Domain Management
@@ -136,14 +136,14 @@ apt install certbot python3-certbot-nginx python3-certbot-dns-cloudflare
 certbot certonly \
   --dns-cloudflare \
   --dns-cloudflare-credentials /root/.cloudflare.ini \
-  -d smartispsolution.com \
-  -d "*.smartispsolution.com"
+  -d smartispapp.com \
+  -d "*.smartispapp.com"
 
 # Update Nginx SSL paths
 nano /etc/nginx/sites-available/smartisp
 # Change ssl_certificate paths to:
-#   /etc/letsencrypt/live/smartispsolution.com/fullchain.pem
-#   /etc/letsencrypt/live/smartispsolution.com/privkey.pem
+#   /etc/letsencrypt/live/smartispapp.com/fullchain.pem
+#   /etc/letsencrypt/live/smartispapp.com/privkey.pem
 
 nginx -t && systemctl reload nginx
 ```

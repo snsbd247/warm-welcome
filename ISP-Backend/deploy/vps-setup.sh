@@ -20,7 +20,7 @@
 set -euo pipefail
 
 # ── Configuration ─────────────────────────────────────────────
-DOMAIN="smartispsolution.com"
+DOMAIN="smartispapp.com"
 APP_DIR="/var/www/smartisp"
 BACKEND_DIR="${APP_DIR}/backend"
 FRONTEND_DIR="${APP_DIR}/frontend"
@@ -190,7 +190,7 @@ apt install -y nginx
 cat > /etc/nginx/sites-available/smartisp << 'NGINXCONF'
 # ═══════════════════════════════════════════════════════════════
 # Smart ISP — Nginx Configuration
-# Handles: *.smartispsolution.com + custom client domains
+# Handles: *.smartispapp.com + custom client domains
 # ═══════════════════════════════════════════════════════════════
 
 # Rate limiting
