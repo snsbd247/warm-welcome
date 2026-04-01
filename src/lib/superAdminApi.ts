@@ -337,7 +337,7 @@ export const superAdminApi = {
   // Tenant Users
   getTenantUsers: async (tenantId: string) => {
     if (IS_LOVABLE) {
-      const profiles = await sbSelect("profiles");
+      const profiles = await sbSelect("profiles", { filters: { tenant_id: tenantId } });
       const roles = await sbSelect("user_roles");
       return profiles.map((p: any) => {
         const userRole = roles.find((r: any) => r.user_id === p.id);
