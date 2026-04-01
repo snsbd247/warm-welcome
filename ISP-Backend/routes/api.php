@@ -153,7 +153,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     // ══════════════════════════════════════════════════════
     // ── PAYMENTS — module: payments ─────────────────────
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:payments,create')->group(function () {
+    Route::middleware(['check.plan_module:payments', 'check.permission:payments,create'])->group(function () {
         Route::post('/payments', [PaymentController::class, 'store']);
     });
     Route::middleware('check.permission:payments,edit')->group(function () {
