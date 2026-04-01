@@ -512,6 +512,8 @@ Route::middleware(['super.admin.auth'])->prefix('super-admin')->group(function (
     Route::put('/tenants/{tenantId}/users/{userId}', [ActivityLogController::class, 'updateTenantUser']);
     Route::get('/tenants/{id}/activity-logs', [ActivityLogController::class, 'tenantActivityLogs']);
     Route::get('/tenants/{id}/login-history', [ActivityLogController::class, 'tenantLoginHistory']);
+    Route::get('/tenants/{id}/sessions', [\App\Http\Controllers\Api\SessionManagementController::class, 'tenantSessions']);
+    Route::post('/sessions/{id}/force-terminate', [\App\Http\Controllers\Api\SessionManagementController::class, 'forceTerminate']);
 });
 
 /*

@@ -16,6 +16,8 @@ class LoginHistory extends Model
     protected $fillable = [
         'id', 'tenant_id', 'user_id', 'ip_address', 'device',
         'browser', 'status', 'failure_reason', 'created_at',
+        'country', 'city', 'latitude', 'longitude',
+        'user_agent', 'is_suspicious', 'suspicious_reason',
     ];
 
     protected $casts = [
