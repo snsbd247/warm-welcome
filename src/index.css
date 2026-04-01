@@ -137,3 +137,7 @@
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--sidebar-foreground) / 0.3);
 }
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
