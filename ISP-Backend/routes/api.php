@@ -136,7 +136,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     // ══════════════════════════════════════════════════════
     // ── BILLING — module: billing ───────────────────────
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:billing,view')->group(function () {
+    Route::middleware(['check.plan_module:billing', 'check.permission:billing,view'])->group(function () {
         Route::get('/billing/cycle-overview', [BillController::class, 'cycleOverview']);
     });
     Route::middleware('check.permission:billing,create')->group(function () {
