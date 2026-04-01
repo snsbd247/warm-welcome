@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { db } from "@/integrations/supabase/client";
+import { db, supabaseDirect } from "@/integrations/supabase/client";
 import api from "@/lib/api";
+import { IS_LOVABLE } from "@/lib/environment";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,11 +133,18 @@ export default function MikroTikRouters() {
   const testConnection = async (router: any) => {
     setTesting(router.id);
     try {
-      const { data: resp } = await api.post('/mikrotik/test-connection', {
-        router_id: router.id,
-      });
-      if (resp?.success) toast.success(resp.message || "Connected successfully!");
-      else toast.error(resp?.message || "Connection failed");
+      if (IS_LOVABLE) {
+        const { data, error } = await supabaseDirect.functions.invoke('mikrotik-sync/test-connection', {
+          body: { ip_address: router.ip_address, username: router.username, password: router.password, api_port: router.api_port },
+        });
+        if (error) throw error;
+        if (data?.success) toast.success(data.identity ? `Connected! Router: ${data.identity}, Version: ${data.version}` : "Connected successfully!");
+        else toast.error(data?.error || "Connection failed");
+      } else {
+        const { data: resp } = await api.post('/mikrotik/test-connection', { router_id: router.id });
+        if (resp?.success) toast.success(resp.message || "Connected successfully!");
+        else toast.error(resp?.message || "Connection failed");
+      }
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message;
       toast.error(`Test failed: ${msg}`);
@@ -146,11 +154,23 @@ export default function MikroTikRouters() {
   const importUsers = async (router: any) => {
     setImporting(`users-${router.id}`);
     try {
-      const { data } = await api.post('/mikrotik/import-users', { router_id: router.id });
-      if (data?.success) {
-        toast.success(`Imported ${data.imported} customers, skipped ${data.skipped}`);
-        queryClient.invalidateQueries({ queryKey: ["customers"] });
-      } else toast.error(data?.error || "Import failed");
+      if (IS_LOVABLE) {
+        const { data, error } = await supabaseDirect.functions.invoke('mikrotik-sync/sync-all', {
+          body: { router_id: router.id },
+        });
+        if (error) throw error;
+        if (data?.success) {
+          const r = data.results;
+          toast.success(`Imported ${r.imported} customers, pushed ${r.pushed}, updated ${r.updated}`);
+          queryClient.invalidateQueries({ queryKey: ["customers"] });
+        } else toast.error(data?.error || "Import failed");
+      } else {
+        const { data } = await api.post('/mikrotik/import-users', { router_id: router.id });
+        if (data?.success) {
+          toast.success(`Imported ${data.imported} customers, skipped ${data.skipped}`);
+          queryClient.invalidateQueries({ queryKey: ["customers"] });
+        } else toast.error(data?.error || "Import failed");
+      }
     } catch (err: any) { toast.error(`Import failed: ${err.message}`); }
     finally { setImporting(null); }
   };
@@ -158,11 +178,23 @@ export default function MikroTikRouters() {
   const importPackages = async (router: any) => {
     setImporting(`packages-${router.id}`);
     try {
-      const { data } = await api.post('/mikrotik/import-packages', { router_id: router.id });
-      if (data?.success) {
-        toast.success(`Imported ${data.imported} packages, skipped ${data.skipped}`);
-        queryClient.invalidateQueries({ queryKey: ["packages"] });
-      } else toast.error(data?.error || "Import failed");
+      if (IS_LOVABLE) {
+        const { data, error } = await supabaseDirect.functions.invoke('mikrotik-sync/bulk-sync-packages', {
+          body: { router_id: router.id },
+        });
+        if (error) throw error;
+        if (data?.success) {
+          const r = data.results;
+          toast.success(`Synced ${r.synced}, imported ${r.imported} packages`);
+          queryClient.invalidateQueries({ queryKey: ["packages"] });
+        } else toast.error(data?.error || "Import failed");
+      } else {
+        const { data } = await api.post('/mikrotik/import-packages', { router_id: router.id });
+        if (data?.success) {
+          toast.success(`Imported ${data.imported} packages, skipped ${data.skipped}`);
+          queryClient.invalidateQueries({ queryKey: ["packages"] });
+        } else toast.error(data?.error || "Import failed");
+      }
     } catch (err: any) { toast.error(`Import failed: ${err.message}`); }
     finally { setImporting(null); }
   };
@@ -174,16 +206,28 @@ export default function MikroTikRouters() {
     }
     setTesting("form");
     try {
-      const { data: resp } = await api.post('/mikrotik/test-connection', {
-        host: form.ip_address,
+      const payload = {
+        ip_address: form.ip_address,
         username: form.username,
         password: form.password,
-        port: parseInt(form.api_port) || 8728,
-      });
-      if (resp?.success) {
-        toast.success(resp.message || "Connected successfully!");
+        api_port: parseInt(form.api_port) || 8728,
+      };
+      if (IS_LOVABLE) {
+        const { data, error } = await supabaseDirect.functions.invoke('mikrotik-sync/test-connection', {
+          body: payload,
+        });
+        if (error) throw error;
+        if (data?.success) toast.success(data.identity ? `Connected! Router: ${data.identity}` : "Connected successfully!");
+        else toast.error(data?.error || "Connection failed");
       } else {
-        toast.error(resp?.message || "Connection failed");
+        const { data: resp } = await api.post('/mikrotik/test-connection', {
+          host: form.ip_address,
+          username: form.username,
+          password: form.password,
+          port: parseInt(form.api_port) || 8728,
+        });
+        if (resp?.success) toast.success(resp.message || "Connected successfully!");
+        else toast.error(resp?.message || "Connection failed");
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message;
