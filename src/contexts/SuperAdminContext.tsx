@@ -37,20 +37,31 @@ export function SuperAdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const adminPath = import.meta.env.VITE_SUPER_ADMIN_PATH || "admin_login162";
-    const base = API_BASE_URL;
-    const res = await fetch(`${base}/${adminPath}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    let data: any;
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || "Login failed");
+    if (IS_LOVABLE) {
+      // Use Supabase Edge Function in preview mode
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("super-admin-login", {
+        body: { email, password },
+      });
+      if (fnError) throw new Error(fnError.message || "Login failed");
+      if (fnData?.error) throw new Error(fnData.error);
+      data = fnData;
+    } else {
+      // Use Laravel API in production
+      const adminPath = import.meta.env.VITE_SUPER_ADMIN_PATH || "admin_login162";
+      const res = await fetch(`${API_BASE_URL}/${adminPath}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Login failed");
+      }
+      data = await res.json();
     }
 
-    const data = await res.json();
     setUser(data.user);
     setToken(data.token);
     localStorage.setItem("super_admin_token", data.token);
