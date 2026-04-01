@@ -15,7 +15,7 @@ class TenantResolver
 
     public function __construct()
     {
-        $this->centralDomains = array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', 'smartispsolution.com,www.smartispsolution.com,localhost'))));
+        $this->centralDomains = array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', 'smartispapp.com,www.smartispapp.com,localhost'))));
     }
 
     /**
