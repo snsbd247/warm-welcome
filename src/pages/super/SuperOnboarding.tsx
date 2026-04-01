@@ -144,18 +144,20 @@ export default function SuperOnboarding() {
   const runSetupItem = useMutation({
     mutationFn: async (itemKey: string) => {
       setRunningItem(itemKey);
-      await new Promise((r) => setTimeout(r, 1200));
+      const result = await runSetupStep(itemKey);
+      if (!result.success) throw new Error(result.message);
       if (createdTenantId) {
         await superAdminApi.updateTenant(createdTenantId, { [`setup_${itemKey}`]: true });
       }
+      return result;
     },
-    onSuccess: (_, itemKey) => {
+    onSuccess: (result, itemKey) => {
       const newProgress = { ...setupProgress, [itemKey]: true };
       update({ setupProgress: newProgress });
       setRunningItem(null);
-      toast.success(`${itemKey} imported!`);
+      toast.success(`${itemKey} imported${result?.count ? ` (${result.count} records)` : ""}!`);
     },
-    onError: (e: any) => { setRunningItem(null); toast.error(e.message); },
+    onError: (e: any) => { setRunningItem(null); toast.error(e.message || "Import failed"); },
   });
 
   const runFullSetup = useMutation({
