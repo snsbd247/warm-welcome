@@ -838,6 +838,8 @@ export default function SuperTenantProfile() {
   const [forceReimport, setForceReimport] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
+  const [showFullResetConfirm, setShowFullResetConfirm] = useState(false);
+  const [fullResetConfirmText, setFullResetConfirmText] = useState("");
 
   const setupMut = useMutation({
     mutationFn: async (step: string) => {
