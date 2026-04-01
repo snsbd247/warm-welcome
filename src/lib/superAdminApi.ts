@@ -292,4 +292,57 @@ export const superAdminApi = {
     const qs = params ? "?" + new URLSearchParams(params).toString() : "";
     return request(`/sms-transactions${qs}`);
   },
+
+  // Impersonation
+  impersonateTenant: async (tenantId: string) => {
+    if (IS_LOVABLE) {
+      // In Lovable preview, create a mock impersonation
+      const users = await sbSelect("profiles");
+      const tenants = await sbSelect("tenants");
+      const tenant = tenants.find((t: any) => t.id === tenantId);
+      // Find any user — in preview mode we simulate
+      const user = users[0];
+      if (!user) throw new Error("No users found for this tenant");
+      return {
+        token: "mock_impersonation_" + Date.now(),
+        tenant: { id: tenantId, name: tenant?.name, subdomain: tenant?.subdomain },
+        user: { id: user.id, name: user.full_name },
+        mock: true,
+      };
+    }
+    return request(`/tenants/${tenantId}/impersonate`, { method: "POST" });
+  },
+
+  // Tenant Users
+  getTenantUsers: async (tenantId: string) => {
+    if (IS_LOVABLE) {
+      const profiles = await sbSelect("profiles");
+      return profiles.map((p: any) => ({
+        ...p,
+        role: "admin",
+        custom_role_id: null,
+      }));
+    }
+    return request(`/tenants/${tenantId}/users`);
+  },
+  updateTenantUser: async (tenantId: string, userId: string, data: any) => {
+    if (IS_LOVABLE) return sbUpdate("profiles", userId, data);
+    return request(`/tenants/${tenantId}/users/${userId}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+
+  // Tenant Activity Logs
+  getTenantActivityLogs: async (tenantId: string) => {
+    if (IS_LOVABLE) {
+      return sbSelect("activity_logs");
+    }
+    return request(`/tenants/${tenantId}/activity-logs`);
+  },
+
+  // Tenant Login History
+  getTenantLoginHistory: async (tenantId: string) => {
+    if (IS_LOVABLE) {
+      return sbSelect("login_histories");
+    }
+    return request(`/tenants/${tenantId}/login-history`);
+  },
 };

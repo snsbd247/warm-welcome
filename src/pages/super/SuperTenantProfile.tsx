@@ -13,12 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   ArrowLeft, Building2, Globe, CreditCard, MessageSquare, CheckCircle2,
   AlertTriangle, Loader2, Database, MapPin, BookOpen, Mail, Zap,
   Shield, Activity, Clock, TrendingUp, Lightbulb, Plus, Ban,
-  RefreshCw, Trash2, ExternalLink, Phone, AtSign, Calendar
+  RefreshCw, Trash2, ExternalLink, Phone, AtSign, Calendar,
+  LogIn, Users, Eye, Edit, Key, History
 } from "lucide-react";
 
 // ─── SMS Recharge Dialog ─────────────────────────────────────
@@ -191,6 +193,269 @@ function SubscriptionDialog({ tenantId, currentSub, onSuccess }: {
   );
 }
 
+// ─── Impersonate Button ──────────────────────────────────────
+function ImpersonateButton({ tenantId, tenantName, tenantSubdomain }: { tenantId: string; tenantName: string; tenantSubdomain: string }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleImpersonate = async () => {
+    if (!confirm(`Login as "${tenantName}" tenant admin? This will open a new session.`)) return;
+    setLoading(true);
+    try {
+      const result = await superAdminApi.impersonateTenant(tenantId);
+      if (result.mock) {
+        toast.info("Impersonation simulated in preview mode");
+        return;
+      }
+      // Store impersonation data and redirect
+      const targetUrl = `https://${tenantSubdomain}.${window.location.host.split('.').slice(-2).join('.')}`;
+      localStorage.setItem("impersonation_token", result.token);
+      localStorage.setItem("impersonation_tenant", JSON.stringify(result.tenant));
+      toast.success(`Redirecting to ${tenantName}...`);
+      window.open(`${targetUrl}/admin/login?impersonate=${result.token}`, "_blank");
+    } catch (e: any) {
+      toast.error(e.message || "Impersonation failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleImpersonate} disabled={loading} className="gap-1.5">
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+      Login as Tenant
+    </Button>
+  );
+}
+
+// ─── Tenant Users Tab ────────────────────────────────────────
+function TenantUsersTab({ tenantId }: { tenantId: string }) {
+  const qc = useQueryClient();
+  const [editUser, setEditUser] = useState<any>(null);
+  const [editData, setEditData] = useState<any>({});
+
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ["super-tenant-users", tenantId],
+    queryFn: () => superAdminApi.getTenantUsers(tenantId),
+  });
+
+  const updateMut = useMutation({
+    mutationFn: () => superAdminApi.updateTenantUser(tenantId, editUser.id, editData),
+    onSuccess: () => { toast.success("User updated"); setEditUser(null); qc.invalidateQueries({ queryKey: ["super-tenant-users", tenantId] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  if (isLoading) return <Card><CardContent className="py-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></CardContent></Card>;
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2"><Users className="h-5 w-5" /> Tenant Users ({users.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {users.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">No users found</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((u: any) => (
+                  <TableRow key={u.id}>
+                    <TableCell className="font-medium">{u.full_name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{u.email || u.username || "—"}</TableCell>
+                    <TableCell><Badge variant="outline" className="text-xs capitalize">{u.role}</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant={u.status === "active" ? "default" : "destructive"} className="text-xs capitalize">{u.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditUser(u); setEditData({ full_name: u.full_name, email: u.email, status: u.status }); }}>
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditUser(u); setEditData({ password: "" }); }}>
+                          <Key className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editData.password !== undefined ? "Reset Password" : "Edit User"}: {editUser?.full_name}</DialogTitle>
+          </DialogHeader>
+          {editData.password !== undefined ? (
+            <div className="space-y-3">
+              <Label>New Password</Label>
+              <Input type="password" value={editData.password || ""} onChange={(e) => setEditData({ password: e.target.value })} placeholder="Enter new password" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <Label>Full Name</Label>
+                <Input value={editData.full_name || ""} onChange={(e) => setEditData((d: any) => ({ ...d, full_name: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input value={editData.email || ""} onChange={(e) => setEditData((d: any) => ({ ...d, email: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={editData.status || "active"} onValueChange={(v) => setEditData((d: any) => ({ ...d, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
+            <Button onClick={() => updateMut.mutate()} disabled={updateMut.isPending}>
+              {updateMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+// ─── Tenant Activity Logs Tab ────────────────────────────────
+function TenantActivityTab({ tenantId }: { tenantId: string }) {
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ["super-tenant-activity", tenantId],
+    queryFn: () => superAdminApi.getTenantActivityLogs(tenantId),
+  });
+
+  if (isLoading) return <Card><CardContent className="py-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></CardContent></Card>;
+
+  const actionColors: Record<string, string> = {
+    create: "default",
+    edit: "secondary",
+    delete: "destructive",
+    login: "default",
+    impersonate: "outline",
+    payment: "default",
+    settings: "secondary",
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2"><Activity className="h-5 w-5" /> Activity Logs</CardTitle>
+        <CardDescription>Recent user actions in this tenant</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {logs.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">No activity logs yet</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Time</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Module</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>IP</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {logs.slice(0, 100).map((log: any) => (
+                <TableRow key={log.id}>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    {new Date(log.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </TableCell>
+                  <TableCell className="font-medium text-sm">{log.user?.full_name || log.user_id?.slice(0, 8) || "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={(actionColors[log.action] as any) || "secondary"} className="text-xs capitalize">{log.action}</Badge>
+                  </TableCell>
+                  <TableCell className="text-sm capitalize">{log.module}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{log.description}</TableCell>
+                  <TableCell className="text-xs font-mono">{log.ip_address || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Tenant Login History Tab ────────────────────────────────
+function TenantLoginHistoryTab({ tenantId }: { tenantId: string }) {
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ["super-tenant-login-history", tenantId],
+    queryFn: () => superAdminApi.getTenantLoginHistory(tenantId),
+  });
+
+  if (isLoading) return <Card><CardContent className="py-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></CardContent></Card>;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2"><History className="h-5 w-5" /> Login History</CardTitle>
+        <CardDescription>All login attempts for this tenant</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {logs.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">No login history yet</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Time</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Device</TableHead>
+                <TableHead>Browser</TableHead>
+                <TableHead>IP</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {logs.slice(0, 100).map((log: any) => (
+                <TableRow key={log.id}>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    {new Date(log.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </TableCell>
+                  <TableCell className="font-medium text-sm">{log.user?.full_name || log.user_id?.slice(0, 8) || "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={log.status === "success" ? "default" : "destructive"} className="text-xs capitalize">{log.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-sm">{log.device || "—"}</TableCell>
+                  <TableCell className="text-sm">{log.browser || "—"}</TableCell>
+                  <TableCell className="text-xs font-mono">{log.ip_address || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Main Page ───────────────────────────────────────────────
 export default function SuperTenantProfile() {
   const { id } = useParams<{ id: string }>();
@@ -343,10 +608,11 @@ export default function SuperTenantProfile() {
             <Globe className="h-3.5 w-3.5" /> {tenant.subdomain}.smartispapp.com
           </p>
         </div>
-        <div className="flex items-center gap-2 self-start">
+        <div className="flex items-center gap-2 self-start flex-wrap">
           <Badge variant={tenant.status === "active" ? "default" : "destructive"} className="text-sm px-3 py-1 capitalize">
             {tenant.status}
           </Badge>
+          <ImpersonateButton tenantId={id!} tenantName={tenant.name} tenantSubdomain={tenant.subdomain} />
           {tenant.status === "active" ? (
             <Button variant="outline" size="sm" onClick={() => { if (confirm("Suspend this tenant?")) suspendMut.mutate(); }}>
               <Ban className="h-4 w-4 mr-1" /> Suspend
@@ -570,45 +836,65 @@ export default function SuperTenantProfile() {
         </CardContent>
       </Card>
 
-      {/* ── SMS Transaction History ────────────────────────── */}
-      {smsTransactions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <RefreshCw className="h-5 w-5" /> SMS Transaction History
-            </CardTitle>
-            <CardDescription>Recent SMS balance transactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Description</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {smsTransactions.slice(0, 10).map((tx: any) => (
-                  <TableRow key={tx.id}>
-                    <TableCell className="text-sm">{new Date(tx.created_at).toLocaleDateString("en-GB")}</TableCell>
-                    <TableCell>
-                      <Badge variant={tx.type === "credit" ? "default" : "secondary"} className="text-xs capitalize">
-                        {tx.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className={`font-medium ${tx.type === "credit" ? "text-primary" : "text-destructive"}`}>
-                      {tx.type === "credit" ? "+" : "−"}{tx.amount}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{tx.description || "—"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+      {/* ── Tabs: SMS History, Users, Activity Logs, Login History ── */}
+      <Tabs defaultValue="sms" className="w-full">
+        <TabsList className="w-full grid grid-cols-4">
+          <TabsTrigger value="sms"><RefreshCw className="h-4 w-4 mr-1" /> SMS</TabsTrigger>
+          <TabsTrigger value="users"><Users className="h-4 w-4 mr-1" /> Users</TabsTrigger>
+          <TabsTrigger value="activity"><Activity className="h-4 w-4 mr-1" /> Activity</TabsTrigger>
+          <TabsTrigger value="logins"><History className="h-4 w-4 mr-1" /> Logins</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="sms">
+          {smsTransactions.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">SMS Transaction History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Description</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {smsTransactions.slice(0, 10).map((tx: any) => (
+                      <TableRow key={tx.id}>
+                        <TableCell className="text-sm">{new Date(tx.created_at).toLocaleDateString("en-GB")}</TableCell>
+                        <TableCell>
+                          <Badge variant={tx.type === "credit" ? "default" : "secondary"} className="text-xs capitalize">{tx.type}</Badge>
+                        </TableCell>
+                        <TableCell className={`font-medium ${tx.type === "credit" ? "text-primary" : "text-destructive"}`}>
+                          {tx.type === "credit" ? "+" : "−"}{tx.amount}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{tx.description || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card><CardContent className="py-8 text-center text-muted-foreground">No SMS transactions yet</CardContent></Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="users">
+          <TenantUsersTab tenantId={id!} />
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <TenantActivityTab tenantId={id!} />
+        </TabsContent>
+
+        <TabsContent value="logins">
+          <TenantLoginHistoryTab tenantId={id!} />
+        </TabsContent>
+      </Tabs>
 
       {/* ── AI Suggestions ─────────────────────────────────── */}
       {suggestions.length > 0 && (

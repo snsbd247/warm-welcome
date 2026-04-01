@@ -47,6 +47,8 @@ import AdminUsers from "@/pages/AdminUsers";
 import CustomerProfilePage from "@/pages/CustomerProfile";
 import LoginLogs from "@/pages/LoginLogs";
 import AuditLogs from "@/pages/AuditLogs";
+import ActivityLogs from "@/pages/ActivityLogs";
+import UserLoginHistory from "@/pages/UserLoginHistory";
 import RoleManagement from "@/pages/settings/RoleManagement";
 import BackupRestore from "@/pages/settings/BackupRestore";
 import FooterSettings from "@/pages/settings/FooterSettings";
@@ -160,6 +162,8 @@ function App() {
                 <Route path="/users" element={<PermissionGuard module="users"><AdminUsers /></PermissionGuard>} />
                 <Route path="/login-logs" element={<PermissionGuard module="settings"><LoginLogs /></PermissionGuard>} />
                 <Route path="/audit-logs" element={<PermissionGuard module="settings"><AuditLogs /></PermissionGuard>} />
+                <Route path="/activity-logs" element={<PermissionGuard module="settings"><ActivityLogs /></PermissionGuard>} />
+                <Route path="/login-history" element={<PermissionGuard module="settings"><UserLoginHistory /></PermissionGuard>} />
 
                 {/* HR Routes */}
                 <Route path="/hr/designations" element={<PermissionGuard module="hr"><DesignationList /></PermissionGuard>} />

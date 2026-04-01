@@ -33,6 +33,8 @@ use App\Http\Controllers\Api\WhatsappController;
 use App\Http\Controllers\Api\SuperAdminAuthController;
 use App\Http\Controllers\Api\SuperAdminController;
 use App\Http\Controllers\Api\SslCommerzController;
+use App\Http\Controllers\Api\ImpersonationController;
+use App\Http\Controllers\Api\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,6 +51,7 @@ Route::post("/{$superAdminPath}/login", [SuperAdminAuthController::class, 'login
 Route::post('/portal/login', [CustomerAuthController::class, 'login'])->middleware('throttle:login');
 Route::post('/customer/login', [CustomerAuthController::class, 'login'])->middleware('throttle:login');
 Route::post('/customer/verify', [CustomerAuthController::class, 'verify']);
+Route::post('/impersonate/consume', [ImpersonationController::class, 'consume']);
 Route::any('/bkash/callback', [BkashController::class, 'callback']);
 Route::any('/nagad/callback', [NagadController::class, 'callback']);
 
@@ -427,6 +430,12 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     });
 
     // ══════════════════════════════════════════════════════
+    // ── ACTIVITY LOGS & LOGIN HISTORY ───────────────────
+    // ══════════════════════════════════════════════════════
+    Route::get('/activity-logs', [ActivityLogController::class, 'activityLogs']);
+    Route::get('/login-history', [ActivityLogController::class, 'loginHistory']);
+
+    // ══════════════════════════════════════════════════════
     // ── GENERIC CRUD — catches remaining tables ─────────
     // ══════════════════════════════════════════════════════
     Route::get('/{table}', [GenericCrudController::class, 'index']);
@@ -487,6 +496,15 @@ Route::middleware(['super.admin.auth'])->prefix('super-admin')->group(function (
     Route::get('/sms-wallets', [SuperAdminController::class, 'smsWallets']);
     Route::post('/sms-recharge', [SuperAdminController::class, 'rechargeSms']);
     Route::get('/sms-transactions', [SuperAdminController::class, 'smsTransactions']);
+
+    // Impersonation
+    Route::post('/tenants/{id}/impersonate', [ImpersonationController::class, 'generate']);
+
+    // Tenant Users, Activity Logs & Login History
+    Route::get('/tenants/{id}/users', [ActivityLogController::class, 'tenantUsers']);
+    Route::put('/tenants/{tenantId}/users/{userId}', [ActivityLogController::class, 'updateTenantUser']);
+    Route::get('/tenants/{id}/activity-logs', [ActivityLogController::class, 'tenantActivityLogs']);
+    Route::get('/tenants/{id}/login-history', [ActivityLogController::class, 'tenantLoginHistory']);
 });
 
 /*
