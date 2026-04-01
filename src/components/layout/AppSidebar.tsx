@@ -184,8 +184,9 @@ function NavGroup({ label, icon: Icon, items, collapsed, location, defaultOpen =
 export default function AppSidebar() {
   const { signOut } = useAuth();
   const location = useLocation();
-  const { hasModuleAccess, isSuperAdmin } = usePermissions();
+  const { hasModuleAccess, isSuperAdmin, customRoleName } = usePermissions();
   const { isModuleEnabled } = useModuleSettings();
+  const isOwner = isSuperAdmin || customRoleName?.toLowerCase() === "owner";
   const { branding } = useBranding();
   const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
