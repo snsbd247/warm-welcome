@@ -358,4 +358,42 @@ class SuperAdminController extends Controller
         $domain->delete();
         return response()->json(['success' => true]);
     }
+
+    // ══════════════════════════════════════════
+    // MODULE MANAGEMENT (Super Admin)
+    // ══════════════════════════════════════════
+    public function allModules()
+    {
+        return response()->json(
+            Module::orderBy('sort_order')->get()
+        );
+    }
+
+    public function updateModule(Request $request, string $id)
+    {
+        $module = Module::findOrFail($id);
+        $module->update($request->only(['name', 'description', 'icon', 'is_active', 'sort_order']));
+        return response()->json($module);
+    }
+
+    /**
+     * Get allowed modules for a specific tenant.
+     */
+    public function tenantModules(string $tenantId)
+    {
+        $allowed = PlanModuleService::getAllowedModules($tenantId);
+        $allModules = Module::where('is_active', true)->orderBy('sort_order')->get();
+
+        $result = $allModules->map(function ($mod) use ($allowed) {
+            return [
+                'id'       => $mod->id,
+                'name'     => $mod->name,
+                'slug'     => $mod->slug,
+                'is_core'  => $mod->is_core,
+                'allowed'  => in_array($mod->slug, $allowed),
+            ];
+        });
+
+        return response()->json($result);
+    }
 }

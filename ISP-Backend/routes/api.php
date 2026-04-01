@@ -458,6 +458,11 @@ Route::middleware(['super.admin.auth'])->prefix('super-admin')->group(function (
     Route::put('/plans/{id}', [SuperAdminController::class, 'updatePlan']);
     Route::delete('/plans/{id}', [SuperAdminController::class, 'deletePlan']);
 
+    // Module Management
+    Route::get('/modules', [SuperAdminController::class, 'allModules']);
+    Route::put('/modules/{id}', [SuperAdminController::class, 'updateModule']);
+    Route::get('/tenants/{id}/modules', [SuperAdminController::class, 'tenantModules']);
+
     // Subscription Management
     Route::get('/subscriptions', [SuperAdminController::class, 'subscriptions']);
     Route::post('/subscriptions', [SuperAdminController::class, 'assignSubscription']);
