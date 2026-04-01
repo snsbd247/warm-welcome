@@ -163,20 +163,28 @@ export default function SuperOnboarding() {
   const runFullSetup = useMutation({
     mutationFn: async () => {
       setRunningItem("all");
-      for (const item of SETUP_ITEMS) {
-        if (!setupProgress[item.key]) {
-          await new Promise((r) => setTimeout(r, 800));
-          if (createdTenantId) {
-            await superAdminApi.updateTenant(createdTenantId, { [`setup_${item.key}`]: true });
-          }
-          update({ setupProgress: { ...setupProgress, [item.key]: true } });
-        }
-      }
+      const result = await setupAll();
       if (createdTenantId) {
-        await superAdminApi.updateTenant(createdTenantId, { setup_status: "completed" });
+        await superAdminApi.updateTenant(createdTenantId, {
+          setup_geo: result.geo.success,
+          setup_accounts: result.accounts.success,
+          setup_templates: result.templates.success,
+          setup_ledger: result.ledger.success,
+          setup_status: result.overall ? "completed" : "partial",
+        });
       }
+      if (!result.overall) {
+        const failures = [
+          !result.geo.success && `Geo: ${result.geo.message}`,
+          !result.accounts.success && `Accounts: ${result.accounts.message}`,
+          !result.templates.success && `Templates: ${result.templates.message}`,
+          !result.ledger.success && `Ledger: ${result.ledger.message}`,
+        ].filter(Boolean);
+        throw new Error(failures.join("; "));
+      }
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       const allDone: Record<string, boolean> = {};
       SETUP_ITEMS.forEach((i) => (allDone[i.key] = true));
       update({ setupProgress: allDone, step: 4 });
@@ -184,7 +192,7 @@ export default function SuperOnboarding() {
       setRunningItem(null);
       toast.success("Full setup completed!");
     },
-    onError: (e: any) => { setRunningItem(null); toast.error(e.message); },
+    onError: (e: any) => { setRunningItem(null); toast.error(e.message || "Setup failed"); },
   });
 
   // ── Step 4: Activate ───────────────────────────────────────
