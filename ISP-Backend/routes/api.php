@@ -299,7 +299,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
         Route::get('/accounting/expense-heads', [AccountingHeadController::class, 'expenseHeads']);
         Route::get('/accounting/other-heads', [AccountingHeadController::class, 'otherHeads']);
     });
-    Route::middleware('check.permission:accounting,create')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,create'])->group(function () {
         Route::post('/accounting/income-heads', [AccountingHeadController::class, 'storeIncomeHead']);
         Route::post('/accounting/expense-heads', [AccountingHeadController::class, 'storeExpenseHead']);
         Route::post('/accounting/other-heads', [AccountingHeadController::class, 'storeOtherHead']);
