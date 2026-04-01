@@ -112,6 +112,28 @@
   }
 }
 
+/* Page transition animation */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-page-enter {
+  animation: page-enter 0.25s ease-out;
+}
+
+/* Smooth scrolling for main content */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Better focus styles */
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: calc(var(--radius) - 4px);
+}
+
 /* Custom sidebar scrollbar — thin, auto-hide */
 .sidebar-scroll {
   scrollbar-width: thin;

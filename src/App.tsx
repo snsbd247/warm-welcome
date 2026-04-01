@@ -12,106 +12,124 @@ import { ThemeProvider } from "next-themes";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PermissionGuard from "@/components/PermissionGuard";
 import CustomerProtectedRoute from "@/components/CustomerProtectedRoute";
-import Login from "@/pages/Login";
-import ForgotPassword from "@/pages/ForgotPassword";
-import ResetPassword from "@/pages/ResetPassword";
-import Dashboard from "@/pages/Dashboard";
-import Customers from "@/pages/Customers";
-import Packages from "@/pages/Packages";
-import Billing from "@/pages/Billing";
-import BillingCycleOverview from "@/pages/BillingCycleOverview";
-import Payments from "@/pages/Payments";
-import MerchantPayments from "@/pages/MerchantPayments";
-import MerchantPaymentReports from "@/pages/MerchantPaymentReports";
-import Tickets from "@/pages/Tickets";
-import SMSLogs from "@/pages/SMSLogs";
-import SMSSettings from "@/pages/SMSSettings";
-import ReminderLogs from "@/pages/ReminderLogs";
-import PayBill from "@/pages/PayBill";
-import AdminProfile from "@/pages/AdminProfile";
-import GeneralSettings from "@/pages/settings/GeneralSettings";
-import SystemSettings from "@/pages/settings/SystemSettings";
-import IntegrationManagement from "@/pages/settings/IntegrationManagement";
-import BkashApiManagement from "@/pages/settings/BkashApiManagement";
-import NagadApiManagement from "@/pages/settings/NagadApiManagement";
+import { Suspense, lazy } from "react";
+import { Loader2 } from "lucide-react";
 
-import MikroTikRouters from "@/pages/settings/MikroTikRouters";
-import CustomerLogin from "@/pages/portal/CustomerLogin";
-import CustomerDashboard from "@/pages/portal/CustomerDashboard";
-import CustomerBills from "@/pages/portal/CustomerBills";
-import CustomerPayments from "@/pages/portal/CustomerPayments";
-import CustomerProfile from "@/pages/portal/CustomerProfile";
-import CustomerTickets from "@/pages/portal/CustomerTickets";
-import PaymentCallback from "@/pages/portal/PaymentCallback";
-import AdminUsers from "@/pages/AdminUsers";
-import CustomerProfilePage from "@/pages/CustomerProfile";
-import LoginLogs from "@/pages/LoginLogs";
-import AuditLogs from "@/pages/AuditLogs";
-import ActivityLogs from "@/pages/ActivityLogs";
-import UserLoginHistory from "@/pages/UserLoginHistory";
-import SessionManagement from "@/pages/SessionManagement";
-import SecurityDashboard from "@/pages/SecurityDashboard";
-import RoleManagement from "@/pages/settings/RoleManagement";
-import BackupRestore from "@/pages/settings/BackupRestore";
-import FooterSettings from "@/pages/settings/FooterSettings";
-import NotFound from "@/pages/NotFound";
-import AccPurchases from "@/pages/accounting/Purchases";
-import AccProducts from "@/pages/accounting/Products";
-import AccVendors from "@/pages/accounting/Vendors";
-import AccSales from "@/pages/accounting/Sales";
-import AccExpenses from "@/pages/accounting/Expenses";
-import AccReports from "@/pages/accounting/Reports";
-import ChartOfAccounts from "@/pages/accounting/ChartOfAccounts";
-import BalanceSheet from "@/pages/accounting/BalanceSheet";
-import JournalEntries from "@/pages/accounting/JournalEntries";
-import LedgerStatement from "@/pages/accounting/LedgerStatement";
-import ReportLedgerStatement from "@/pages/reporting/LedgerStatement";
-import IncomeHead from "@/pages/accounting/IncomeHead";
-import ExpenseHead from "@/pages/accounting/ExpenseHead";
-import OthersHead from "@/pages/accounting/OthersHead";
-import AllTransactions from "@/pages/accounting/AllTransactions";
-import AllLedgersList from "@/pages/accounting/AllLedgersList";
-import ChequeRegister from "@/pages/accounting/ChequeRegister";
-import TrialBalance from "@/pages/accounting/TrialBalance";
-import ProfitLoss from "@/pages/accounting/ProfitLoss";
-import CashFlowStatement from "@/pages/accounting/CashFlowStatement";
-import Daybook from "@/pages/accounting/Daybook";
-import EquityChanges from "@/pages/accounting/EquityChanges";
-import ReceivablePayable from "@/pages/accounting/ReceivablePayable";
-import SalesPurchaseReport from "@/pages/reporting/SalesPurchaseReport";
-import DesignationList from "@/pages/hr/DesignationList";
-import EmployeeList from "@/pages/hr/EmployeeList";
-import DailyAttendance from "@/pages/hr/DailyAttendance";
-import MonthlyAttendance from "@/pages/hr/MonthlyAttendance";
-import LoanManagement from "@/pages/hr/LoanManagement";
-import SalarySheet from "@/pages/hr/SalarySheet";
-import EmployeeProfile from "@/pages/hr/EmployeeProfile";
-import SupplierList from "@/pages/supplier/SupplierList";
-import SupplierPayments from "@/pages/supplier/SupplierPayments";
-import SupplierProfile from "@/pages/supplier/SupplierProfile";
-import SupplierPurchases from "@/pages/supplier/SupplierPurchases";
-import DailyReport from "@/pages/reporting/DailyReport";
-import FinancialStatement from "@/pages/reporting/FinancialStatement";
-import BtrcReport from "@/pages/reporting/BtrcReport";
-import TrafficMonitor from "@/pages/reporting/TrafficMonitor";
-import ApiHealthMonitor from "@/pages/settings/ApiHealthMonitor";
-import GeoManagement from "@/pages/settings/GeoManagement";
-import DomainManagement from "@/pages/settings/DomainManagement";
-import LandingPage from "@/pages/LandingPage";
+// ── Page-level loading fallback ──
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Lazy loaded pages ──
+const Login = lazy(() => import("@/pages/Login"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Customers = lazy(() => import("@/pages/Customers"));
+const Packages = lazy(() => import("@/pages/Packages"));
+const Billing = lazy(() => import("@/pages/Billing"));
+const BillingCycleOverview = lazy(() => import("@/pages/BillingCycleOverview"));
+const Payments = lazy(() => import("@/pages/Payments"));
+const MerchantPayments = lazy(() => import("@/pages/MerchantPayments"));
+const MerchantPaymentReports = lazy(() => import("@/pages/MerchantPaymentReports"));
+const Tickets = lazy(() => import("@/pages/Tickets"));
+const SMSLogs = lazy(() => import("@/pages/SMSLogs"));
+const SMSSettings = lazy(() => import("@/pages/SMSSettings"));
+const ReminderLogs = lazy(() => import("@/pages/ReminderLogs"));
+const PayBill = lazy(() => import("@/pages/PayBill"));
+const AdminProfile = lazy(() => import("@/pages/AdminProfile"));
+const GeneralSettings = lazy(() => import("@/pages/settings/GeneralSettings"));
+const SystemSettings = lazy(() => import("@/pages/settings/SystemSettings"));
+const IntegrationManagement = lazy(() => import("@/pages/settings/IntegrationManagement"));
+const BkashApiManagement = lazy(() => import("@/pages/settings/BkashApiManagement"));
+const NagadApiManagement = lazy(() => import("@/pages/settings/NagadApiManagement"));
+const MikroTikRouters = lazy(() => import("@/pages/settings/MikroTikRouters"));
+const CustomerLogin = lazy(() => import("@/pages/portal/CustomerLogin"));
+const CustomerDashboard = lazy(() => import("@/pages/portal/CustomerDashboard"));
+const CustomerBills = lazy(() => import("@/pages/portal/CustomerBills"));
+const CustomerPayments = lazy(() => import("@/pages/portal/CustomerPayments"));
+const CustomerProfile = lazy(() => import("@/pages/portal/CustomerProfile"));
+const CustomerTickets = lazy(() => import("@/pages/portal/CustomerTickets"));
+const PaymentCallback = lazy(() => import("@/pages/portal/PaymentCallback"));
+const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
+const CustomerProfilePage = lazy(() => import("@/pages/CustomerProfile"));
+const LoginLogs = lazy(() => import("@/pages/LoginLogs"));
+const AuditLogs = lazy(() => import("@/pages/AuditLogs"));
+const ActivityLogs = lazy(() => import("@/pages/ActivityLogs"));
+const UserLoginHistory = lazy(() => import("@/pages/UserLoginHistory"));
+const SessionManagement = lazy(() => import("@/pages/SessionManagement"));
+const SecurityDashboard = lazy(() => import("@/pages/SecurityDashboard"));
+const RoleManagement = lazy(() => import("@/pages/settings/RoleManagement"));
+const BackupRestore = lazy(() => import("@/pages/settings/BackupRestore"));
+const FooterSettings = lazy(() => import("@/pages/settings/FooterSettings"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const AccPurchases = lazy(() => import("@/pages/accounting/Purchases"));
+const AccProducts = lazy(() => import("@/pages/accounting/Products"));
+const AccVendors = lazy(() => import("@/pages/accounting/Vendors"));
+const AccSales = lazy(() => import("@/pages/accounting/Sales"));
+const AccExpenses = lazy(() => import("@/pages/accounting/Expenses"));
+const AccReports = lazy(() => import("@/pages/accounting/Reports"));
+const ChartOfAccounts = lazy(() => import("@/pages/accounting/ChartOfAccounts"));
+const BalanceSheet = lazy(() => import("@/pages/accounting/BalanceSheet"));
+const JournalEntries = lazy(() => import("@/pages/accounting/JournalEntries"));
+const LedgerStatement = lazy(() => import("@/pages/accounting/LedgerStatement"));
+const ReportLedgerStatement = lazy(() => import("@/pages/reporting/LedgerStatement"));
+const IncomeHead = lazy(() => import("@/pages/accounting/IncomeHead"));
+const ExpenseHead = lazy(() => import("@/pages/accounting/ExpenseHead"));
+const OthersHead = lazy(() => import("@/pages/accounting/OthersHead"));
+const AllTransactions = lazy(() => import("@/pages/accounting/AllTransactions"));
+const AllLedgersList = lazy(() => import("@/pages/accounting/AllLedgersList"));
+const ChequeRegister = lazy(() => import("@/pages/accounting/ChequeRegister"));
+const TrialBalance = lazy(() => import("@/pages/accounting/TrialBalance"));
+const ProfitLoss = lazy(() => import("@/pages/accounting/ProfitLoss"));
+const CashFlowStatement = lazy(() => import("@/pages/accounting/CashFlowStatement"));
+const Daybook = lazy(() => import("@/pages/accounting/Daybook"));
+const EquityChanges = lazy(() => import("@/pages/accounting/EquityChanges"));
+const ReceivablePayable = lazy(() => import("@/pages/accounting/ReceivablePayable"));
+const SalesPurchaseReport = lazy(() => import("@/pages/reporting/SalesPurchaseReport"));
+const DesignationList = lazy(() => import("@/pages/hr/DesignationList"));
+const EmployeeList = lazy(() => import("@/pages/hr/EmployeeList"));
+const DailyAttendance = lazy(() => import("@/pages/hr/DailyAttendance"));
+const MonthlyAttendance = lazy(() => import("@/pages/hr/MonthlyAttendance"));
+const LoanManagement = lazy(() => import("@/pages/hr/LoanManagement"));
+const SalarySheet = lazy(() => import("@/pages/hr/SalarySheet"));
+const EmployeeProfile = lazy(() => import("@/pages/hr/EmployeeProfile"));
+const SupplierList = lazy(() => import("@/pages/supplier/SupplierList"));
+const SupplierPayments = lazy(() => import("@/pages/supplier/SupplierPayments"));
+const SupplierProfile = lazy(() => import("@/pages/supplier/SupplierProfile"));
+const SupplierPurchases = lazy(() => import("@/pages/supplier/SupplierPurchases"));
+const DailyReport = lazy(() => import("@/pages/reporting/DailyReport"));
+const FinancialStatement = lazy(() => import("@/pages/reporting/FinancialStatement"));
+const BtrcReport = lazy(() => import("@/pages/reporting/BtrcReport"));
+const TrafficMonitor = lazy(() => import("@/pages/reporting/TrafficMonitor"));
+const ApiHealthMonitor = lazy(() => import("@/pages/settings/ApiHealthMonitor"));
+const GeoManagement = lazy(() => import("@/pages/settings/GeoManagement"));
+const DomainManagement = lazy(() => import("@/pages/settings/DomainManagement"));
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
+const ForcePasswordChange = lazy(() => import("@/pages/ForcePasswordChange"));
+
+// Super Admin (separate chunk)
 import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
-import SuperAdminLogin from "@/pages/super/SuperAdminLogin";
-import SuperAdminLayout from "@/components/super/SuperAdminLayout";
-import SuperDashboard from "@/pages/super/SuperDashboard";
-import SuperTenants from "@/pages/super/SuperTenants";
-import SuperTenantProfile from "@/pages/super/SuperTenantProfile";
-import SuperOnboarding from "@/pages/super/SuperOnboarding";
-import SuperPlans from "@/pages/super/SuperPlans";
-import SuperSubscriptions from "@/pages/super/SuperSubscriptions";
-import SuperDomains from "@/pages/super/SuperDomains";
-import SuperSmsManagement from "@/pages/super/SuperSmsManagement";
-import SuperAnalytics from "@/pages/super/SuperAnalytics";
-import SuperSmtpSettings from "@/pages/super/SuperSmtpSettings";
-import ForcePasswordChange from "@/pages/ForcePasswordChange";
+const SuperAdminLogin = lazy(() => import("@/pages/super/SuperAdminLogin"));
+const SuperAdminLayout = lazy(() => import("@/components/super/SuperAdminLayout"));
+const SuperDashboard = lazy(() => import("@/pages/super/SuperDashboard"));
+const SuperTenants = lazy(() => import("@/pages/super/SuperTenants"));
+const SuperTenantProfile = lazy(() => import("@/pages/super/SuperTenantProfile"));
+const SuperOnboarding = lazy(() => import("@/pages/super/SuperOnboarding"));
+const SuperPlans = lazy(() => import("@/pages/super/SuperPlans"));
+const SuperSubscriptions = lazy(() => import("@/pages/super/SuperSubscriptions"));
+const SuperDomains = lazy(() => import("@/pages/super/SuperDomains"));
+const SuperSmsManagement = lazy(() => import("@/pages/super/SuperSmsManagement"));
+const SuperAnalytics = lazy(() => import("@/pages/super/SuperAnalytics"));
+const SuperSmtpSettings = lazy(() => import("@/pages/super/SuperSmtpSettings"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -143,6 +161,7 @@ function App() {
             <LanguageProvider>
             <CustomerAuthProvider>
               <BrandingProvider>
+              <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Admin Routes */}
                 <Route path="/admin/login" element={<Login />} />
@@ -160,7 +179,6 @@ function App() {
                 <Route path="/merchant-reports" element={<PermissionGuard module="reports"><MerchantPaymentReports /></PermissionGuard>} />
                 <Route path="/tickets" element={<PermissionGuard module="tickets"><Tickets /></PermissionGuard>} />
                 <Route path="/sms" element={<PermissionGuard module="sms"><SMSLogs /></PermissionGuard>} />
-                {/* SMS Settings removed - managed via Integration Management */}
                 <Route path="/reminders" element={<PermissionGuard module="sms"><ReminderLogs /></PermissionGuard>} />
                 <Route path="/profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
                 <Route path="/users" element={<PermissionGuard module="users"><AdminUsers /></PermissionGuard>} />
@@ -222,7 +240,6 @@ function App() {
                 <Route path="/settings/general" element={<PermissionGuard module="settings"><GeneralSettings /></PermissionGuard>} />
                 <Route path="/settings/system" element={<PermissionGuard module="settings"><SystemSettings /></PermissionGuard>} />
                 <Route path="/settings/packages" element={<PermissionGuard module="settings"><Packages /></PermissionGuard>} />
-                
                 <Route path="/settings/locations" element={<PermissionGuard module="settings"><GeoManagement /></PermissionGuard>} />
                 <Route path="/settings/mikrotik" element={<PermissionGuard module="settings"><MikroTikRouters /></PermissionGuard>} />
                 <Route path="/settings/roles" element={<PermissionGuard module="roles"><RoleManagement /></PermissionGuard>} />
@@ -255,17 +272,18 @@ function App() {
                   <Route path="analytics" element={<SuperAnalytics />} />
                 </Route>
 
-                {/* Customer Portal Routes */}
+                {/* Customer Portal */}
                 <Route path="/login" element={<CustomerLogin />} />
-                <Route path="/portal" element={<CustomerProtectedRoute><CustomerDashboard /></CustomerProtectedRoute>} />
+                <Route path="/portal/dashboard" element={<CustomerProtectedRoute><CustomerDashboard /></CustomerProtectedRoute>} />
                 <Route path="/portal/bills" element={<CustomerProtectedRoute><CustomerBills /></CustomerProtectedRoute>} />
                 <Route path="/portal/payments" element={<CustomerProtectedRoute><CustomerPayments /></CustomerProtectedRoute>} />
                 <Route path="/portal/profile" element={<CustomerProtectedRoute><CustomerProfile /></CustomerProtectedRoute>} />
                 <Route path="/portal/tickets" element={<CustomerProtectedRoute><CustomerTickets /></CustomerProtectedRoute>} />
-                <Route path="/portal/payment-callback" element={<PaymentCallback />} />
+                <Route path="/portal/payment/callback" element={<CustomerProtectedRoute><PaymentCallback /></CustomerProtectedRoute>} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
               </BrandingProvider>
             </CustomerAuthProvider>
             </LanguageProvider>
