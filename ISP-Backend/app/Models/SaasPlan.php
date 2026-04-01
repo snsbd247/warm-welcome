@@ -35,4 +35,14 @@ class SaasPlan extends Model
     {
         return $this->hasMany(Subscription::class, 'plan_id');
     }
+
+    public function modules()
+    {
+        return $this->belongsToMany(Module::class, 'plan_modules', 'plan_id', 'module_id');
+    }
+
+    public function planModules()
+    {
+        return $this->hasMany(PlanModule::class, 'plan_id');
+    }
 }
