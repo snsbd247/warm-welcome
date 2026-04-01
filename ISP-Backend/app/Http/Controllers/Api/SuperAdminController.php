@@ -244,8 +244,14 @@ class SuperAdminController extends Controller
     public function updatePlan(Request $request, string $id)
     {
         $plan = SaasPlan::findOrFail($id);
-        $plan->update($request->all());
-        return response()->json($plan);
+        $plan->update($request->except('modules'));
+
+        // Sync plan modules if provided
+        if ($request->has('modules') && is_array($request->modules)) {
+            PlanModuleService::syncPlanModules($plan->id, $request->modules);
+        }
+
+        return response()->json($plan->load('modules'));
     }
 
     public function deletePlan(string $id)
