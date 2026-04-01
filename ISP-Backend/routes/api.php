@@ -121,6 +121,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     Route::post('/admin/logout', [AuthController::class, 'logout']);
     Route::get('/admin/me', [AuthController::class, 'me']);
     Route::put('/admin/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/admin/force-password-change', [AuthController::class, 'forcePasswordChange']);
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
     // Language preference
