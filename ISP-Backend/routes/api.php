@@ -376,7 +376,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
         Route::get('/supplier-payments', [SupplierController2::class, 'payments']);
         Route::get('/supplier-purchases', [SupplierController2::class, 'purchases']);
     });
-    Route::middleware('check.permission:supplier,create')->group(function () {
+    Route::middleware(['check.plan_module:supplier', 'check.permission:supplier,create'])->group(function () {
         Route::post('/suppliers', [SupplierController2::class, 'store']);
         Route::post('/supplier-payments', [SupplierController2::class, 'storePayment']);
     });
