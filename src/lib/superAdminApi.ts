@@ -447,6 +447,7 @@ export const superAdminApi = {
         address: data.address || null,
         status: "active",
         must_change_password: true,
+        tenant_id: tenantId,
       });
       if (data.role) {
         await sbInsert("user_roles", { user_id: newId, role: data.role });
