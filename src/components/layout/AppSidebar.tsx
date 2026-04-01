@@ -288,6 +288,7 @@ export default function AppSidebar() {
     { to: "/audit-logs", icon: ClipboardList, label: t.sidebar.auditLogs, module: "settings" },
     { to: "/settings/backup", icon: HardDrive, label: t.sidebar.backupRestore, module: "settings" },
     { to: "/settings/api-health", icon: Activity, label: t.sidebar.apiHealth, module: "settings" },
+    { to: "/settings/domains", icon: Globe, label: "Domain Management", module: "settings" },
   ];
 
   const siteName = branding.site_name || "Smart ISP";
