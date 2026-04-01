@@ -147,7 +147,11 @@ export default function MikroTikRouters() {
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message;
-      toast.error(`Test failed: ${msg}`);
+      if (IS_LOVABLE && (msg?.includes("Connection refused") || msg?.includes("timeout"))) {
+        toast.error("রাউটারে কানেক্ট হচ্ছে না। MikroTik API পোর্ট পাবলিকলি ওপেন করুন অথবা cPanel ব্যাকএন্ড থেকে চেষ্টা করুন।", { duration: 8000 });
+      } else {
+        toast.error(`Test failed: ${msg}`);
+      }
     } finally { setTesting(null); }
   };
 
