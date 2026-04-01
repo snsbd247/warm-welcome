@@ -72,6 +72,25 @@ Route::post('/setup/storage-link', [\App\Http\Controllers\Api\SetupController::c
 Route::post('/setup/full', [\App\Http\Controllers\Api\SetupController::class, 'full']);
 Route::post('/setup/reset-all', [\App\Http\Controllers\Api\SetupController::class, 'resetAll']);
 
+// ── Tenant Info (public — needed for login page branding per tenant) ──
+Route::get('/tenant/current', function () {
+    $t = tenant();
+    if (!$t) {
+        return response()->json(['tenant' => null, 'is_central' => true]);
+    }
+    return response()->json([
+        'tenant' => [
+            'id' => $t->id,
+            'name' => $t->name,
+            'subdomain' => $t->subdomain,
+            'logo_url' => $t->logo_url,
+            'status' => $t->status,
+            'plan' => $t->plan,
+        ],
+        'is_central' => false,
+    ]);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Admin Protected Routes
