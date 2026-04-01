@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Domain;
+use App\Models\Module;
 use App\Models\SaasPlan;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserRole;
 use App\Models\CustomRole;
+use App\Services\PlanModuleService;
 use App\Services\TenantResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -207,8 +209,15 @@ class SuperAdminController extends Controller
     public function plans()
     {
         $plans = SaasPlan::withCount('subscriptions')
+            ->with('modules')
             ->orderBy('sort_order')
             ->get();
+
+        // Attach module slugs for each plan
+        $plans->each(function ($plan) {
+            $plan->module_slugs = $plan->modules->pluck('slug')->toArray();
+        });
+
         return response()->json($plans);
     }
 
@@ -223,15 +232,26 @@ class SuperAdminController extends Controller
             'max_users' => 'required|integer|min:1',
         ]);
 
-        $plan = SaasPlan::create($request->all());
-        return response()->json($plan, 201);
-    }
+        $plan = SaasPlan::create($request->except('modules'));
+
+        // Sync plan modules
+        if ($request->has('modules') && is_array($request->modules)) {
+            PlanModuleService::syncPlanModules($plan->id, $request->modules);
+        }
+
+        return response()->json($plan->load('modules'), 201);
 
     public function updatePlan(Request $request, string $id)
     {
         $plan = SaasPlan::findOrFail($id);
-        $plan->update($request->all());
-        return response()->json($plan);
+        $plan->update($request->except('modules'));
+
+        // Sync plan modules if provided
+        if ($request->has('modules') && is_array($request->modules)) {
+            PlanModuleService::syncPlanModules($plan->id, $request->modules);
+        }
+
+        return response()->json($plan->load('modules'));
     }
 
     public function deletePlan(string $id)
@@ -337,5 +357,43 @@ class SuperAdminController extends Controller
         TenantResolver::flushCache($domain->domain);
         $domain->delete();
         return response()->json(['success' => true]);
+    }
+
+    // ══════════════════════════════════════════
+    // MODULE MANAGEMENT (Super Admin)
+    // ══════════════════════════════════════════
+    public function allModules()
+    {
+        return response()->json(
+            Module::orderBy('sort_order')->get()
+        );
+    }
+
+    public function updateModule(Request $request, string $id)
+    {
+        $module = Module::findOrFail($id);
+        $module->update($request->only(['name', 'description', 'icon', 'is_active', 'sort_order']));
+        return response()->json($module);
+    }
+
+    /**
+     * Get allowed modules for a specific tenant.
+     */
+    public function tenantModules(string $tenantId)
+    {
+        $allowed = PlanModuleService::getAllowedModules($tenantId);
+        $allModules = Module::where('is_active', true)->orderBy('sort_order')->get();
+
+        $result = $allModules->map(function ($mod) use ($allowed) {
+            return [
+                'id'       => $mod->id,
+                'name'     => $mod->name,
+                'slug'     => $mod->slug,
+                'is_core'  => $mod->is_core,
+                'allowed'  => in_array($mod->slug, $allowed),
+            ];
+        });
+
+        return response()->json($result);
     }
 }

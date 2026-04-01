@@ -1348,6 +1348,45 @@ export type Database = {
         }
         Relationships: []
       }
+      modules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          is_core: boolean | null
+          name: string
+          slug: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_core?: boolean | null
+          name: string
+          slug: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_core?: boolean | null
+          name?: string
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       olts: {
         Row: {
           brand: string | null
@@ -1660,6 +1699,35 @@ export type Database = {
           module?: string
         }
         Relationships: []
+      }
+      plan_modules: {
+        Row: {
+          created_at: string | null
+          id: string
+          module_id: string
+          plan_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          module_id: string
+          plan_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          module_id?: string
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_modules_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {

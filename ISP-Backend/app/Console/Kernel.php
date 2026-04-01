@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         Commands\CleanupSessions::class,
         Commands\CalculateDailyProfit::class,
         Commands\SendBillReminders::class,
+        Commands\ScanModules::class,
     ];
 
     /**

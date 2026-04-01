@@ -55,6 +55,11 @@ export const superAdminApi = {
   updatePlan: (id: string, data: any) => request(`/plans/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deletePlan: (id: string) => request(`/plans/${id}`, { method: "DELETE" }),
 
+  // Modules
+  getModules: () => request("/modules"),
+  updateModule: (id: string, data: any) => request(`/modules/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  getTenantModules: (tenantId: string) => request(`/tenants/${tenantId}/modules`),
+
   // Subscriptions
   getSubscriptions: (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : "";

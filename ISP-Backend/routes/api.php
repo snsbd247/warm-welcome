@@ -136,40 +136,40 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     // ══════════════════════════════════════════════════════
     // ── BILLING — module: billing ───────────────────────
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:billing,view')->group(function () {
+    Route::middleware(['check.plan_module:billing', 'check.permission:billing,view'])->group(function () {
         Route::get('/billing/cycle-overview', [BillController::class, 'cycleOverview']);
     });
-    Route::middleware('check.permission:billing,create')->group(function () {
+    Route::middleware(['check.plan_module:billing', 'check.permission:billing,create'])->group(function () {
         Route::post('/bills', [BillController::class, 'store']);
         Route::post('/bills/generate', [BillController::class, 'generate']);
     });
-    Route::middleware('check.permission:billing,edit')->group(function () {
+    Route::middleware(['check.plan_module:billing', 'check.permission:billing,edit'])->group(function () {
         Route::put('/bills/{id}', [BillController::class, 'update']);
     });
-    Route::middleware('check.permission:billing,delete')->group(function () {
+    Route::middleware(['check.plan_module:billing', 'check.permission:billing,delete'])->group(function () {
         Route::delete('/bills/{id}', [BillController::class, 'destroy']);
     });
 
     // ══════════════════════════════════════════════════════
     // ── PAYMENTS — module: payments ─────────────────────
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:payments,create')->group(function () {
+    Route::middleware(['check.plan_module:payments', 'check.permission:payments,create'])->group(function () {
         Route::post('/payments', [PaymentController::class, 'store']);
     });
-    Route::middleware('check.permission:payments,edit')->group(function () {
+    Route::middleware(['check.plan_module:payments', 'check.permission:payments,edit'])->group(function () {
         Route::put('/payments/{id}', [PaymentController::class, 'update']);
     });
-    Route::middleware('check.permission:payments,delete')->group(function () {
+    Route::middleware(['check.plan_module:payments', 'check.permission:payments,delete'])->group(function () {
         Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
     });
 
     // ══════════════════════════════════════════════════════
     // ── MERCHANT PAYMENTS — module: merchant_payments ───
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:merchant_payments,view')->group(function () {
+    Route::middleware(['check.plan_module:merchant_payments', 'check.permission:merchant_payments,view'])->group(function () {
         Route::get('/merchant-payments/reports', [MerchantPaymentController::class, 'reports']);
     });
-    Route::middleware('check.permission:merchant_payments,create')->group(function () {
+    Route::middleware(['check.plan_module:merchant_payments', 'check.permission:merchant_payments,create'])->group(function () {
         Route::post('/merchant-payments', [MerchantPaymentController::class, 'store']);
         Route::post('/merchant-payments/import', [MerchantPaymentController::class, 'import']);
         Route::post('/merchant-payments/{id}/match', [MerchantPaymentController::class, 'match']);
@@ -178,7 +178,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     // ══════════════════════════════════════════════════════
     // ── SMS & EMAIL — module: sms ───────────────────────
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:sms,create')->group(function () {
+    Route::middleware(['check.plan_module:sms', 'check.permission:sms,create'])->group(function () {
         Route::post('/sms/send', [SmsController::class, 'send']);
         Route::post('/sms/send-bulk', [SmsController::class, 'sendBulk']);
         Route::get('/sms/balance', [SmsBalanceController::class, 'check']);
@@ -223,7 +223,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     // ══════════════════════════════════════════════════════
     // ── ACCOUNTING & INVENTORY — module: accounting ─────
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:accounting,view')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,view'])->group(function () {
         // Vendors
         Route::get('/vendors', [VendorController::class, 'index']);
         Route::get('/vendors/{id}', [VendorController::class, 'show']);
@@ -262,7 +262,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
         Route::get('/accounting/cheque-register', [AccountingController::class, 'chequeRegister']);
         Route::get('/accounting/all-ledgers', [AccountingController::class, 'allLedgers']);
     });
-    Route::middleware('check.permission:accounting,create')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,create'])->group(function () {
         Route::post('/vendors', [VendorController::class, 'store']);
         Route::post('/products', [ProductController::class, 'store']);
         Route::post('/purchases', [PurchaseController::class, 'store']);
@@ -275,7 +275,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
         Route::post('/accounting/transactions', [AccountingController::class, 'storeTransaction']);
         Route::post('/accounting/journal-entries', [AccountingController::class, 'storeJournalEntry']);
     });
-    Route::middleware('check.permission:accounting,edit')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,edit'])->group(function () {
         Route::put('/vendors/{id}', [VendorController::class, 'update']);
         Route::put('/products/{id}', [ProductController::class, 'update']);
         Route::put('/expenses/{id}', [ExpenseController::class, 'update']);
@@ -283,7 +283,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
         Route::put('/accounting/transactions/{id}', [AccountingController::class, 'updateTransaction']);
         Route::post('/accounting/recalculate-balances', [AccountingController::class, 'recalculateBalances']);
     });
-    Route::middleware('check.permission:accounting,delete')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,delete'])->group(function () {
         Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
         Route::delete('/products/{id}', [ProductController::class, 'destroy']);
         Route::delete('/purchases/{id}', [PurchaseController::class, 'destroy']);
@@ -294,22 +294,22 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     });
 
     // ── Accounting Heads — module: accounting ────────────
-    Route::middleware('check.permission:accounting,view')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,view'])->group(function () {
         Route::get('/accounting/income-heads', [AccountingHeadController::class, 'incomeHeads']);
         Route::get('/accounting/expense-heads', [AccountingHeadController::class, 'expenseHeads']);
         Route::get('/accounting/other-heads', [AccountingHeadController::class, 'otherHeads']);
     });
-    Route::middleware('check.permission:accounting,create')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,create'])->group(function () {
         Route::post('/accounting/income-heads', [AccountingHeadController::class, 'storeIncomeHead']);
         Route::post('/accounting/expense-heads', [AccountingHeadController::class, 'storeExpenseHead']);
         Route::post('/accounting/other-heads', [AccountingHeadController::class, 'storeOtherHead']);
     });
-    Route::middleware('check.permission:accounting,edit')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,edit'])->group(function () {
         Route::put('/accounting/income-heads/{id}', [AccountingHeadController::class, 'updateIncomeHead']);
         Route::put('/accounting/expense-heads/{id}', [AccountingHeadController::class, 'updateExpenseHead']);
         Route::put('/accounting/other-heads/{id}', [AccountingHeadController::class, 'updateOtherHead']);
     });
-    Route::middleware('check.permission:accounting,delete')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,delete'])->group(function () {
         Route::delete('/accounting/income-heads/{id}', [AccountingHeadController::class, 'deleteIncomeHead']);
         Route::delete('/accounting/expense-heads/{id}', [AccountingHeadController::class, 'deleteExpenseHead']);
         Route::delete('/accounting/other-heads/{id}', [AccountingHeadController::class, 'deleteOtherHead']);
@@ -318,7 +318,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     // ══════════════════════════════════════════════════════
     // ── REPORTS — module: reports ────────────────────────
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:reports,view')->group(function () {
+    Route::middleware(['check.plan_module:reports', 'check.permission:reports,view'])->group(function () {
         Route::get('/reports/dashboard', [ReportController::class, 'dashboard']);
         Route::get('/reports/profit-loss', [ReportController::class, 'profitLoss']);
         Route::get('/reports/daily', [ReportController::class, 'daily']);
@@ -337,7 +337,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     // ══════════════════════════════════════════════════════
     // ── HUMAN RESOURCE — module: hr ─────────────────────
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:hr,view')->group(function () {
+    Route::middleware(['check.plan_module:hr', 'check.permission:hr,view'])->group(function () {
         Route::get('/hr/designations', [HrController::class, 'designations']);
         Route::get('/hr/employees', [HrController::class, 'employees']);
         Route::get('/hr/employees/{id}', [HrController::class, 'employeeProfile']);
@@ -346,7 +346,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
         Route::get('/hr/loans', [HrController::class, 'loans']);
         Route::get('/hr/salary', [HrController::class, 'salarySheets']);
     });
-    Route::middleware('check.permission:hr,create')->group(function () {
+    Route::middleware(['check.plan_module:hr', 'check.permission:hr,create'])->group(function () {
         Route::post('/hr/designations', [HrController::class, 'storeDesignation']);
         Route::post('/hr/employees', [HrController::class, 'storeEmployee']);
         Route::post('/hr/attendance', [HrController::class, 'storeAttendance']);
@@ -355,13 +355,13 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
         Route::post('/hr/salary/generate', [HrController::class, 'generateSalary']);
         Route::post('/hr/salary/{id}/pay', [HrController::class, 'paySalary']);
     });
-    Route::middleware('check.permission:hr,edit')->group(function () {
+    Route::middleware(['check.plan_module:hr', 'check.permission:hr,edit'])->group(function () {
         Route::put('/hr/designations/{id}', [HrController::class, 'updateDesignation']);
         Route::put('/hr/employees/{id}', [HrController::class, 'updateEmployee']);
         Route::put('/hr/loans/{id}', [HrController::class, 'updateLoan']);
         Route::put('/hr/salary/{id}', [HrController::class, 'updateSalarySheet']);
     });
-    Route::middleware('check.permission:hr,delete')->group(function () {
+    Route::middleware(['check.plan_module:hr', 'check.permission:hr,delete'])->group(function () {
         Route::delete('/hr/designations/{id}', [HrController::class, 'deleteDesignation']);
         Route::delete('/hr/employees/{id}', [HrController::class, 'deleteEmployee']);
         Route::delete('/hr/loans/{id}', [HrController::class, 'deleteLoan']);
@@ -370,20 +370,20 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     // ══════════════════════════════════════════════════════
     // ── SUPPLIER — module: supplier ─────────────────────
     // ══════════════════════════════════════════════════════
-    Route::middleware('check.permission:supplier,view')->group(function () {
+    Route::middleware(['check.plan_module:supplier', 'check.permission:supplier,view'])->group(function () {
         Route::get('/suppliers', [SupplierController2::class, 'index']);
         Route::get('/suppliers/{id}', [SupplierController2::class, 'show']);
         Route::get('/supplier-payments', [SupplierController2::class, 'payments']);
         Route::get('/supplier-purchases', [SupplierController2::class, 'purchases']);
     });
-    Route::middleware('check.permission:supplier,create')->group(function () {
+    Route::middleware(['check.plan_module:supplier', 'check.permission:supplier,create'])->group(function () {
         Route::post('/suppliers', [SupplierController2::class, 'store']);
         Route::post('/supplier-payments', [SupplierController2::class, 'storePayment']);
     });
-    Route::middleware('check.permission:supplier,edit')->group(function () {
+    Route::middleware(['check.plan_module:supplier', 'check.permission:supplier,edit'])->group(function () {
         Route::put('/suppliers/{id}', [SupplierController2::class, 'update']);
     });
-    Route::middleware('check.permission:supplier,delete')->group(function () {
+    Route::middleware(['check.plan_module:supplier', 'check.permission:supplier,delete'])->group(function () {
         Route::delete('/suppliers/{id}', [SupplierController2::class, 'destroy']);
         Route::delete('/supplier-payments/{id}', [SupplierController2::class, 'deletePayment']);
     });
@@ -457,6 +457,11 @@ Route::middleware(['super.admin.auth'])->prefix('super-admin')->group(function (
     Route::post('/plans', [SuperAdminController::class, 'createPlan']);
     Route::put('/plans/{id}', [SuperAdminController::class, 'updatePlan']);
     Route::delete('/plans/{id}', [SuperAdminController::class, 'deletePlan']);
+
+    // Module Management
+    Route::get('/modules', [SuperAdminController::class, 'allModules']);
+    Route::put('/modules/{id}', [SuperAdminController::class, 'updateModule']);
+    Route::get('/tenants/{id}/modules', [SuperAdminController::class, 'tenantModules']);
 
     // Subscription Management
     Route::get('/subscriptions', [SuperAdminController::class, 'subscriptions']);

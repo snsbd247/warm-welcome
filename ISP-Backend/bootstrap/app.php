@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.resolve'    => \App\Http\Middleware\ResolveTenant::class,
             'super.admin.auth'  => \App\Http\Middleware\SuperAdminAuth::class,
             'check.subscription'=> \App\Http\Middleware\CheckSubscription::class,
+            'check.plan_module' => \App\Http\Middleware\CheckPlanModule::class,
         ]);
 
         // Apply tenant resolution + Sanctum to all API requests

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAllowedModules } from "@/hooks/usePlanModules";
 import { db } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ const ACTION_LABELS: Record<string, string> = {
 export default function RoleManagement() {
   const { t } = useLanguage();
   const { isSuperAdmin } = usePermissions();
+  const { allowedModules, isModuleAllowed } = useAllowedModules();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editRole, setEditRole] = useState<any>(null);
@@ -102,12 +104,17 @@ export default function RoleManagement() {
     },
   });
 
-  // Group permissions by module
-  const groupedPermissions = permissions?.reduce((acc: Record<string, any[]>, perm: any) => {
-    if (!acc[perm.module]) acc[perm.module] = [];
-    acc[perm.module].push(perm);
-    return acc;
-  }, {} as Record<string, any[]>) || {};
+  // Group permissions by module, filtered by plan-allowed modules
+  const groupedPermissions = useMemo(() => {
+    if (!permissions) return {};
+    return permissions.reduce((acc: Record<string, any[]>, perm: any) => {
+      // Only show permissions for modules allowed by the current plan
+      if (!isSuperAdmin && !isModuleAllowed(perm.module)) return acc;
+      if (!acc[perm.module]) acc[perm.module] = [];
+      acc[perm.module].push(perm);
+      return acc;
+    }, {} as Record<string, any[]>);
+  }, [permissions, allowedModules, isSuperAdmin, isModuleAllowed]);
 
   const openAdd = () => {
     setEditRole(null);
