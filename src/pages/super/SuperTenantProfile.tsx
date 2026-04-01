@@ -232,6 +232,8 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
   const qc = useQueryClient();
   const [editUser, setEditUser] = useState<any>(null);
   const [editData, setEditData] = useState<any>({});
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser] = useState({ full_name: "", email: "", password: "", role: "admin" });
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["super-tenant-users", tenantId],
@@ -244,17 +246,37 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const createMut = useMutation({
+    mutationFn: () => superAdminApi.createTenantUser(tenantId, newUser),
+    onSuccess: () => {
+      toast.success("User created and credentials email sent!");
+      setShowAddUser(false);
+      setNewUser({ full_name: "", email: "", password: "", role: "admin" });
+      qc.invalidateQueries({ queryKey: ["super-tenant-users", tenantId] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   if (isLoading) return <Card><CardContent className="py-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></CardContent></Card>;
 
   return (
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2"><Users className="h-5 w-5" /> Tenant Users ({users.length})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2"><Users className="h-5 w-5" /> Tenant Users ({users.length})</CardTitle>
+            <Button size="sm" onClick={() => setShowAddUser(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Add User
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {users.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">No users found</p>
+            <div className="text-center py-8 space-y-3">
+              <Users className="h-10 w-10 mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground">No users found for this tenant</p>
+              <p className="text-xs text-muted-foreground">Click "Add User" to create the first admin user</p>
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -293,6 +315,55 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
         </CardContent>
       </Card>
 
+      {/* Add User Dialog */}
+      <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Full Name</Label>
+              <Input value={newUser.full_name} onChange={(e) => setNewUser(d => ({ ...d, full_name: e.target.value }))} placeholder="John Doe" />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input type="email" value={newUser.email} onChange={(e) => setNewUser(d => ({ ...d, email: e.target.value }))} placeholder="user@example.com" />
+            </div>
+            <div>
+              <Label>Password</Label>
+              <Input type="password" value={newUser.password} onChange={(e) => setNewUser(d => ({ ...d, password: e.target.value }))} placeholder="Min 6 characters" />
+            </div>
+            <div>
+              <Label>Role</Label>
+              <Select value={newUser.role} onValueChange={(v) => setNewUser(d => ({ ...d, role: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="super_admin">Owner (Full Access)</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="operator">Operator</SelectItem>
+                  <SelectItem value="technician">Technician</SelectItem>
+                  <SelectItem value="accountant">Accountant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+              <p>📧 Login credentials will be sent via email automatically</p>
+              <p>🔒 User will be required to change password on first login</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddUser(false)}>Cancel</Button>
+            <Button onClick={() => createMut.mutate()} disabled={!newUser.full_name || !newUser.email || !newUser.password || createMut.isPending}>
+              {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+              Create User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit User Dialog */}
       <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
         <DialogContent>
@@ -303,6 +374,9 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
             <div className="space-y-3">
               <Label>New Password</Label>
               <Input type="password" value={editData.password || ""} onChange={(e) => setEditData({ password: e.target.value })} placeholder="Enter new password" />
+              <div className="p-2 rounded bg-muted/50 text-xs text-muted-foreground">
+                🔒 User will be forced to change password on next login
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
