@@ -54,6 +54,15 @@ export default function MikroTikRouters() {
       (r.ip_address || "").includes(search)
   );
 
+  const getLovableRouterPayload = (router: any) => ({
+    router_id: router.id,
+    name: router.name,
+    ip_address: router.ip_address,
+    username: router.username,
+    password: router.password,
+    api_port: router.api_port,
+  });
+
   const openAdd = () => {
     setEditRouter(null);
     setForm({ name: "", ip_address: "", username: "admin", password: "", api_port: "8728", description: "" });
@@ -160,7 +169,7 @@ export default function MikroTikRouters() {
     try {
       if (IS_LOVABLE) {
         const { data, error } = await supabaseDirect.functions.invoke('mikrotik-sync/sync-all', {
-          body: { router_id: router.id },
+          body: getLovableRouterPayload(router),
         });
         if (error) throw error;
         if (data?.success) {
@@ -200,7 +209,7 @@ export default function MikroTikRouters() {
     try {
       if (IS_LOVABLE) {
         const { data, error } = await supabaseDirect.functions.invoke('mikrotik-sync/bulk-sync-packages', {
-          body: { router_id: router.id },
+          body: getLovableRouterPayload(router),
         });
         if (error) throw error;
         if (data?.success) {
