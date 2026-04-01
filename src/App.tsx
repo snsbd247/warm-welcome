@@ -230,6 +230,7 @@ function App() {
                   <Route path="plans" element={<SuperPlans />} />
                   <Route path="subscriptions" element={<SuperSubscriptions />} />
                   <Route path="domains" element={<SuperDomains />} />
+                  <Route path="sms" element={<SuperSmsManagement />} />
                 </Route>
 
                 {/* Customer Portal Routes */}
