@@ -169,7 +169,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
     Route::middleware(['check.plan_module:merchant_payments', 'check.permission:merchant_payments,view'])->group(function () {
         Route::get('/merchant-payments/reports', [MerchantPaymentController::class, 'reports']);
     });
-    Route::middleware('check.permission:merchant_payments,create')->group(function () {
+    Route::middleware(['check.plan_module:merchant_payments', 'check.permission:merchant_payments,create'])->group(function () {
         Route::post('/merchant-payments', [MerchantPaymentController::class, 'store']);
         Route::post('/merchant-payments/import', [MerchantPaymentController::class, 'import']);
         Route::post('/merchant-payments/{id}/match', [MerchantPaymentController::class, 'match']);
