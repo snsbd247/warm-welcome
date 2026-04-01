@@ -30,7 +30,7 @@ interface DomainRecord {
 
 // ── Domain format validation (client-side) ──────────────────
 const DOMAIN_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i;
-const BLOCKED_DOMAINS = ["localhost", "smartispsolution.com", "example.com", "test.com"];
+const BLOCKED_DOMAINS = ["localhost", "smartispapp.com", "example.com", "test.com"];
 
 function validateDomain(domain: string): { valid: boolean; error?: string } {
   const d = domain.trim().toLowerCase();
@@ -158,7 +158,7 @@ const DomainManagement = () => {
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-1">Default Subdomain (always active)</p>
                 <p className="text-sm font-semibold text-foreground">
-                  {subdomain}.smartispsolution.com
+                  {subdomain}.smartispapp.com
                 </p>
               </div>
               <Badge variant="outline" className="text-xs">
@@ -497,7 +497,7 @@ function DnsInstructionDialog({
                     </td>
                     <td className="px-3 py-2 font-mono text-xs">{hostPart}</td>
                     <td className="px-3 py-2 font-mono text-xs">
-                      {subdomain ? `${subdomain}.smartispsolution.com` : "smartispsolution.com"}
+                      {subdomain ? `${subdomain}.smartispapp.com` : "smartispapp.com"}
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">300</td>
                     <td className="px-3 py-2">
@@ -505,7 +505,7 @@ function DnsInstructionDialog({
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0"
-                        onClick={() => copyText(subdomain ? `${subdomain}.smartispsolution.com` : "smartispsolution.com")}
+                        onClick={() => copyText(subdomain ? `${subdomain}.smartispapp.com` : "smartispapp.com")}
                       >
                         <Copy className="h-3 w-3" />
                       </Button>

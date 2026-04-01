@@ -122,7 +122,7 @@ class TenantResolver
     {
         // Flush subdomain cache
         if ($tenant->subdomain) {
-            $centralDomains = array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', 'smartispsolution.com'))));
+            $centralDomains = array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', 'smartispapp.com'))));
             foreach ($centralDomains as $central) {
                 Cache::forget("tenant:host:{$tenant->subdomain}.{$central}");
             }

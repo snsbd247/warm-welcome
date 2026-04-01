@@ -23,7 +23,7 @@ class SaasSeeder extends Seeder
             ['username' => 'superadmin'],
             [
                 'name' => 'Super Admin',
-                'email' => 'superadmin@smartispsolution.com',
+                'email' => 'superadmin@smartispapp.com',
                 'password_hash' => Hash::make('Super@2025'),
                 'status' => 'active',
             ]
