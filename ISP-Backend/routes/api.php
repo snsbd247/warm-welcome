@@ -262,7 +262,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
         Route::get('/accounting/cheque-register', [AccountingController::class, 'chequeRegister']);
         Route::get('/accounting/all-ledgers', [AccountingController::class, 'allLedgers']);
     });
-    Route::middleware('check.permission:accounting,create')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,create'])->group(function () {
         Route::post('/vendors', [VendorController::class, 'store']);
         Route::post('/products', [ProductController::class, 'store']);
         Route::post('/purchases', [PurchaseController::class, 'store']);
