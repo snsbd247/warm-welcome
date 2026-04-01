@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Domain;
+use App\Models\Module;
 use App\Models\SaasPlan;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserRole;
 use App\Models\CustomRole;
+use App\Services\PlanModuleService;
 use App\Services\TenantResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
