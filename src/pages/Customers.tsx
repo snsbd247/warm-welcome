@@ -19,6 +19,7 @@ import { Plus, Eye, Pencil, Printer, Search, Loader2, RefreshCw, ChevronLeft, Ch
 import { toast } from "sonner";
 
 import api from "@/lib/api";
+import { IS_LOVABLE } from "@/lib/environment";
 import CustomerForm from "@/components/customers/CustomerForm";
 import CustomerView from "@/components/customers/CustomerView";
 import { generateCustomerPDF } from "@/lib/pdf";
