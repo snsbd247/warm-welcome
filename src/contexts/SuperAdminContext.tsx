@@ -1,6 +1,6 @@
 import { useState, createContext, useContext, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { getApiBaseUrl } from "@/lib/apiBaseUrl";
+import { API_BASE_URL } from "@/lib/apiBaseUrl";
 
 interface SuperAdminUser {
   id: string;
