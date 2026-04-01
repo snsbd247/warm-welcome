@@ -314,21 +314,37 @@ export const superAdminApi = {
     return request(`/sms-transactions${qs}`);
   },
 
-  // Impersonation
+  // Impersonation — creates a real admin session for the tenant's admin user
   impersonateTenant: async (tenantId: string) => {
     if (IS_LOVABLE) {
-      // In Lovable preview, create a mock impersonation
-      const users = await sbSelect("profiles");
+      // Find the tenant's admin user
+      const profiles = await sbSelect("profiles", { filters: { tenant_id: tenantId } });
       const tenants = await sbSelect("tenants");
       const tenant = tenants.find((t: any) => t.id === tenantId);
-      // Find any user — in preview mode we simulate
-      const user = users[0];
+      if (!tenant) throw new Error("Tenant not found");
+
+      // Prefer owner/admin role user, fallback to first user
+      const user = profiles.find((p: any) => p.status === "active") || profiles[0];
       if (!user) throw new Error("No users found for this tenant");
+
+      // Create a real admin session token
+      const sessionToken = crypto.randomUUID();
+      const { error: sessionError } = await supabaseClient
+        .from("admin_sessions")
+        .insert({
+          admin_id: user.id,
+          session_token: sessionToken,
+          ip_address: "super-admin-impersonation",
+          browser: "Impersonation",
+          device_name: "Super Admin Panel",
+          status: "active",
+        });
+      if (sessionError) throw new Error("Failed to create session: " + sessionError.message);
+
       return {
-        token: "mock_impersonation_" + Date.now(),
-        tenant: { id: tenantId, name: tenant?.name, subdomain: tenant?.subdomain },
-        user: { id: user.id, name: user.full_name },
-        mock: true,
+        token: sessionToken,
+        tenant: { id: tenantId, name: tenant.name, subdomain: tenant.subdomain },
+        user: { id: user.id, name: user.full_name, email: user.email, role: "admin", avatar_url: user.avatar_url },
       };
     }
     return request(`/tenants/${tenantId}/impersonate`, { method: "POST" });

@@ -197,22 +197,30 @@ function SubscriptionDialog({ tenantId, currentSub, onSuccess }: {
 // ─── Impersonate Button ──────────────────────────────────────
 function ImpersonateButton({ tenantId, tenantName, tenantSubdomain }: { tenantId: string; tenantName: string; tenantSubdomain: string }) {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleImpersonate = async () => {
     if (!confirm(`Login as "${tenantName}" tenant admin? This will open a new session.`)) return;
     setLoading(true);
     try {
       const result = await superAdminApi.impersonateTenant(tenantId);
-      if (result.mock) {
-        toast.info("Impersonation simulated in preview mode");
-        return;
-      }
-      // Store impersonation data and redirect
-      const targetUrl = `https://${tenantSubdomain}.${window.location.host.split('.').slice(-2).join('.')}`;
+
+      // Save super admin session to restore later
+      const superToken = localStorage.getItem("super_admin_token");
+      const superUser = localStorage.getItem("super_admin_user");
+      if (superToken) localStorage.setItem("saved_super_token", superToken);
+      if (superUser) localStorage.setItem("saved_super_user", superUser);
+
+      // Set tenant admin session
+      localStorage.setItem("admin_token", result.token);
+      localStorage.setItem("admin_user", JSON.stringify(result.user));
       localStorage.setItem("impersonation_token", result.token);
       localStorage.setItem("impersonation_tenant", JSON.stringify(result.tenant));
-      toast.success(`Redirecting to ${tenantName}...`);
-      window.open(`${targetUrl}/admin/login?impersonate=${result.token}`, "_blank");
+
+      toast.success(`Logging in as ${tenantName}...`);
+
+      // Navigate to tenant dashboard
+      window.location.href = "/";
     } catch (e: any) {
       toast.error(e.message || "Impersonation failed");
     } finally {
