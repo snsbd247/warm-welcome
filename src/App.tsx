@@ -93,6 +93,7 @@ import TrafficMonitor from "@/pages/reporting/TrafficMonitor";
 import ApiHealthMonitor from "@/pages/settings/ApiHealthMonitor";
 import GeoManagement from "@/pages/settings/GeoManagement";
 import DomainManagement from "@/pages/settings/DomainManagement";
+import LandingPage from "@/pages/LandingPage";
 import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
 import SuperAdminLogin from "@/pages/super/SuperAdminLogin";
 import SuperAdminLayout from "@/components/super/SuperAdminLayout";
@@ -141,6 +142,7 @@ function App() {
                 <Route path="/admin/login" element={<Login />} />
                 <Route path="/admin/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/landing" element={<LandingPage />} />
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/customers" element={<PermissionGuard module="customers"><Customers /></PermissionGuard>} />
                 <Route path="/customers/:id" element={<PermissionGuard module="customers"><CustomerProfilePage /></PermissionGuard>} />
