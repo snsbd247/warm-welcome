@@ -13,12 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   ArrowLeft, Building2, Globe, CreditCard, MessageSquare, CheckCircle2,
   AlertTriangle, Loader2, Database, MapPin, BookOpen, Mail, Zap,
   Shield, Activity, Clock, TrendingUp, Lightbulb, Plus, Ban,
-  RefreshCw, Trash2, ExternalLink, Phone, AtSign, Calendar
+  RefreshCw, Trash2, ExternalLink, Phone, AtSign, Calendar,
+  LogIn, Users, Eye, Edit, Key, History
 } from "lucide-react";
 
 // ─── SMS Recharge Dialog ─────────────────────────────────────
