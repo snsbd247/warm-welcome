@@ -283,7 +283,7 @@ Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
         Route::put('/accounting/transactions/{id}', [AccountingController::class, 'updateTransaction']);
         Route::post('/accounting/recalculate-balances', [AccountingController::class, 'recalculateBalances']);
     });
-    Route::middleware('check.permission:accounting,delete')->group(function () {
+    Route::middleware(['check.plan_module:accounting', 'check.permission:accounting,delete'])->group(function () {
         Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
         Route::delete('/products/{id}', [ProductController::class, 'destroy']);
         Route::delete('/purchases/{id}', [PurchaseController::class, 'destroy']);
