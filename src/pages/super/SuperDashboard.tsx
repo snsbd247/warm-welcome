@@ -90,7 +90,7 @@ export default function SuperDashboard() {
                     <p className="font-medium">{sub.tenant?.name}</p>
                     <p className="text-sm text-muted-foreground">{sub.plan?.name}</p>
                   </div>
-                  <Badge variant="outline" className="text-yellow-600 border-yellow-300">
+                  <Badge variant="outline" className="text-destructive border-destructive/30">
                     Expires {sub.end_date}
                   </Badge>
                 </div>

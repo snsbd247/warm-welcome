@@ -177,7 +177,7 @@ export default function SuperTenants() {
                       </Button>
                     ) : (
                       <Button variant="ghost" size="sm" onClick={() => activateMut.mutate(t.id)}>
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <CheckCircle className="h-4 w-4 text-primary" />
                       </Button>
                     )}
                     <Button variant="ghost" size="sm" onClick={() => { if (confirm("Delete this tenant?")) deleteMut.mutate(t.id); }}>
