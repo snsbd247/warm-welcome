@@ -573,45 +573,65 @@ export default function SuperTenantProfile() {
         </CardContent>
       </Card>
 
-      {/* ── SMS Transaction History ────────────────────────── */}
-      {smsTransactions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <RefreshCw className="h-5 w-5" /> SMS Transaction History
-            </CardTitle>
-            <CardDescription>Recent SMS balance transactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Description</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {smsTransactions.slice(0, 10).map((tx: any) => (
-                  <TableRow key={tx.id}>
-                    <TableCell className="text-sm">{new Date(tx.created_at).toLocaleDateString("en-GB")}</TableCell>
-                    <TableCell>
-                      <Badge variant={tx.type === "credit" ? "default" : "secondary"} className="text-xs capitalize">
-                        {tx.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className={`font-medium ${tx.type === "credit" ? "text-primary" : "text-destructive"}`}>
-                      {tx.type === "credit" ? "+" : "−"}{tx.amount}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{tx.description || "—"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+      {/* ── Tabs: SMS History, Users, Activity Logs, Login History ── */}
+      <Tabs defaultValue="sms" className="w-full">
+        <TabsList className="w-full grid grid-cols-4">
+          <TabsTrigger value="sms"><RefreshCw className="h-4 w-4 mr-1" /> SMS</TabsTrigger>
+          <TabsTrigger value="users"><Users className="h-4 w-4 mr-1" /> Users</TabsTrigger>
+          <TabsTrigger value="activity"><Activity className="h-4 w-4 mr-1" /> Activity</TabsTrigger>
+          <TabsTrigger value="logins"><History className="h-4 w-4 mr-1" /> Logins</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="sms">
+          {smsTransactions.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">SMS Transaction History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Description</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {smsTransactions.slice(0, 10).map((tx: any) => (
+                      <TableRow key={tx.id}>
+                        <TableCell className="text-sm">{new Date(tx.created_at).toLocaleDateString("en-GB")}</TableCell>
+                        <TableCell>
+                          <Badge variant={tx.type === "credit" ? "default" : "secondary"} className="text-xs capitalize">{tx.type}</Badge>
+                        </TableCell>
+                        <TableCell className={`font-medium ${tx.type === "credit" ? "text-primary" : "text-destructive"}`}>
+                          {tx.type === "credit" ? "+" : "−"}{tx.amount}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{tx.description || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card><CardContent className="py-8 text-center text-muted-foreground">No SMS transactions yet</CardContent></Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="users">
+          <TenantUsersTab tenantId={id!} />
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <TenantActivityTab tenantId={id!} />
+        </TabsContent>
+
+        <TabsContent value="logins">
+          <TenantLoginHistoryTab tenantId={id!} />
+        </TabsContent>
+      </Tabs>
 
       {/* ── AI Suggestions ─────────────────────────────────── */}
       {suggestions.length > 0 && (
