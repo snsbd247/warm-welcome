@@ -15,7 +15,7 @@ class StoreAdminUserRequest extends FormRequest
             'email' => 'nullable|email|max:255|unique:users,email',
             'username' => 'required|string|max:100|unique:users,username',
             'password' => 'required|string|min:6|max:255',
-            'role' => 'required|string|in:super_admin,admin,staff,manager,operator,technician,accountant',
+            'role' => 'required|string|in:super_admin,admin,owner,staff,manager,operator,technician,accountant',
             'mobile' => 'nullable|string|max:20',
             'staff_id' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:500',

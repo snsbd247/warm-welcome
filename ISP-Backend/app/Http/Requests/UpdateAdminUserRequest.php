@@ -16,7 +16,7 @@ class UpdateAdminUserRequest extends FormRequest
             'email' => "nullable|email|max:255|unique:users,email,{$userId}",
             'username' => "sometimes|string|max:100|unique:users,username,{$userId}",
             'password' => 'nullable|string|min:6|max:255',
-            'role' => 'sometimes|string|in:super_admin,admin,staff,manager,operator,technician,accountant',
+            'role' => 'sometimes|string|in:super_admin,admin,owner,staff,manager,operator,technician,accountant',
             'mobile' => 'nullable|string|max:20',
             'staff_id' => 'nullable|string|max:50',
             'status' => 'sometimes|string|in:active,disabled',

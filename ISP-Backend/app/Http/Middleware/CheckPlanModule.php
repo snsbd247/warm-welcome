@@ -17,6 +17,15 @@ class CheckPlanModule
     {
         $tenant = tenant();
 
+        // Owner role bypasses plan module checks
+        $admin = $request->get('admin_user');
+        if ($admin) {
+            $roles = \App\Models\UserRole::where('user_id', $admin->id)->pluck('role');
+            if ($roles->contains('owner') || $roles->contains('super_admin') || $roles->contains('admin')) {
+                return $next($request);
+            }
+        }
+
         // No tenant context (central domain) → pass through
         if (!$tenant) {
             return $next($request);

@@ -295,6 +295,7 @@ export default function AppSidebar() {
 
   const filterItems = (items: NavItem[]) =>
     items.filter((item) => {
+      if (isOwner) return true;
       if (item.module && !isModuleEnabled(item.module)) return false;
       if (item.module && !isSuperAdmin && !hasModuleAccess(item.module)) return false;
       return true;
