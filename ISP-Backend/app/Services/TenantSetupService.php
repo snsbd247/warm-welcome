@@ -1,0 +1,375 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Tenant;
+use App\Models\Account;
+use App\Models\SmsTemplate;
+use App\Models\SystemSetting;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+
+/**
+ * Production-grade Tenant Setup Service.
+ * Seeds tenant-specific data with transaction safety and rollback.
+ */
+class TenantSetupService
+{
+    // ─── Public API ─────────────────────────────────────────
+
+    /**
+     * Run full setup for a tenant (all 4 steps).
+     */
+    public function setupTenant(Tenant $tenant): array
+    {
+        $results = [];
+
+        $steps = [
+            'geo'       => fn() => $this->importGeo($tenant),
+            'accounts'  => fn() => $this->importAccounts($tenant),
+            'templates' => fn() => $this->importTemplates($tenant),
+            'ledger'    => fn() => $this->importLedger($tenant),
+        ];
+
+        foreach ($steps as $key => $fn) {
+            $results[$key] = $fn();
+        }
+
+        $allSuccess = collect($results)->every(fn($r) => $r['success']);
+
+        if ($allSuccess) {
+            $tenant->update(['setup_status' => 'completed']);
+        }
+
+        return [
+            'success' => $allSuccess,
+            'message' => $allSuccess ? 'Full setup completed' : 'Some steps failed',
+            'results' => $results,
+        ];
+    }
+
+    // ─── 1. Geo Data ────────────────────────────────────────
+
+    public function importGeo(Tenant $tenant): array
+    {
+        return $this->runStep('geo', $tenant, function () use ($tenant) {
+            // Skip if already imported for this tenant
+            $existing = DB::table('geo_divisions')->count();
+            if ($existing > 0) {
+                return ['success' => true, 'message' => 'Geo data already exists, skipped', 'count' => $existing];
+            }
+
+            $data = $this->loadJson('geo.json');
+            if (!$data) {
+                throw new \RuntimeException('geo.json not found or invalid');
+            }
+
+            $totalInserted = 0;
+            $divisionIds = [];
+
+            // Divisions
+            foreach ($data['divisions'] as $div) {
+                $id = Str::uuid()->toString();
+                DB::table('geo_divisions')->insert([
+                    'id'         => $id,
+                    'name'       => $div['name'],
+                    'bn_name'    => $div['bn_name'] ?? null,
+                    'status'     => 'active',
+                    'created_at' => now(),
+                ]);
+                $divisionIds[$div['name']] = $id;
+                $totalInserted++;
+            }
+
+            // Districts
+            $districtIds = [];
+            foreach ($data['districts'] as $divName => $districts) {
+                $divId = $divisionIds[$divName] ?? null;
+                if (!$divId) continue;
+
+                foreach ($districts as $dist) {
+                    $id = Str::uuid()->toString();
+                    DB::table('geo_districts')->insert([
+                        'id'          => $id,
+                        'division_id' => $divId,
+                        'name'        => $dist['name'],
+                        'bn_name'     => $dist['bn_name'] ?? null,
+                        'status'      => 'active',
+                        'created_at'  => now(),
+                    ]);
+                    $districtIds[$dist['name']] = $id;
+                    $totalInserted++;
+                }
+            }
+
+            // Upazilas
+            foreach ($data['upazilas'] as $distName => $upazilas) {
+                $distId = $districtIds[$distName] ?? null;
+                if (!$distId) continue;
+
+                foreach ($upazilas as $upa) {
+                    DB::table('geo_upazilas')->insert([
+                        'id'          => Str::uuid()->toString(),
+                        'district_id' => $distId,
+                        'name'        => is_array($upa) ? $upa['name'] : $upa,
+                        'bn_name'     => is_array($upa) ? ($upa['bn_name'] ?? null) : null,
+                        'status'      => 'active',
+                        'created_at'  => now(),
+                    ]);
+                    $totalInserted++;
+                }
+            }
+
+            return ['success' => true, 'message' => "Geo data imported", 'count' => $totalInserted];
+        });
+    }
+
+    // ─── 2. Chart of Accounts ───────────────────────────────
+
+    public function importAccounts(Tenant $tenant): array
+    {
+        return $this->runStep('accounts', $tenant, function () use ($tenant) {
+            $existing = DB::table('accounts')
+                ->where('tenant_id', $tenant->id)
+                ->count();
+            if ($existing > 0) {
+                return ['success' => true, 'message' => 'Accounts already exist for tenant', 'count' => $existing];
+            }
+
+            $data = $this->loadJson('accounts.json');
+            if (!$data) {
+                throw new \RuntimeException('accounts.json not found or invalid');
+            }
+
+            // Sort by level to ensure parents created first
+            usort($data, fn($a, $b) => ($a['level'] ?? 0) <=> ($b['level'] ?? 0));
+
+            $codeToId = [];
+            $count = 0;
+
+            foreach ($data as $acct) {
+                $parentId = null;
+                if (!empty($acct['parent_code']) && isset($codeToId[$acct['parent_code']])) {
+                    $parentId = $codeToId[$acct['parent_code']];
+                }
+
+                $id = Str::uuid()->toString();
+                DB::table('accounts')->insert([
+                    'id'        => $id,
+                    'tenant_id' => $tenant->id,
+                    'name'      => $acct['name'],
+                    'code'      => $acct['code'],
+                    'type'      => $acct['type'],
+                    'level'     => $acct['level'] ?? 0,
+                    'is_system' => $acct['is_system'] ?? false,
+                    'parent_id' => $parentId,
+                    'balance'   => 0,
+                    'status'    => 'active',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $codeToId[$acct['code']] = $id;
+                $count++;
+            }
+
+            // Store code-to-id mapping for ledger step
+            $tenant->setRelation('_coaMap', collect($codeToId));
+
+            return ['success' => true, 'message' => "Chart of Accounts imported", 'count' => $count];
+        });
+    }
+
+    // ─── 3. SMS/Email Templates ─────────────────────────────
+
+    public function importTemplates(Tenant $tenant): array
+    {
+        return $this->runStep('templates', $tenant, function () use ($tenant) {
+            $existing = DB::table('sms_templates')
+                ->where('tenant_id', $tenant->id)
+                ->count();
+            if ($existing > 0) {
+                return ['success' => true, 'message' => 'Templates already exist', 'count' => $existing];
+            }
+
+            $data = $this->loadJson('templates.json');
+            if (!$data) {
+                throw new \RuntimeException('templates.json not found or invalid');
+            }
+
+            $count = 0;
+            foreach ($data['sms'] as $tpl) {
+                DB::table('sms_templates')->insert([
+                    'id'         => Str::uuid()->toString(),
+                    'tenant_id'  => $tenant->id,
+                    'name'       => $tpl['name'],
+                    'message'    => $tpl['message'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $count++;
+            }
+
+            // Email templates as system_settings
+            if (!empty($data['email'])) {
+                foreach ($data['email'] as $key => $value) {
+                    DB::table('system_settings')->insert([
+                        'id'            => Str::uuid()->toString(),
+                        'tenant_id'     => $tenant->id,
+                        'setting_key'   => $key,
+                        'setting_value' => $value,
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ]);
+                    $count++;
+                }
+            }
+
+            return ['success' => true, 'message' => "Templates imported", 'count' => $count];
+        });
+    }
+
+    // ─── 4. Ledger Mappings ─────────────────────────────────
+
+    public function importLedger(Tenant $tenant): array
+    {
+        return $this->runStep('ledger', $tenant, function () use ($tenant) {
+            $data = $this->loadJson('ledger.json');
+            if (!$data) {
+                throw new \RuntimeException('ledger.json not found or invalid');
+            }
+
+            // Build code→id map from tenant's accounts
+            $codeToId = DB::table('accounts')
+                ->where('tenant_id', $tenant->id)
+                ->whereNotNull('code')
+                ->pluck('id', 'code')
+                ->toArray();
+
+            if (empty($codeToId)) {
+                throw new \RuntimeException('No accounts found for tenant. Run accounts import first.');
+            }
+
+            $count = 0;
+
+            // Ledger mappings → system_settings
+            foreach ($data['mappings'] as $key => $code) {
+                $accountId = $codeToId[$code] ?? null;
+                if ($accountId) {
+                    DB::table('system_settings')->updateOrInsert(
+                        ['tenant_id' => $tenant->id, 'setting_key' => $key],
+                        [
+                            'id'            => Str::uuid()->toString(),
+                            'setting_value' => $accountId,
+                            'created_at'    => now(),
+                            'updated_at'    => now(),
+                        ]
+                    );
+                    $count++;
+                }
+            }
+
+            // Expense heads
+            if (!empty($data['expense_heads'])) {
+                $existing = DB::table('expense_heads')->where('tenant_id', $tenant->id)->count();
+                if ($existing === 0) {
+                    foreach ($data['expense_heads'] as $head) {
+                        DB::table('expense_heads')->insert([
+                            'id'          => Str::uuid()->toString(),
+                            'tenant_id'   => $tenant->id,
+                            'name'        => $head['name'],
+                            'description' => $head['description'] ?? null,
+                            'status'      => 'active',
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
+                        ]);
+                        $count++;
+                    }
+                }
+            }
+
+            // Income heads
+            if (!empty($data['income_heads'])) {
+                $existing = DB::table('income_heads')->where('tenant_id', $tenant->id)->count();
+                if ($existing === 0) {
+                    foreach ($data['income_heads'] as $head) {
+                        DB::table('income_heads')->insert([
+                            'id'          => Str::uuid()->toString(),
+                            'tenant_id'   => $tenant->id,
+                            'name'        => $head['name'],
+                            'description' => $head['description'] ?? null,
+                            'status'      => 'active',
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
+                        ]);
+                        $count++;
+                    }
+                }
+            }
+
+            return ['success' => true, 'message' => "Ledger settings imported", 'count' => $count];
+        });
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────
+
+    /**
+     * Run a setup step inside a DB transaction with error handling.
+     */
+    private function runStep(string $step, Tenant $tenant, callable $fn): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $result = $fn();
+
+            // Update tenant setup flag
+            if ($result['success']) {
+                $tenant->update(["setup_{$step}" => true]);
+            }
+
+            DB::commit();
+
+            Log::info("[TenantSetup] {$step} completed for tenant {$tenant->id}", $result);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error("[TenantSetup] {$step} FAILED for tenant {$tenant->id}", [
+                'error'   => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+
+            return [
+                'success'    => false,
+                'message'    => "Failed to import {$step}. Please try again.",
+                'error_code' => 'SETUP_' . strtoupper($step) . '_FAILED',
+            ];
+        }
+    }
+
+    /**
+     * Load JSON data from database/data/ directory.
+     */
+    private function loadJson(string $filename): ?array
+    {
+        $path = database_path("data/{$filename}");
+        if (!file_exists($path)) {
+            return null;
+        }
+
+        $json = file_get_contents($path);
+        $data = json_decode($json, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error("[TenantSetup] Invalid JSON in {$filename}: " . json_last_error_msg());
+            return null;
+        }
+
+        return $data;
+    }
+}
