@@ -101,6 +101,7 @@ import SuperTenants from "@/pages/super/SuperTenants";
 import SuperPlans from "@/pages/super/SuperPlans";
 import SuperSubscriptions from "@/pages/super/SuperSubscriptions";
 import SuperDomains from "@/pages/super/SuperDomains";
+import SuperSmsManagement from "@/pages/super/SuperSmsManagement";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
