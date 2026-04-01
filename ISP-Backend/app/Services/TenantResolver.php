@@ -78,7 +78,7 @@ class TenantResolver
 
     /**
      * Extract subdomain from host.
-     * e.g. isp1.smartispsolution.com → isp1
+     * e.g. isp1.smartispapp.com → isp1
      */
     protected function extractSubdomain(string $host): ?string
     {
