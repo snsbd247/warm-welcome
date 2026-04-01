@@ -118,6 +118,7 @@ const settingsNav: NavItem[] = [
   { to: "/audit-logs", icon: ClipboardList, label: "Audit Logs", module: "settings" },
   { to: "/settings/backup", icon: HardDrive, label: "Backup & Restore", module: "settings" },
   { to: "/settings/api-health", icon: Activity, label: "API Health", module: "settings" },
+  { to: "/settings/domains", icon: Globe, label: "Domain Management", module: "settings" },
 ];
 
 // ═══════ NavGroup component ═══════
@@ -287,6 +288,7 @@ export default function AppSidebar() {
     { to: "/audit-logs", icon: ClipboardList, label: t.sidebar.auditLogs, module: "settings" },
     { to: "/settings/backup", icon: HardDrive, label: t.sidebar.backupRestore, module: "settings" },
     { to: "/settings/api-health", icon: Activity, label: t.sidebar.apiHealth, module: "settings" },
+    { to: "/settings/domains", icon: Globe, label: "Domain Management", module: "settings" },
   ];
 
   const siteName = branding.site_name || "Smart ISP";

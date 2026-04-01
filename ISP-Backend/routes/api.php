@@ -72,6 +72,25 @@ Route::post('/setup/storage-link', [\App\Http\Controllers\Api\SetupController::c
 Route::post('/setup/full', [\App\Http\Controllers\Api\SetupController::class, 'full']);
 Route::post('/setup/reset-all', [\App\Http\Controllers\Api\SetupController::class, 'resetAll']);
 
+// ── Tenant Info (public — needed for login page branding per tenant) ──
+Route::get('/tenant/current', function () {
+    $t = tenant();
+    if (!$t) {
+        return response()->json(['tenant' => null, 'is_central' => true]);
+    }
+    return response()->json([
+        'tenant' => [
+            'id' => $t->id,
+            'name' => $t->name,
+            'subdomain' => $t->subdomain,
+            'logo_url' => $t->logo_url,
+            'status' => $t->status,
+            'plan' => $t->plan,
+        ],
+        'is_central' => false,
+    ]);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Admin Protected Routes
@@ -377,6 +396,19 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/storage/download', [StorageController::class, 'download']);
     Route::post('/storage/delete', [StorageController::class, 'delete']);
     Route::get('/storage/serve/{bucket}/{path}', [StorageController::class, 'serve'])->where('path', '.*');
+
+    // ══════════════════════════════════════════════════════
+    // ── DOMAIN MANAGEMENT — module: settings ────────────
+    // ══════════════════════════════════════════════════════
+    Route::middleware('check.permission:settings,view')->group(function () {
+        Route::get('/domains', [\App\Http\Controllers\Api\DomainController::class, 'index']);
+    });
+    Route::middleware('check.permission:settings,edit')->group(function () {
+        Route::post('/domains', [\App\Http\Controllers\Api\DomainController::class, 'store']);
+        Route::post('/domains/{id}/primary', [\App\Http\Controllers\Api\DomainController::class, 'setPrimary']);
+        Route::post('/domains/{id}/verify', [\App\Http\Controllers\Api\DomainController::class, 'verify']);
+        Route::delete('/domains/{id}', [\App\Http\Controllers\Api\DomainController::class, 'destroy']);
+    });
 
     // ══════════════════════════════════════════════════════
     // ── GENERIC CRUD — catches remaining tables ─────────

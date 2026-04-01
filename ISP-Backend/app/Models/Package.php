@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use App\Traits\HasUuid;
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Package extends Model
 {
-    use HasUuid;
+    use HasUuid, BelongsToTenant;
 
     protected $fillable = [
-        'id', 'name', 'speed', 'monthly_price', 'download_speed', 'upload_speed',
+        'id', 'tenant_id', 'name', 'speed', 'monthly_price', 'download_speed', 'upload_speed',
         'is_active', 'mikrotik_profile_name', 'bandwidth_profile', 'burst_limit',
         'router_id',
     ];

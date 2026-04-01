@@ -46,6 +46,9 @@ class GenericCrudController extends Controller
         'role_permissions' => \App\Models\RolePermission::class,
         'admin_sessions' => \App\Models\AdminSession::class,
         'admin_login_logs' => \App\Models\AdminLoginLog::class,
+        // Multi-tenancy
+        'tenants' => \App\Models\Tenant::class,
+        'domains' => \App\Models\Domain::class,
         // Accounting & Inventory
         'vendors' => \App\Models\Vendor::class,
         'products' => \App\Models\Product::class,

@@ -3,16 +3,17 @@
 namespace App\Models;
 
 use App\Traits\HasUuid;
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
 {
-    use HasUuid;
+    use HasUuid, BelongsToTenant;
 
     protected $table = 'users';
 
     protected $fillable = [
-        'id', 'full_name', 'email', 'username', 'mobile', 'address',
+        'id', 'tenant_id', 'full_name', 'email', 'username', 'mobile', 'address',
         'avatar_url', 'password_hash', 'staff_id', 'status', 'language',
     ];
 

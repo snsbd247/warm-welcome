@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use App\Traits\HasUuid;
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Bill extends Model
 {
-    use HasUuid;
+    use HasUuid, BelongsToTenant;
 
     protected $fillable = [
-        'id', 'customer_id', 'month', 'amount', 'status',
+        'id', 'tenant_id', 'customer_id', 'month', 'amount', 'status',
         'due_date', 'paid_date', 'payment_link_token',
     ];
 

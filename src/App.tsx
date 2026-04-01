@@ -92,6 +92,7 @@ import BtrcReport from "@/pages/reporting/BtrcReport";
 import TrafficMonitor from "@/pages/reporting/TrafficMonitor";
 import ApiHealthMonitor from "@/pages/settings/ApiHealthMonitor";
 import GeoManagement from "@/pages/settings/GeoManagement";
+import DomainManagement from "@/pages/settings/DomainManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -208,6 +209,7 @@ function App() {
                 <Route path="/settings/nagad" element={<PermissionGuard module="settings"><NagadApiManagement /></PermissionGuard>} />
                 <Route path="/settings/backup" element={<PermissionGuard module="settings"><BackupRestore /></PermissionGuard>} />
                 <Route path="/settings/api-health" element={<PermissionGuard module="settings"><ApiHealthMonitor /></PermissionGuard>} />
+                <Route path="/settings/domains" element={<PermissionGuard module="settings"><DomainManagement /></PermissionGuard>} />
 
                 {/* Public Payment Link */}
                 <Route path="/pay" element={<PayBill />} />
