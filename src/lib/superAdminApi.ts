@@ -317,16 +317,39 @@ export const superAdminApi = {
   getTenantUsers: async (tenantId: string) => {
     if (IS_LOVABLE) {
       const profiles = await sbSelect("profiles");
-      return profiles.map((p: any) => ({
-        ...p,
-        role: "admin",
-        custom_role_id: null,
-      }));
+      const roles = await sbSelect("user_roles");
+      return profiles.map((p: any) => {
+        const userRole = roles.find((r: any) => r.user_id === p.id);
+        return {
+          ...p,
+          role: userRole?.role || "staff",
+          custom_role_id: userRole?.custom_role_id || null,
+        };
+      });
     }
     return request(`/tenants/${tenantId}/users`);
   },
   updateTenantUser: async (tenantId: string, userId: string, data: any) => {
-    if (IS_LOVABLE) return sbUpdate("profiles", userId, data);
+    if (IS_LOVABLE) {
+      const { role, password, must_change_password, ...profileData } = data;
+      // Update profile fields
+      const updatePayload: any = { ...profileData };
+      if (must_change_password !== undefined) updatePayload.must_change_password = must_change_password;
+      // password can't be hashed client-side for Supabase preview, skip
+      if (Object.keys(updatePayload).length > 0) {
+        await sbUpdate("profiles", userId, updatePayload);
+      }
+      // Update role if provided
+      if (role) {
+        const existingRoles = await sbSelect("user_roles", { filters: { user_id: userId } });
+        if (existingRoles.length > 0) {
+          await sbUpdate("user_roles", existingRoles[0].id, { role });
+        } else {
+          await sbInsert("user_roles", { user_id: userId, role });
+        }
+      }
+      return { success: true };
+    }
     return request(`/tenants/${tenantId}/users/${userId}`, { method: "PUT", body: JSON.stringify(data) });
   },
 
