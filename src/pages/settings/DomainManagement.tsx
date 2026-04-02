@@ -454,6 +454,7 @@ const DomainManagement = () => {
         onClose={() => setDnsDialogDomain(null)}
       />
     </div>
+    </DashboardLayout>
   );
 };
 
