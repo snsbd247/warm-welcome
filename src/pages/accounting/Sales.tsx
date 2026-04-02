@@ -37,7 +37,7 @@ export default function Sales() {
     customer_name: "Walk-in Customer", customer_phone: "", sale_date: new Date().toISOString().split("T")[0],
     payment_method: "cash", discount: 0, tax: 0, paid_amount: 0, notes: "",
   });
-  const [items, setItems] = useState<SaleItem[]>([{ product_id: "", quantity: 1, unit_price: 0 }]);
+  const [items, setItems] = useState<SaleItem[]>([{ product_id: "", quantity: 1, unit_price: 0, serial_number: "" }]);
 
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ["sales"],
