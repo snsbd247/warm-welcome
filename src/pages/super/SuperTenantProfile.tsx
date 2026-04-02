@@ -895,27 +895,6 @@ export default function SuperTenantProfile() {
     },
   });
 
-  const fullResetMut = useMutation({
-    mutationFn: async () => {
-      const result: FullResetAndImportResult = await fullSystemResetAndImport();
-      if (!result.overall) {
-        const msgs: string[] = [];
-        if (result.reset.errors.length > 0) msgs.push(`Reset errors: ${result.reset.errors.slice(0, 3).join(", ")}`);
-        if (result.setup && !result.setup.overall) msgs.push("Some demo data failed to import");
-        throw new Error(msgs.join("; ") || "Full reset failed");
-      }
-      return result;
-    },
-    onSuccess: (result: FullResetAndImportResult) => {
-      toast.success(`🎉 Full system reset complete! ${result.reset.tables_cleared.length} tables cleared, demo data imported.`);
-      setShowFullResetConfirm(false);
-      setFullResetConfirmText("");
-      qc.invalidateQueries();
-    },
-    onError: (e: any) => {
-      toast.error(e.message || "Full reset failed");
-    },
-  });
 
   const suspendMut = useMutation({
     mutationFn: () => superAdminApi.suspendTenant(id!),
