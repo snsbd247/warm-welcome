@@ -230,8 +230,40 @@ export default function Dashboard() {
     );
   }
 
+  // Plan expiry warning query
+  const { data: planStatus } = useQuery({
+    queryKey: ["tenant-plan-status"],
+    queryFn: async () => {
+      // Check tenant plan expiry from tenants table
+      const { data } = await db.from("tenants").select("plan_expire_date, grace_days, plan_expiry_message, status").limit(1).maybeSingle();
+      if (!data?.plan_expire_date) return null;
+      const daysLeft = Math.ceil((new Date(data.plan_expire_date).getTime() - Date.now()) / 86400000);
+      return {
+        days_left: daysLeft,
+        show_warning: daysLeft <= 2 && daysLeft >= -(data.grace_days ?? 3),
+        is_expired: daysLeft < 0,
+        message: data.plan_expiry_message || "আপনার প্ল্যানের মেয়াদ শীঘ্রই শেষ হচ্ছে। দয়া করে রিনিউ করুন।",
+      };
+    },
+    refetchInterval: 300000,
+    retry: 1,
+  });
+
   return (
     <DashboardLayout>
+      {/* ══════ Plan Expiry Warning ══════ */}
+      {planStatus?.show_warning && (
+        <div className={`mb-4 p-4 rounded-lg border ${planStatus.is_expired ? "bg-destructive/10 border-destructive/30" : "bg-amber-500/10 border-amber-500/30"}`}>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className={`h-5 w-5 ${planStatus.is_expired ? "text-destructive" : "text-amber-500"}`} />
+            <div>
+              <p className="font-semibold text-sm">{planStatus.is_expired ? "⚠️ প্ল্যানের মেয়াদ শেষ!" : "⏳ প্ল্যান এক্সপায়ারি সতর্কতা"}</p>
+              <p className="text-sm text-muted-foreground">{planStatus.message} {planStatus.days_left >= 0 ? `(${planStatus.days_left} দিন বাকি)` : `(${Math.abs(planStatus.days_left)} দিন আগে শেষ হয়েছে)`}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ══════ Header ══════ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
