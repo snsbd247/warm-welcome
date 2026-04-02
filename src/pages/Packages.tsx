@@ -72,6 +72,15 @@ export default function Packages() {
     },
   });
 
+  const { data: ipPools } = useQuery({
+    queryKey: ["ip-pools-active"],
+    queryFn: async () => {
+      const { data, error } = await db.from("ip_pools").select("*").eq("status", "active");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const filtered = packages?.filter(
     (p) =>
       (p.name || "").toLowerCase().includes(search.toLowerCase()) ||
