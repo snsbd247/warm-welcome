@@ -112,6 +112,10 @@ const GeoManagement = lazy(() => import("@/pages/settings/GeoManagement"));
 const DomainManagement = lazy(() => import("@/pages/settings/DomainManagement"));
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const ForcePasswordChange = lazy(() => import("@/pages/ForcePasswordChange"));
+const CouponManagement = lazy(() => import("@/pages/CouponManagement"));
+const IpPoolManagement = lazy(() => import("@/pages/IpPoolManagement"));
+const FaqManagement = lazy(() => import("@/pages/FaqManagement"));
+const AdvancedAnalytics = lazy(() => import("@/pages/AdvancedAnalytics"));
 
 // Super Admin (separate chunk)
 import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
