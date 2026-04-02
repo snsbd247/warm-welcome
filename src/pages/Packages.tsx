@@ -104,6 +104,7 @@ export default function Packages() {
       upload_speed: pkg.upload_speed?.toString() || "",
       burst_limit: pkg.burst_limit || "",
       router_id: pkg.router_id || "",
+      ip_pool_id: pkg.ip_pool_id || "",
     });
     setFormOpen(true);
   };
