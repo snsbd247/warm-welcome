@@ -320,9 +320,22 @@ export default function SuperSmsManagement() {
             <div className="text-sm text-muted-foreground flex items-center gap-1">
               <TrendingUp className="h-3.5 w-3.5" /> Sent (30 Days)
             </div>
-            <div className="text-2xl font-bold text-green-600">{totalSent.toLocaleString()}</div>
-            {totalFailed > 0 && (
-              <div className="text-xs text-destructive">{totalFailed} failed</div>
+            {balanceLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin mt-1" />
+            ) : apiSent30 !== null ? (
+              <>
+                <div className="text-2xl font-bold text-primary">{apiSent30.toLocaleString()}</div>
+                {(apiFailed30 ?? 0) > 0 && (
+                  <div className="text-xs text-destructive">{apiFailed30} failed</div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-primary">{totalSent.toLocaleString()}</div>
+                {totalFailed > 0 && (
+                  <div className="text-xs text-destructive">{totalFailed} failed</div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
