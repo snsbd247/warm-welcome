@@ -824,16 +824,3 @@ class MikrotikService
         return $num;
     }
 }
-        $num = intval($value);
-        if (stripos($fullRate, 'M') !== false || stripos($fullRate, 'm') !== false) {
-            return $num; // already in Mbps
-        }
-        if (stripos($fullRate, 'k') !== false || stripos($fullRate, 'K') !== false) {
-            return max(1, intval($num / 1000));
-        }
-        // Assume bits per second if raw number > 1000000
-        if ($num > 1000000) return intval($num / 1000000);
-        if ($num > 1000) return intval($num / 1000);
-        return $num;
-    }
-}
