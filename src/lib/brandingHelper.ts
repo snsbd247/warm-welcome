@@ -44,8 +44,18 @@ export async function getBranding(): Promise<BrandingData> {
   }
 
   try {
-    const { data } = await db.from("general_settings").select("*").limit(1).maybeSingle();
-    
+    const [{ data }, footerData] = await Promise.all([
+      db.from("general_settings").select("*").limit(1).maybeSingle(),
+      (db as any).from("system_settings")
+        .select("setting_key, setting_value")
+        .in("setting_key", ["branding_footer_text", "branding_copyright_text"]),
+    ]);
+
+    const footerMap: Record<string, string> = {};
+    ((footerData?.data || footerData) || []).forEach?.((r: any) => {
+      footerMap[r.setting_key] = r.setting_value || "";
+    });
+
     if (data) {
       const d = data as any;
       cachedBranding = {
@@ -55,8 +65,8 @@ export async function getBranding(): Promise<BrandingData> {
         support_email: d.support_email || d.email || DEFAULT_BRANDING.support_email,
         support_phone: d.support_phone || d.mobile || DEFAULT_BRANDING.support_phone,
         logo_url: d.logo_url || DEFAULT_BRANDING.logo_url,
-        footer_text: DEFAULT_BRANDING.footer_text,
-        copyright_text: DEFAULT_BRANDING.copyright_text,
+        footer_text: footerMap.branding_footer_text || DEFAULT_BRANDING.footer_text,
+        copyright_text: footerMap.branding_copyright_text || DEFAULT_BRANDING.copyright_text,
         email: d.email || DEFAULT_BRANDING.email,
         mobile: d.mobile || DEFAULT_BRANDING.mobile,
       };
