@@ -222,14 +222,6 @@ export default function Dashboard() {
     }
   };
 
-  if (loadingCustomers || loadingBills) {
-    return (
-      <DashboardLayout>
-        <DashboardSkeleton />
-      </DashboardLayout>
-    );
-  }
-
   // Plan expiry warning query
   const { data: planStatus } = useQuery({
     queryKey: ["tenant-plan-status"],
@@ -248,6 +240,14 @@ export default function Dashboard() {
     refetchInterval: 300000,
     retry: 1,
   });
+
+  if (loadingCustomers || loadingBills) {
+    return (
+      <DashboardLayout>
+        <DashboardSkeleton />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
