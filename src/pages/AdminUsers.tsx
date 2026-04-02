@@ -28,6 +28,9 @@ import {
 import { Plus, Pencil, Trash2, Loader2, Search, Ban, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { Database } from "@/integrations/supabase/types";
+
+type AppRole = Database["public"]["Enums"]["app_role"];
 
 export default function AdminUsers() {
   const { t } = useLanguage();
@@ -161,7 +164,11 @@ export default function AdminUsers() {
           await db.from("profiles").update(updateData).eq("id", editUser.id);
           if (form.role) {
             await db.from("user_roles").delete().eq("user_id", editUser.id);
-            await db.from("user_roles").insert({ user_id: editUser.id, role: form.role, custom_role_id: form.custom_role_id || null });
+            await db.from("user_roles").insert({
+              user_id: editUser.id,
+              role: form.role as AppRole,
+              custom_role_id: form.custom_role_id || null,
+            });
           }
           toast.success("User updated");
         } else {
@@ -186,7 +193,11 @@ export default function AdminUsers() {
             tenant_id: currentProfile?.tenant_id || null,
           });
           if (form.role) {
-            await db.from("user_roles").insert({ user_id: newId, role: form.role, custom_role_id: form.custom_role_id || null });
+            await db.from("user_roles").insert({
+              user_id: newId,
+              role: form.role as AppRole,
+              custom_role_id: form.custom_role_id || null,
+            });
           }
           toast.success("User created");
         }
