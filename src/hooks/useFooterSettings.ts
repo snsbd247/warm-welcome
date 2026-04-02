@@ -18,6 +18,7 @@ const DEFAULTS: FooterSettings = {
   footer_developer: "",
   system_version: "",
   auto_update_year: true,
+  branding_copyright_text: "",
 };
 
 export function useFooterSettings() {
