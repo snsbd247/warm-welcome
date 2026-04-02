@@ -29,6 +29,8 @@ export default function ProductSerials() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [form, setForm] = useState({ product_id: "", serial_number: "", notes: "" });
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkSerials, setBulkSerials] = useState("");
 
   const { data: serials = [], isLoading } = useQuery({
     queryKey: ["product_serials"],
