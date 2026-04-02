@@ -119,8 +119,7 @@ export default function SuperSmsManagement() {
     return null;
   }, [liveBalance]);
 
-  const apiSent30 = liveBalance?.sent_30_days ?? null;
-  const apiFailed30 = liveBalance?.failed_30_days ?? null;
+  const apiTotalSent = liveBalance?.total_sent ?? null;
 
   // ── SMS Wallets (all tenants) ───────────────
   const { data: wallets = [], isLoading: walletsLoading } = useQuery({
@@ -354,24 +353,18 @@ export default function SuperSmsManagement() {
           </CardContent>
         </Card>
 
-        {/* 30-Day Sent */}
+        {/* Total Sent (GreenWeb API) */}
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground flex items-center gap-1">
-              <TrendingUp className="h-3.5 w-3.5" /> Sent (30 Days)
+              <TrendingUp className="h-3.5 w-3.5" /> Total Sent (API)
             </div>
             {balanceLoading ? (
               <Loader2 className="h-5 w-5 animate-spin mt-1" />
-            ) : apiSent30 !== null && apiSent30 > 0 ? (
-              <>
-                <div className="text-2xl font-bold text-primary">{apiSent30.toLocaleString()}</div>
-                {(apiFailed30 ?? 0) > 0 && <div className="text-xs text-destructive">{apiFailed30} failed</div>}
-              </>
+            ) : apiTotalSent !== null && apiTotalSent > 0 ? (
+              <div className="text-2xl font-bold text-primary">{apiTotalSent.toLocaleString()}</div>
             ) : (
-              <>
-                <div className="text-2xl font-bold text-primary">{totalSent.toLocaleString()}</div>
-                {totalFailed > 0 && <div className="text-xs text-destructive">{totalFailed} failed</div>}
-              </>
+              <div className="text-2xl font-bold text-primary">{totalSent.toLocaleString()}</div>
             )}
           </CardContent>
         </Card>
