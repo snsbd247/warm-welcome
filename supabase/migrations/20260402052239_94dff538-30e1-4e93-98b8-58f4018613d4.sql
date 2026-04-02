@@ -1,0 +1,20 @@
+INSERT INTO modules (id, name, slug, description, icon, is_core, is_active, sort_order) VALUES
+  (gen_random_uuid(), 'Dashboard', 'dashboard', 'Main dashboard and analytics', 'LayoutDashboard', true, true, 1),
+  (gen_random_uuid(), 'Customers', 'customers', 'Customer management', 'Users', true, true, 2),
+  (gen_random_uuid(), 'Billing', 'billing', 'Bill generation and management', 'Receipt', true, true, 3),
+  (gen_random_uuid(), 'Payments', 'payments', 'Payment collection', 'CreditCard', true, true, 4),
+  (gen_random_uuid(), 'Packages', 'packages', 'Internet packages', 'Package', true, true, 5),
+  (gen_random_uuid(), 'Settings', 'settings', 'System settings', 'Settings', true, true, 6),
+  (gen_random_uuid(), 'MikroTik', 'mikrotik', 'Router management', 'Router', false, true, 7),
+  (gen_random_uuid(), 'OLT/ONU', 'olt-onu', 'Fiber network management', 'Network', false, true, 8),
+  (gen_random_uuid(), 'SMS', 'sms', 'SMS notifications', 'MessageSquare', false, true, 9),
+  (gen_random_uuid(), 'Reports', 'reports', 'Reports and analytics', 'BarChart3', false, true, 10),
+  (gen_random_uuid(), 'Accounting', 'accounting', 'Chart of accounts and ledger', 'Calculator', false, true, 11),
+  (gen_random_uuid(), 'HR Management', 'hr', 'Employee and payroll', 'UserCog', false, true, 12),
+  (gen_random_uuid(), 'Inventory', 'inventory', 'Product and stock management', 'Boxes', false, true, 13),
+  (gen_random_uuid(), 'Tickets', 'tickets', 'Support ticket system', 'Ticket', false, true, 14),
+  (gen_random_uuid(), 'User Management', 'users', 'User and role management', 'ShieldCheck', false, true, 15),
+  (gen_random_uuid(), 'Merchant Payments', 'merchant-payments', 'bKash/Nagad merchant', 'Wallet', false, true, 16),
+  (gen_random_uuid(), 'Payment Gateway', 'payment-gateway', 'Online payment gateway', 'Globe', false, true, 17),
+  (gen_random_uuid(), 'Backup', 'backup', 'Data backup and restore', 'Database', false, true, 18)
+ON CONFLICT DO NOTHING;
