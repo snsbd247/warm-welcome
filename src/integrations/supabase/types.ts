@@ -1488,12 +1488,15 @@ export type Database = {
           end_ip: string
           gateway: string | null
           id: string
+          mikrotik_id: string | null
           name: string
+          ranges: string | null
           router_id: string | null
           start_ip: string
           status: string
           subnet: string
           total_ips: number
+          type: string | null
           updated_at: string
           used_ips: number
         }
@@ -1502,12 +1505,15 @@ export type Database = {
           end_ip: string
           gateway?: string | null
           id?: string
+          mikrotik_id?: string | null
           name: string
+          ranges?: string | null
           router_id?: string | null
           start_ip: string
           status?: string
           subnet: string
           total_ips?: number
+          type?: string | null
           updated_at?: string
           used_ips?: number
         }
@@ -1516,12 +1522,15 @@ export type Database = {
           end_ip?: string
           gateway?: string | null
           id?: string
+          mikrotik_id?: string | null
           name?: string
+          ranges?: string | null
           router_id?: string | null
           start_ip?: string
           status?: string
           subnet?: string
           total_ips?: number
+          type?: string | null
           updated_at?: string
           used_ips?: number
         }
