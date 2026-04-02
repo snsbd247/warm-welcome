@@ -51,7 +51,7 @@ export default function Packages() {
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({
     name: "", speed: "", monthly_price: "", bandwidth_profile: "",
-    download_speed: "", upload_speed: "", burst_limit: "", router_id: "",
+    download_speed: "", upload_speed: "", burst_limit: "", router_id: "", ip_pool_id: "",
   });
 
   const { data: packages, isLoading } = useQuery({
