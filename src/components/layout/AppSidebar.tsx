@@ -90,6 +90,7 @@ const supplierNav: NavItem[] = [
 
 const supportNav: NavItem[] = [
   { to: "/tickets", icon: Ticket, label: "Tickets", module: "tickets" },
+  { to: "/faq", icon: HelpCircle, label: "FAQ", module: "settings" },
   { to: "/sms", icon: MessageSquare, label: "SMS Logs", module: "sms" },
   { to: "/reminders", icon: Bell, label: "Reminders", module: "sms" },
 ];
