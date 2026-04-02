@@ -40,6 +40,8 @@ Deno.serve(async (req) => {
     }
 
     const token = settings.api_token || "";
+    const adminCostRate = settings.admin_cost_rate ?? 0.25;
+
     if (!token) {
       return new Response(
         JSON.stringify({ success: false, error: "SMS API token not configured by Super Admin" }),
@@ -76,8 +78,9 @@ Deno.serve(async (req) => {
       : (msgLen <= 160 ? 1 : Math.ceil(msgLen / 153));
 
     // ── Tenant wallet balance & rate check ──
-    let smsRate = 0.50; // default rate
+    let smsRate = 0.50;
     let smsCost = 0;
+    let adminCost = parseFloat((smsCount * adminCostRate).toFixed(2));
 
     if (tenant_id) {
       const { data: wallet } = await supabase
@@ -96,19 +99,20 @@ Deno.serve(async (req) => {
           response: `Insufficient balance. Required: ৳${smsCost}, Available: ৳${currentBalance}`,
           customer_id: customer_id || null,
           tenant_id, sms_count: smsCount, cost: smsCost,
+          admin_cost: 0, profit: 0,
         });
         return new Response(
           JSON.stringify({
             success: false,
             error: `Insufficient SMS balance. Required: ৳${smsCost}, Available: ৳${currentBalance}`,
-            balance: currentBalance,
-            required: smsCost,
-            sms_count: smsCount,
-            rate: smsRate,
+            balance: currentBalance, required: smsCost,
+            sms_count: smsCount, rate: smsRate,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+    } else {
+      smsCost = parseFloat((smsCount * smsRate).toFixed(2));
     }
 
     // ── Clean phone number (Bangladesh format) ──
@@ -121,7 +125,7 @@ Deno.serve(async (req) => {
     let status = "failed";
 
     try {
-      console.log(`[SMS] Sending to ${phone}, smsCount=${smsCount}, rate=${smsRate}, cost=${smsCost}`);
+      console.log(`[SMS] Sending to ${phone}, smsCount=${smsCount}, rate=${smsRate}, cost=${smsCost}, adminCost=${adminCost}`);
       const smsUrl = `${gatewayUrl}?token=${encodeURIComponent(token)}&to=${encodeURIComponent(phone)}&message=${encodeURIComponent(message)}`;
       const smsResponse = await fetch(smsUrl);
       responseText = await smsResponse.text();
@@ -138,6 +142,9 @@ Deno.serve(async (req) => {
       status = "failed";
       console.error(`[SMS] GreenWeb API exception: ${responseText}`);
     }
+
+    // ── Calculate profit (only on success) ──
+    const profit = status === "sent" ? parseFloat((smsCost - adminCost).toFixed(2)) : 0;
 
     // ── Deduct wallet balance ONLY on confirmed success ──
     let remainingBalance = null;
@@ -167,13 +174,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Log with REAL status + cost ──
+    // ── Log with REAL status + cost + profit ──
     await supabase.from("sms_logs").insert({
       phone: to, message, sms_type, status, response: responseText,
       customer_id: customer_id || null,
       tenant_id: tenant_id || null,
       sms_count: smsCount,
       cost: status === "sent" ? smsCost : 0,
+      admin_cost: status === "sent" ? adminCost : 0,
+      profit: profit,
     });
 
     // ── Reminder logs for billing types ──
@@ -195,7 +204,7 @@ Deno.serve(async (req) => {
     }
 
     const isSuccess = status === "sent";
-    console.log(`[SMS] Final: success=${isSuccess}, cost=${smsCost}, rate=${smsRate}`);
+    console.log(`[SMS] Final: success=${isSuccess}, cost=${smsCost}, adminCost=${adminCost}, profit=${profit}`);
 
     return new Response(
       JSON.stringify({

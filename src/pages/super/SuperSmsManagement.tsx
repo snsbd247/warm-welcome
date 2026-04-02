@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,14 +18,14 @@ import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from "@/components/ui/chart";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Area, AreaChart,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area,
 } from "recharts";
 import {
   Loader2, Save, Settings, Plus, MessageSquare, ArrowUpCircle, ArrowDownCircle,
-  Wifi, WifiOff, AlertTriangle, TrendingUp, Activity, Zap, RefreshCw,
+  Wifi, WifiOff, AlertTriangle, TrendingUp, Activity, Zap, RefreshCw, DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
-import { format, subDays, startOfDay } from "date-fns";
+import { format, subDays } from "date-fns";
 
 const LOW_BALANCE_THRESHOLD = 100;
 
@@ -45,6 +45,9 @@ const chartConfig = {
   failed: { label: "Failed", color: "hsl(0 84% 60%)" },
   total: { label: "Total SMS", color: "hsl(var(--primary))" },
   balance: { label: "Balance", color: "hsl(var(--primary))" },
+  revenue: { label: "Revenue", color: "hsl(142 76% 36%)" },
+  cost: { label: "Cost", color: "hsl(0 84% 60%)" },
+  profit: { label: "Profit", color: "hsl(var(--primary))" },
 };
 
 export default function SuperSmsManagement() {
@@ -89,7 +92,6 @@ export default function SuperSmsManagement() {
     const balArr = liveBalance.balance || liveBalance;
     if (Array.isArray(balArr) && balArr.length > 0) {
       const item = balArr[0];
-      // GreenWeb returns balance as string, normalize
       return {
         ...item,
         balance: item.balance ?? item.remaining ?? item.credit ?? null,
@@ -107,7 +109,6 @@ export default function SuperSmsManagement() {
     return null;
   }, [liveBalance]);
 
-  // Sent/Failed from API (not DB)
   const apiSent30 = liveBalance?.sent_30_days ?? null;
   const apiFailed30 = liveBalance?.failed_30_days ?? null;
 
@@ -131,14 +132,14 @@ export default function SuperSmsManagement() {
     },
   });
 
-  // ── SMS Logs for Analytics ──────────────────
+  // ── SMS Logs for Analytics (with profit data) ──────────────────
   const { data: smsLogs = [] } = useQuery({
     queryKey: ["super-sms-logs-analytics"],
     queryFn: async () => {
       const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
       const { data } = await db
         .from("sms_logs")
-        .select("id, created_at, status, sms_type, tenant_id, sms_count, cost")
+        .select("id, created_at, status, sms_type, tenant_id, sms_count, cost, admin_cost, profit")
         .gte("created_at", thirtyDaysAgo)
         .order("created_at", { ascending: true });
       return data || [];
@@ -147,15 +148,17 @@ export default function SuperSmsManagement() {
 
   // ── Daily Usage Chart Data ──────────────────
   const dailyUsage = useMemo(() => {
-    const map: Record<string, { date: string; sent: number; failed: number; total: number }> = {};
+    const map: Record<string, { date: string; sent: number; failed: number; revenue: number; cost: number; profit: number }> = {};
     for (let i = 29; i >= 0; i--) {
       const d = format(subDays(new Date(), i), "yyyy-MM-dd");
-      map[d] = { date: d, sent: 0, failed: 0, total: 0 };
+      map[d] = { date: d, sent: 0, failed: 0, revenue: 0, cost: 0, profit: 0 };
     }
     smsLogs.forEach((log: any) => {
       const d = format(new Date(log.created_at), "yyyy-MM-dd");
       if (map[d]) {
-        map[d].total += (log.sms_count || 1);
+        map[d].revenue += Number(log.cost || 0);
+        map[d].cost += Number(log.admin_cost || 0);
+        map[d].profit += Number(log.profit || 0);
         if (log.status === "sent") map[d].sent += (log.sms_count || 1);
         else map[d].failed += (log.sms_count || 1);
       }
@@ -163,16 +166,18 @@ export default function SuperSmsManagement() {
     return Object.values(map);
   }, [smsLogs]);
 
-  // ── Per-Tenant Consumption ──────────────────
+  // ── Per-Tenant Consumption + Profit ──────────────────
   const tenantConsumption = useMemo(() => {
-    const map: Record<string, { tenant_id: string; total: number }> = {};
+    const map: Record<string, { tenant_id: string; total: number; revenue: number; admin_cost: number; profit: number }> = {};
     smsLogs.forEach((log: any) => {
       const tid = log.tenant_id || "unknown";
-      if (!map[tid]) map[tid] = { tenant_id: tid, total: 0 };
+      if (!map[tid]) map[tid] = { tenant_id: tid, total: 0, revenue: 0, admin_cost: 0, profit: 0 };
       map[tid].total += (log.sms_count || 1);
+      map[tid].revenue += Number(log.cost || 0);
+      map[tid].admin_cost += Number(log.admin_cost || 0);
+      map[tid].profit += Number(log.profit || 0);
     });
     const result = Object.values(map).sort((a, b) => b.total - a.total);
-    // Map tenant names
     return result.map((item) => {
       const w = wallets.find((w: any) => w.tenant_id === item.tenant_id);
       return { ...item, tenant_name: w?.tenant_name || "Unknown" };
@@ -205,10 +210,13 @@ export default function SuperSmsManagement() {
     },
   });
 
-  // ── Stats ───────────────────────────────────
+  // ── Aggregated Stats ───────────────────────
   const totalBalance = wallets.reduce((sum: number, w: any) => sum + (w.balance || 0), 0);
   const totalSent = smsLogs.filter((l: any) => l.status === "sent").length;
   const totalFailed = smsLogs.filter((l: any) => l.status === "failed").length;
+  const totalRevenue = smsLogs.reduce((sum: number, l: any) => sum + Number(l.cost || 0), 0);
+  const totalAdminCost = smsLogs.reduce((sum: number, l: any) => sum + Number(l.admin_cost || 0), 0);
+  const totalProfit = smsLogs.reduce((sum: number, l: any) => sum + Number(l.profit || 0), 0);
 
   // ── Handlers ────────────────────────────────
   const handleSaveSettings = async () => {
@@ -219,6 +227,7 @@ export default function SuperSmsManagement() {
         await db.from("sms_settings").update({
           api_token: form.api_token,
           sender_id: form.sender_id,
+          admin_cost_rate: form.admin_cost_rate,
           sms_on_bill_generate: form.sms_on_bill_generate,
           sms_on_payment: form.sms_on_payment,
           sms_on_registration: form.sms_on_registration,
@@ -233,6 +242,7 @@ export default function SuperSmsManagement() {
         await db.from("sms_settings").insert({
           api_token: form.api_token,
           sender_id: form.sender_id,
+          admin_cost_rate: form.admin_cost_rate,
         });
       }
       toast.success("Global SMS settings saved");
@@ -247,15 +257,9 @@ export default function SuperSmsManagement() {
   const handleRecharge = async () => {
     if (!selectedTenant || !rechargeAmount) return;
     const amount = parseFloat(rechargeAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast.error("Enter a valid amount");
-      return;
-    }
+    if (isNaN(amount) || amount <= 0) { toast.error("Enter a valid amount"); return; }
     const newRate = smsRateInput ? parseFloat(smsRateInput) : null;
-    if (newRate !== null && (isNaN(newRate) || newRate <= 0)) {
-      toast.error("Enter a valid SMS rate");
-      return;
-    }
+    if (newRate !== null && (isNaN(newRate) || newRate <= 0)) { toast.error("Enter a valid SMS rate"); return; }
     try {
       const { data: existing } = await db.from("sms_wallets").select("id, balance").eq("tenant_id", selectedTenant.tenant_id).maybeSingle();
       let newBalance: number;
@@ -296,11 +300,11 @@ export default function SuperSmsManagement() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">SMS Management</h1>
-        <p className="text-muted-foreground">Global SMS gateway, analytics & tenant balance management</p>
+        <p className="text-muted-foreground">Global SMS gateway, analytics, profit tracking & tenant balance management</p>
       </div>
 
       {/* ── Stats Row ──────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Live API Balance */}
         <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
           <CardContent className="pt-6">
@@ -312,23 +316,14 @@ export default function SuperSmsManagement() {
                 {balanceLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin mt-1" />
                 ) : balanceError ? (
-                  <div className="text-sm text-destructive mt-1">{(balanceError as Error).message?.substring(0, 60) || "Failed to fetch"}</div>
+                  <div className="text-sm text-destructive mt-1">{(balanceError as Error).message?.substring(0, 60) || "Failed"}</div>
                 ) : apiBalance && apiBalance.balance != null ? (
-                  <div className="text-2xl font-bold text-primary">
-                    {apiBalance.balance}
-                  </div>
+                  <div className="text-2xl font-bold text-primary">{apiBalance.balance}</div>
                 ) : (
                   <div className="text-lg font-semibold text-muted-foreground">N/A</div>
                 )}
                 {apiBalance?.expire_date && (
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    Expires: {apiBalance.expire_date}
-                  </div>
-                )}
-                {apiBalance?.rate && (
-                  <div className="text-xs text-muted-foreground">
-                    Rate: ৳{apiBalance.rate}/SMS
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Expires: {apiBalance.expire_date}</div>
                 )}
               </div>
               <Button size="icon" variant="ghost" onClick={() => refetchBalance()} className="h-8 w-8">
@@ -342,9 +337,9 @@ export default function SuperSmsManagement() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground flex items-center gap-1">
-              <MessageSquare className="h-3.5 w-3.5" /> Total Tenant Balance
+              <MessageSquare className="h-3.5 w-3.5" /> Tenant Balance
             </div>
-            <div className="text-2xl font-bold">{totalBalance.toLocaleString()}</div>
+            <div className="text-2xl font-bold">৳{totalBalance.toFixed(2)}</div>
             <div className="text-xs text-muted-foreground">{wallets.length} tenants</div>
           </CardContent>
         </Card>
@@ -357,21 +352,30 @@ export default function SuperSmsManagement() {
             </div>
             {balanceLoading ? (
               <Loader2 className="h-5 w-5 animate-spin mt-1" />
-            ) : apiSent30 !== null ? (
+            ) : apiSent30 !== null && apiSent30 > 0 ? (
               <>
                 <div className="text-2xl font-bold text-primary">{apiSent30.toLocaleString()}</div>
-                {(apiFailed30 ?? 0) > 0 && (
-                  <div className="text-xs text-destructive">{apiFailed30} failed</div>
-                )}
+                {(apiFailed30 ?? 0) > 0 && <div className="text-xs text-destructive">{apiFailed30} failed</div>}
               </>
             ) : (
               <>
                 <div className="text-2xl font-bold text-primary">{totalSent.toLocaleString()}</div>
-                {totalFailed > 0 && (
-                  <div className="text-xs text-destructive">{totalFailed} failed</div>
-                )}
+                {totalFailed > 0 && <div className="text-xs text-destructive">{totalFailed} failed</div>}
               </>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Total Profit */}
+        <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 to-transparent">
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground flex items-center gap-1">
+              <DollarSign className="h-3.5 w-3.5" /> SMS Profit (30d)
+            </div>
+            <div className="text-2xl font-bold text-green-600">৳{totalProfit.toFixed(2)}</div>
+            <div className="text-xs text-muted-foreground">
+              Revenue: ৳{totalRevenue.toFixed(2)} | Cost: ৳{totalAdminCost.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
 
@@ -388,8 +392,8 @@ export default function SuperSmsManagement() {
                 <Badge variant="destructive" className="gap-1"><WifiOff className="h-3 w-3" /> Not Configured</Badge>
               )}
             </div>
-            {apiBalance?.sms_rate && (
-              <div className="text-xs text-muted-foreground mt-1">Rate: ৳{apiBalance.sms_rate}/SMS</div>
+            {apiBalance?.rate && (
+              <div className="text-xs text-muted-foreground mt-1">API Rate: ৳{apiBalance.rate}/SMS</div>
             )}
           </CardContent>
         </Card>
@@ -403,18 +407,14 @@ export default function SuperSmsManagement() {
               <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
               <div>
                 <p className="font-semibold text-destructive">
-                  ⚠️ Low SMS Balance Alert — {lowBalanceTenants.length} tenant(s)
+                  ⚠️ Low SMS Balance — {lowBalanceTenants.length} tenant(s)
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {lowBalanceTenants.map((t: any) => (
                     <Badge key={t.tenant_id} variant="outline" className="border-destructive/50 text-destructive gap-1">
-                      {t.tenant_name}: {t.balance} SMS
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-5 px-1 ml-1 text-xs"
-                        onClick={() => { setSelectedTenant(t); setRechargeOpen(true); }}
-                      >
+                      {t.tenant_name}: ৳{Number(t.balance).toFixed(2)}
+                      <Button size="sm" variant="ghost" className="h-5 px-1 ml-1 text-xs"
+                        onClick={() => { setSelectedTenant(t); setRechargeOpen(true); }}>
                         Recharge
                       </Button>
                     </Badge>
@@ -430,13 +430,13 @@ export default function SuperSmsManagement() {
       <Tabs defaultValue="analytics" className="space-y-4">
         <TabsList>
           <TabsTrigger value="analytics">📊 Analytics</TabsTrigger>
-          <TabsTrigger value="wallets">💰 Wallets</TabsTrigger>
+          <TabsTrigger value="profit">💰 Profit</TabsTrigger>
+          <TabsTrigger value="wallets">🏦 Wallets</TabsTrigger>
           <TabsTrigger value="settings">⚙️ Settings</TabsTrigger>
         </TabsList>
 
         {/* ── Analytics Tab ────────────────────── */}
         <TabsContent value="analytics" className="space-y-4">
-          {/* Daily Usage Chart */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">SMS Usage (Last 30 Days)</CardTitle>
@@ -446,17 +446,9 @@ export default function SuperSmsManagement() {
               <ChartContainer config={chartConfig} className="h-[280px] w-full">
                 <AreaChart data={dailyUsage} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(d) => format(new Date(d), "dd MMM")}
-                    tick={{ fontSize: 11 }}
-                    interval="preserveStartEnd"
-                  />
+                  <XAxis dataKey="date" tickFormatter={(d) => format(new Date(d), "dd MMM")} tick={{ fontSize: 11 }} interval="preserveStartEnd" />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <ChartTooltip
-                    content={<ChartTooltipContent />}
-                    labelFormatter={(d) => format(new Date(d), "dd MMM yyyy")}
-                  />
+                  <ChartTooltip content={<ChartTooltipContent />} labelFormatter={(d) => format(new Date(d), "dd MMM yyyy")} />
                   <Area type="monotone" dataKey="sent" stackId="1" stroke="hsl(142 76% 36%)" fill="hsl(142 76% 36% / 0.3)" name="Sent" />
                   <Area type="monotone" dataKey="failed" stackId="1" stroke="hsl(0 84% 60%)" fill="hsl(0 84% 60% / 0.3)" name="Failed" />
                 </AreaChart>
@@ -465,7 +457,6 @@ export default function SuperSmsManagement() {
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Per-Tenant Consumption */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Tenant SMS Consumption (30 Days)</CardTitle>
@@ -478,12 +469,7 @@ export default function SuperSmsManagement() {
                     <BarChart data={tenantConsumption.slice(0, 8)} layout="vertical" margin={{ left: 10, right: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                       <XAxis type="number" tick={{ fontSize: 11 }} />
-                      <YAxis
-                        dataKey="tenant_name"
-                        type="category"
-                        width={100}
-                        tick={{ fontSize: 11 }}
-                      />
+                      <YAxis dataKey="tenant_name" type="category" width={100} tick={{ fontSize: 11 }} />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <Bar dataKey="total" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Total SMS" />
                     </BarChart>
@@ -492,7 +478,6 @@ export default function SuperSmsManagement() {
               </CardContent>
             </Card>
 
-            {/* SMS Type Breakdown */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">SMS by Type (30 Days)</CardTitle>
@@ -504,15 +489,7 @@ export default function SuperSmsManagement() {
                   <div className="flex items-center gap-4">
                     <ChartContainer config={chartConfig} className="h-[220px] w-[220px] shrink-0">
                       <PieChart>
-                        <Pie
-                          data={typeBreakdown}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={85}
-                          paddingAngle={3}
-                          dataKey="value"
-                        >
+                        <Pie data={typeBreakdown} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} dataKey="value">
                           {typeBreakdown.map((_, i) => (
                             <Cell key={i} fill={COLORS[i % COLORS.length]} />
                           ))}
@@ -534,6 +511,86 @@ export default function SuperSmsManagement() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* ── Profit Tab ───────────────────────── */}
+        <TabsContent value="profit" className="space-y-4">
+          {/* Daily Revenue vs Cost */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Revenue vs Cost (Last 30 Days)</CardTitle>
+              <CardDescription>Daily tenant revenue charged vs admin SMS cost</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="h-[280px] w-full">
+                <AreaChart data={dailyUsage} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                  <XAxis dataKey="date" tickFormatter={(d) => format(new Date(d), "dd MMM")} tick={{ fontSize: 11 }} interval="preserveStartEnd" />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `৳${v}`} />
+                  <ChartTooltip content={<ChartTooltipContent />} labelFormatter={(d) => format(new Date(d), "dd MMM yyyy")} />
+                  <Area type="monotone" dataKey="revenue" stroke="hsl(142 76% 36%)" fill="hsl(142 76% 36% / 0.2)" name="Revenue (৳)" />
+                  <Area type="monotone" dataKey="cost" stroke="hsl(0 84% 60%)" fill="hsl(0 84% 60% / 0.2)" name="Cost (৳)" />
+                  <Area type="monotone" dataKey="profit" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.15)" name="Profit (৳)" />
+                </AreaChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Tenant-wise Profit Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Tenant-wise SMS Profit (30 Days)</CardTitle>
+              <CardDescription>Revenue charged to tenants vs your GreenWeb cost</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tenant</TableHead>
+                    <TableHead className="text-right">SMS Sent</TableHead>
+                    <TableHead className="text-right">Revenue (৳)</TableHead>
+                    <TableHead className="text-right">Admin Cost (৳)</TableHead>
+                    <TableHead className="text-right">Profit (৳)</TableHead>
+                    <TableHead className="text-right">Margin</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tenantConsumption.map((t) => {
+                    const margin = t.revenue > 0 ? ((t.profit / t.revenue) * 100).toFixed(1) : "0.0";
+                    return (
+                      <TableRow key={t.tenant_id}>
+                        <TableCell className="font-medium">{t.tenant_name}</TableCell>
+                        <TableCell className="text-right">{t.total}</TableCell>
+                        <TableCell className="text-right text-green-600">৳{t.revenue.toFixed(2)}</TableCell>
+                        <TableCell className="text-right text-destructive">৳{t.admin_cost.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-bold text-primary">৳{t.profit.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={Number(margin) > 30 ? "default" : "secondary"}>{margin}%</Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {tenantConsumption.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No SMS data for profit analysis</TableCell>
+                    </TableRow>
+                  )}
+                  {tenantConsumption.length > 0 && (
+                    <TableRow className="bg-muted/50 font-bold">
+                      <TableCell>Total</TableCell>
+                      <TableCell className="text-right">{tenantConsumption.reduce((s, t) => s + t.total, 0)}</TableCell>
+                      <TableCell className="text-right text-green-600">৳{totalRevenue.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-destructive">৳{totalAdminCost.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-primary">৳{totalProfit.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <Badge>{totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : "0.0"}%</Badge>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ── Wallets Tab ──────────────────────── */}
@@ -584,11 +641,8 @@ export default function SuperSmsManagement() {
                             <Button size="sm" onClick={() => { setSelectedTenant(w); setRechargeOpen(true); }}>
                               <Plus className="h-4 w-4 mr-1" /> Recharge
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setSelectedTenantTx(selectedTenantTx === w.tenant_id ? null : w.tenant_id)}
-                            >
+                            <Button size="sm" variant="outline"
+                              onClick={() => setSelectedTenantTx(selectedTenantTx === w.tenant_id ? null : w.tenant_id)}>
                               History
                             </Button>
                           </div>
@@ -606,7 +660,6 @@ export default function SuperSmsManagement() {
             </CardContent>
           </Card>
 
-          {/* Transaction History */}
           {selectedTenantTx && (
             <Card>
               <CardHeader>
@@ -644,8 +697,8 @@ export default function SuperSmsManagement() {
                               <Badge variant="destructive" className="gap-1"><ArrowDownCircle className="h-3 w-3" /> Debit</Badge>
                             )}
                           </TableCell>
-                          <TableCell className="font-medium">{tx.amount}</TableCell>
-                          <TableCell>{tx.balance_after}</TableCell>
+                          <TableCell className="font-medium">৳{Number(tx.amount).toFixed(2)}</TableCell>
+                          <TableCell>৳{Number(tx.balance_after).toFixed(2)}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">{tx.description || "—"}</TableCell>
                         </TableRow>
                       ))}
@@ -676,23 +729,25 @@ export default function SuperSmsManagement() {
                 <Loader2 className="h-6 w-6 animate-spin" />
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>API Token</Label>
-                      <Input
-                        type="password"
-                        value={form?.api_token || ""}
+                      <Input type="password" value={form?.api_token || ""}
                         onChange={(e) => setForm({ ...form, api_token: e.target.value })}
-                        placeholder="GreenWeb API Token"
-                      />
+                        placeholder="GreenWeb API Token" />
                     </div>
                     <div className="space-y-2">
                       <Label>Sender ID</Label>
-                      <Input
-                        value={form?.sender_id || ""}
+                      <Input value={form?.sender_id || ""}
                         onChange={(e) => setForm({ ...form, sender_id: e.target.value })}
-                        placeholder="SmartISP"
-                      />
+                        placeholder="SmartISP" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Admin Cost Rate (৳/SMS)</Label>
+                      <Input type="number" value={form?.admin_cost_rate ?? 0.25}
+                        onChange={(e) => setForm({ ...form, admin_cost_rate: parseFloat(e.target.value) || 0 })}
+                        placeholder="0.25" min="0" step="0.01" />
+                      <p className="text-xs text-muted-foreground">Your actual GreenWeb cost per SMS unit</p>
                     </div>
                   </div>
 
@@ -706,10 +761,8 @@ export default function SuperSmsManagement() {
                     ].map((item) => (
                       <div key={item.key} className="flex items-center justify-between p-2 rounded border border-border">
                         <span className="text-sm">{item.label}</span>
-                        <Switch
-                          checked={form?.[item.key] ?? false}
-                          onCheckedChange={(v) => setForm({ ...form, [item.key]: v })}
-                        />
+                        <Switch checked={form?.[item.key] ?? false}
+                          onCheckedChange={(v) => setForm({ ...form, [item.key]: v })} />
                       </div>
                     ))}
                   </div>
@@ -743,34 +796,23 @@ export default function SuperSmsManagement() {
             </div>
             <div className="space-y-2">
               <Label>Recharge Amount (৳)</Label>
-              <Input
-                type="number"
-                value={rechargeAmount}
+              <Input type="number" value={rechargeAmount}
                 onChange={(e) => setRechargeAmount(e.target.value)}
-                placeholder="e.g., 500"
-                min="1"
-                step="0.01"
-              />
+                placeholder="e.g., 500" min="1" step="0.01" />
             </div>
             <div className="space-y-2">
               <Label>SMS Rate (৳ per SMS unit)</Label>
-              <Input
-                type="number"
-                value={smsRateInput}
+              <Input type="number" value={smsRateInput}
                 onChange={(e) => setSmsRateInput(e.target.value)}
                 placeholder={`Current: ৳${Number(selectedTenant?.sms_rate ?? 0.50).toFixed(2)}`}
-                min="0.01"
-                step="0.01"
-              />
+                min="0.01" step="0.01" />
               <p className="text-xs text-muted-foreground">Leave empty to keep current rate</p>
             </div>
             <div className="space-y-2">
               <Label>Description (Optional)</Label>
-              <Input
-                value={rechargeDesc}
+              <Input value={rechargeDesc}
                 onChange={(e) => setRechargeDesc(e.target.value)}
-                placeholder="e.g., Monthly recharge"
-              />
+                placeholder="e.g., Monthly recharge" />
             </div>
             <Button onClick={handleRecharge} className="w-full">
               <Plus className="h-4 w-4 mr-2" /> Recharge
