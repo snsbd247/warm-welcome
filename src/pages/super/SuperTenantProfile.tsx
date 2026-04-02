@@ -948,6 +948,7 @@ export default function SuperTenantProfile() {
     { key: "accounts", label: "Chart of Accounts", icon: BookOpen, done: tenant.setup_accounts },
     { key: "templates", label: "SMS/Email Templates", icon: Mail, done: tenant.setup_templates },
     { key: "ledger", label: "Ledger Mapping Settings", icon: Database, done: tenant.setup_ledger },
+    { key: "payment_gateways", label: "Payment Gateways (bKash & Nagad)", icon: CreditCard, done: tenant.setup_payment_gateways },
   ];
   const completedSteps = setupSteps.filter((s) => s.done).length;
   const setupProgress = (completedSteps / setupSteps.length) * 100;

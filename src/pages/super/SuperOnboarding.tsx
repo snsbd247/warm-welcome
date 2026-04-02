@@ -181,6 +181,7 @@ export default function SuperOnboarding() {
           !result.accounts.success && `Accounts: ${result.accounts.message}`,
           !result.templates.success && `Templates: ${result.templates.message}`,
           !result.ledger.success && `Ledger: ${result.ledger.message}`,
+          !result.paymentGateways.success && `Payment Gateways: ${result.paymentGateways.message}`,
         ].filter(Boolean);
         throw new Error(failures.join("; "));
       }
