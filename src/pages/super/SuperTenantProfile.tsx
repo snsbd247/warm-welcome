@@ -21,7 +21,7 @@ import {
   AlertTriangle, Loader2, Database, MapPin, BookOpen, Mail, Zap,
   Shield, Activity, Clock, TrendingUp, Lightbulb, Plus, Ban,
   RefreshCw, Trash2, ExternalLink, Phone, AtSign, Calendar,
-  LogIn, Users, Eye, Edit, Key, History
+  LogIn, Users, Eye, Edit, Key, History, Receipt
 } from "lucide-react";
 
 // ─── SMS Recharge Dialog ─────────────────────────────────────
