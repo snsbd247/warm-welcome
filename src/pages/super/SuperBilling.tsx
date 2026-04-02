@@ -222,6 +222,48 @@ export default function SuperBilling() {
 
   const [upgradeForm, setUpgradeForm] = useState({ plan_id: "", billing_cycle: "monthly" });
 
+  // Edit invoice
+  const [editOpen, setEditOpen] = useState(false);
+  const [editInv, setEditInv] = useState<any>(null);
+
+  const editInvoice = useMutation({
+    mutationFn: async (form: any) => {
+      const { error } = await (supabase.from as any)("subscription_invoices").update({
+        amount: Number(form.amount),
+        tax_amount: Number(form.tax_amount || 0),
+        total_amount: Number(form.total_amount),
+        billing_cycle: form.billing_cycle,
+        due_date: form.due_date,
+        notes: form.notes || null,
+        status: form.status,
+      }).eq("id", form.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Invoice updated");
+      setEditOpen(false);
+      setEditInv(null);
+      qc.invalidateQueries({ queryKey: ["subscription-invoices"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  // Delete invoice
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const deleteInvoice = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.from as any)("subscription_invoices").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Invoice deleted");
+      setDeleteId(null);
+      qc.invalidateQueries({ queryKey: ["subscription-invoices"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
