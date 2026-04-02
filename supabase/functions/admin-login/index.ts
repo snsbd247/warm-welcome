@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
     // Find profile by username or email
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, username, password_hash, email, status, full_name, avatar_url")
+      .select("id, username, password_hash, email, status, full_name, avatar_url, tenant_id, must_change_password")
       .or(`username.eq.${username},email.eq.${username}`)
       .single();
 
@@ -126,6 +126,8 @@ Deno.serve(async (req: Request) => {
           name: profile.full_name,
           role: userRole,
           avatar_url: profile.avatar_url,
+          tenant_id: profile.tenant_id,
+          must_change_password: profile.must_change_password || false,
         },
         token: sessionToken,
       }),
