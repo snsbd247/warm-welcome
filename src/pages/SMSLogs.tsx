@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import GroupSmsDialog from "@/components/GroupSmsDialog";
 import { safeFormat } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SMSLogs() {
   const { t } = useLanguage();
