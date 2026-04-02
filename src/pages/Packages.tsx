@@ -205,9 +205,14 @@ export default function Packages() {
         // Find router credentials for edge function
         const router = routers?.find((r: any) => r.id === routerId);
         if (!router) { toast.error("রাউটার সিলেক্ট করুন"); return; }
+        // Find pool info for PPP profile
+        const pkg = packages?.find((p: any) => p.id === packageId);
+        const pool = ipPools?.find((p: any) => p.id === pkg?.ip_pool_id);
         const data = await mikrotikEdge('sync-profile', {
           package_id: packageId, router_id: routerId,
           ip_address: router.ip_address, username: router.username, password: router.password, api_port: router.api_port,
+          remote_address: pool?.name || undefined,
+          local_address: pool?.gateway || undefined,
         });
         if (data?.success) {
           toast.success(`MikroTik profile synced: ${data.profile_name}`);
