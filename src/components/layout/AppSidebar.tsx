@@ -45,6 +45,7 @@ const billingNav: NavItem[] = [
   { to: "/payments", icon: CreditCard, label: "Payments", module: "payments" },
   { to: "/merchant-payments", icon: Wallet, label: "Merchant Payments", module: "merchant_payments" },
   { to: "/merchant-reports", icon: BarChart3, label: "Payment Reports", module: "reports" },
+  { to: "/coupons", icon: Tag, label: "Coupons", module: "billing" },
 ];
 
 const hrNav: NavItem[] = [
