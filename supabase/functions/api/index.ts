@@ -105,7 +105,7 @@ const ALLOWED_TABLES = new Set([
 
 const PUBLIC_READ_TABLES = new Set([
   "packages", "zones", "general_settings", "support_tickets", "ticket_replies",
-  "system_settings",
+  "system_settings", "faqs", "sms_wallets",
 ]);
 
 // ─── GENERIC DATA PROXY HANDLER ─────────────────────────────────
