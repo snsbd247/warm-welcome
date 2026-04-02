@@ -116,6 +116,7 @@ const CouponManagement = lazy(() => import("@/pages/CouponManagement"));
 const IpPoolManagement = lazy(() => import("@/pages/IpPoolManagement"));
 const FaqManagement = lazy(() => import("@/pages/FaqManagement"));
 const AdvancedAnalytics = lazy(() => import("@/pages/AdvancedAnalytics"));
+const SubscriptionInvoices = lazy(() => import("@/pages/settings/SubscriptionInvoices"));
 
 // Inventory module
 const InventoryDashboard = lazy(() => import("@/pages/inventory/InventoryDashboard"));
