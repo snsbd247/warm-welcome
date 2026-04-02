@@ -47,6 +47,7 @@ export function useFooterSettings() {
         footer_developer: map.footer_developer || DEFAULTS.footer_developer,
         system_version: map.system_version || DEFAULTS.system_version,
         auto_update_year: map.auto_update_year !== "false",
+        branding_copyright_text: map.branding_copyright_text || DEFAULTS.branding_copyright_text,
       };
     },
     staleTime: 5 * 60 * 1000,
