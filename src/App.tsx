@@ -251,6 +251,10 @@ function App() {
                 <Route path="/settings/backup" element={<PermissionGuard module="settings"><BackupRestore /></PermissionGuard>} />
                 <Route path="/settings/api-health" element={<PermissionGuard module="settings"><ApiHealthMonitor /></PermissionGuard>} />
                 <Route path="/settings/domains" element={<PermissionGuard module="settings"><DomainManagement /></PermissionGuard>} />
+                <Route path="/coupons" element={<PermissionGuard module="billing"><CouponManagement /></PermissionGuard>} />
+                <Route path="/ip-pools" element={<PermissionGuard module="settings"><IpPoolManagement /></PermissionGuard>} />
+                <Route path="/faq" element={<PermissionGuard module="settings"><FaqManagement /></PermissionGuard>} />
+                <Route path="/analytics" element={<PermissionGuard module="reports"><AdvancedAnalytics /></PermissionGuard>} />
 
                 {/* Public Payment Link */}
                 <Route path="/pay" element={<PayBill />} />
