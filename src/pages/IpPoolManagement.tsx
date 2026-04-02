@@ -230,12 +230,12 @@ export default function IpPoolManagement() {
               </Select>
             )}
 
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingPool(null); setForm(emptyForm); } }}>
               <DialogTrigger asChild>
                 <Button><Plus className="h-4 w-4 mr-2" /> {t.ipPool.addPool}</Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg">
-                <DialogHeader><DialogTitle>{t.ipPool.createPool}</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>{editingPool ? (t.ipPool.editPool || "Edit Pool") : t.ipPool.createPool}</DialogTitle></DialogHeader>
                 <div className="space-y-4">
                   <div>
                     <Label>{t.ipPool.poolName}</Label>
@@ -285,9 +285,19 @@ export default function IpPoolManagement() {
                     <Label>{t.ipPool.totalIps}</Label>
                     <Input type="number" value={form.total_ips} onChange={e => setForm(f => ({ ...f, total_ips: Number(e.target.value) }))} />
                   </div>
-                  <Button onClick={() => createMutation.mutate(form)} disabled={!form.name || createMutation.isPending} className="w-full">
-                    {t.ipPool.createPool}
-                  </Button>
+                  {editingPool ? (
+                    <Button
+                      onClick={() => updateMutation.mutate({ id: editingPool.id, data: form })}
+                      disabled={!form.name || updateMutation.isPending}
+                      className="w-full"
+                    >
+                      {t.ipPool.editPool || "Edit Pool"}
+                    </Button>
+                  ) : (
+                    <Button onClick={() => createMutation.mutate(form)} disabled={!form.name || createMutation.isPending} className="w-full">
+                      {t.ipPool.createPool}
+                    </Button>
+                  )}
                 </div>
               </DialogContent>
             </Dialog>
