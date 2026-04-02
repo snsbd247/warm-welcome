@@ -57,7 +57,7 @@ export default function Packages() {
   const { data: packages, isLoading } = useQuery({
     queryKey: ["packages-all"],
     queryFn: async () => {
-      const { data, error } = await db.from("packages").select("*, mikrotik_routers(name)").order("created_at", { ascending: false });
+      const { data, error } = await db.from("packages").select("*, mikrotik_routers(name), ip_pools(name, gateway)").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
