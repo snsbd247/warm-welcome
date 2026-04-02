@@ -122,17 +122,31 @@ export default function Products() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div><Label>Category</Label>
-                    <Select value={form.category} onValueChange={v => setForm({...form, category: v})}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="router">Router</SelectItem>
-                        <SelectItem value="cable">Cable</SelectItem>
-                        <SelectItem value="onu">ONU</SelectItem>
-                        <SelectItem value="splitter">Splitter</SelectItem>
-                        <SelectItem value="general">General</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {categories.length > 0 ? (
+                      <Select value={form.category_id} onValueChange={v => {
+                        const cat = categories.find((c: any) => c.id === v);
+                        setForm({...form, category_id: v, category: cat?.name || "other"});
+                      }}>
+                        <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                        <SelectContent>
+                          {categories.map((c: any) => (
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Select value={form.category} onValueChange={v => setForm({...form, category: v})}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="router">Router</SelectItem>
+                          <SelectItem value="cable">Cable</SelectItem>
+                          <SelectItem value="onu">ONU</SelectItem>
+                          <SelectItem value="splitter">Splitter</SelectItem>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div><Label>Unit</Label>
                     <Select value={form.unit} onValueChange={v => setForm({...form, unit: v})}>
