@@ -417,6 +417,9 @@ export default function SuperBilling() {
                       <TableCell>{statusBadge(inv.status)}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => setPreviewInv(inv)} title="View">
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
                           {inv.status === "pending" && (
                             <Button size="sm" onClick={() => markPaid.mutate(inv.id)} disabled={markPaid.isPending}>
                               <CheckCircle className="h-3 w-3 mr-1" /> Mark Paid
