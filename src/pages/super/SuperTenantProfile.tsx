@@ -1381,7 +1381,7 @@ export default function SuperTenantProfile() {
               <ul className="list-disc list-inside text-xs space-y-0.5 ml-2">
                 <li>Customers, Bills, Payments, Ledger entries</li>
                 <li>SMS/Reminder logs, Daily reports</li>
-                <li>Products, Expenses, Vendors, Suppliers</li>
+                <li>Products, Expenses, Suppliers</li>
                 <li>Transactions</li>
               </ul>
               <p className="text-xs mt-2">Will NOT delete: Users, Roles, Settings, Accounts (COA), Templates, Geo data</p>
