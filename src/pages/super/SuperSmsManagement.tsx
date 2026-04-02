@@ -298,16 +298,23 @@ export default function SuperSmsManagement() {
                 </div>
                 {balanceLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin mt-1" />
-                ) : apiBalance ? (
+                ) : balanceError ? (
+                  <div className="text-sm text-destructive mt-1">{(balanceError as Error).message?.substring(0, 60) || "Failed to fetch"}</div>
+                ) : apiBalance && apiBalance.balance != null ? (
                   <div className="text-2xl font-bold text-primary">
-                    {apiBalance.balance ?? "N/A"}
+                    {apiBalance.balance}
                   </div>
                 ) : (
-                  <div className="text-lg font-semibold text-muted-foreground">—</div>
+                  <div className="text-lg font-semibold text-muted-foreground">N/A</div>
                 )}
                 {apiBalance?.expire_date && (
                   <div className="text-xs text-muted-foreground mt-0.5">
                     Expires: {apiBalance.expire_date}
+                  </div>
+                )}
+                {apiBalance?.rate && (
+                  <div className="text-xs text-muted-foreground">
+                    Rate: ৳{apiBalance.rate}/SMS
                   </div>
                 )}
               </div>
