@@ -35,12 +35,25 @@ Deno.serve(async (req) => {
     // Fetch balance, expiry, rate
     const balanceUrl = `http://api.greenweb.com.bd/g_api.php?token=${token}&balance&expiry&rate&json`;
     const balanceRes = await fetch(balanceUrl);
-    const rawBalance = await balanceRes.json();
+    const rawText = await balanceRes.text();
+    
+    let rawBalance: any;
+    try {
+      rawBalance = JSON.parse(rawText);
+    } catch {
+      // If not JSON, try to extract balance from plain text
+      return new Response(
+        JSON.stringify({ balance: [{ balance: rawText.trim() }], sent_30_days: 0, failed_30_days: 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Strip token from response for security
     const balanceData = Array.isArray(rawBalance)
       ? rawBalance.map(({ token: _t, ...rest }: any) => rest)
-      : rawBalance;
+      : (typeof rawBalance === 'object' && rawBalance !== null)
+        ? (({ token: _t, ...rest }: any) => rest)(rawBalance)
+        : rawBalance;
 
     // Fetch sent count from GreenWeb report API (last 30 days)
     let sentCount = 0;
