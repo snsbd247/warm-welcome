@@ -1056,18 +1056,18 @@ export default function SuperTenantProfile() {
               <DomainAddDialog tenantId={id!} onSuccess={() => qc.invalidateQueries({ queryKey: ["super-tenant-domains", id] })} />
             </div>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <span className="text-xs bg-muted px-1.5 py-0.5 rounded">default</span>
-              <span className="truncate">{tenant.subdomain}.smartispapp.com</span>
+          <CardContent className="space-y-1.5 text-sm">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">default</Badge>
+              <span className="truncate text-muted-foreground">{tenant.subdomain}.smartisp...</span>
             </div>
-            {domains.length > 0 ? domains.map((d: any) => (
+            {domains.map((d: any) => (
               <div key={d.id} className="flex items-center justify-between group">
-                <div className="flex items-center gap-1.5 truncate">
+                <div className="flex items-center gap-2 truncate">
                   {d.is_verified ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
                   ) : (
-                    <Clock className="h-3.5 w-3.5 text-yellow-500 shrink-0" />
+                    <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                   )}
                   <span className="truncate">{d.domain}</span>
                 </div>
@@ -1075,7 +1075,7 @@ export default function SuperTenantProfile() {
                   <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>
               </div>
-            )) : null}
+            ))}
           </CardContent>
         </Card>
 
@@ -1092,19 +1092,19 @@ export default function SuperTenantProfile() {
           <CardContent className="space-y-2 text-sm">
             {subscription ? (
               <>
-                <p className="font-semibold text-base">{subscription.plan?.name || "—"}</p>
+                <p className="font-semibold text-base text-foreground">{subscription.plan?.name || "—"}</p>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs capitalize">{subscription.billing_cycle}</Badge>
                   <Badge variant={subscription.status === "active" ? "default" : "destructive"} className="text-xs">{subscription.status}</Badge>
                 </div>
-                <Separator />
+                <Separator className="my-1" />
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Amount</span>
-                  <span className="font-medium">৳{Number(subscription.amount || 0).toLocaleString()}</span>
+                  <span className="font-medium">Tk {Number(subscription.amount || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Expires</span>
-                  <span className="font-medium">{subscription.end_date || "—"}</span>
+                  <span className="font-semibold">{subscription.end_date || "—"}</span>
                 </div>
               </>
             ) : (
