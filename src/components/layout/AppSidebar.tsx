@@ -96,6 +96,7 @@ const supportNav: NavItem[] = [
 ];
 
 const reportingNav: NavItem[] = [
+  { to: "/analytics", icon: PieChart, label: "Advanced Analytics", module: "reports" },
   { to: "/reporting/daily", icon: FileText, label: "Daily Report", module: "reports" },
   { to: "/reporting/financial", icon: BarChart3, label: "Financial Statement", module: "reports" },
   { to: "/reporting/ledger-statement", icon: BookOpen, label: "Ledger Statement", module: "reports" },
