@@ -1348,7 +1348,10 @@ export default function SuperTenantProfile() {
           <TenantUsersTab tenantId={id!} />
         </TabsContent>
 
-        <TabsContent value="activity">
+        <TabsContent value="invoices">
+          <TenantInvoicesTab tenantId={id!} tenantName={tenant.name} />
+        </TabsContent>
+
           <TenantActivityTab tenantId={id!} />
         </TabsContent>
 
