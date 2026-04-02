@@ -429,13 +429,13 @@ Deno.serve(async (req: Request) => {
 
     // ─── SYNC PROFILE (Package → PPP Profile) ──────────────────
     if (req.method === "POST" && path === "sync-profile") {
-      const { package_id, router_id } = await req.json();
+      const { package_id, router_id, remote_address, local_address } = await req.json();
       if (!package_id) {
         return new Response(JSON.stringify({ error: "Missing package_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const supabase = getSupabaseAdmin();
-      const { data: pkg, error } = await supabase.from("packages").select("*").eq("id", package_id).single();
+      const { data: pkg, error } = await supabase.from("packages").select("*, ip_pools(name, gateway)").eq("id", package_id).single();
       if (error || !pkg) {
         return new Response(JSON.stringify({ error: "Package not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
@@ -445,15 +445,31 @@ Deno.serve(async (req: Request) => {
       const profileName = pkg.mikrotik_profile_name || `ISP-${pkg.name.replace(/\s+/g, "-")}`;
       const rateLimit = `${pkg.upload_speed}M/${pkg.download_speed}M`;
 
+      // Resolve remote-address (IP Pool name) and local-address (Gateway)
+      const poolData = pkg.ip_pools as any;
+      const remoteAddr = remote_address || poolData?.name || undefined;
+      const localAddr = local_address || poolData?.gateway || undefined;
+
+      console.log("PPP Profile sync:", { profileName, rateLimit, remoteAddr, localAddr });
+
       try {
         await withRouter(routerConfig, async (mt) => {
           const listRes = await mt.send(["/ppp/profile/print", `?name=${profileName}`]);
           const existing = parseItems(listRes.sentences);
           if (existing.length > 0) {
-            const res = await mt.send(["/ppp/profile/set", `=.id=${existing[0][".id"]}`, `=rate-limit=${rateLimit}`]);
+            // Update existing profile with rate-limit + remote/local address
+            const updateWords = ["/ppp/profile/set", `=.id=${existing[0][".id"]}`, `=rate-limit=${rateLimit}`];
+            if (remoteAddr) updateWords.push(`=remote-address=${remoteAddr}`);
+            if (localAddr) updateWords.push(`=local-address=${localAddr}`);
+            const res = await mt.send(updateWords);
             if (res.trap) throw new Error(res.trap);
           } else {
-            const res = await mt.send(["/ppp/profile/add", `=name=${profileName}`, `=rate-limit=${rateLimit}`, "=local-address=10.10.10.1"]);
+            // Create new profile with rate-limit + remote/local address
+            const addWords = ["/ppp/profile/add", `=name=${profileName}`, `=rate-limit=${rateLimit}`];
+            if (remoteAddr) addWords.push(`=remote-address=${remoteAddr}`);
+            if (localAddr) addWords.push(`=local-address=${localAddr}`);
+            else addWords.push("=local-address=10.10.10.1");
+            const res = await mt.send(addWords);
             if (res.trap) throw new Error(res.trap);
           }
         });
