@@ -14,6 +14,7 @@ class FiberSplitter extends Model
 
     protected $fillable = [
         'tenant_id', 'core_id', 'ratio', 'location', 'label', 'status', 'lat', 'lng',
+        'source_type', 'source_id',
     ];
 
     protected $casts = [
@@ -29,5 +30,13 @@ class FiberSplitter extends Model
     public function outputs()
     {
         return $this->hasMany(FiberSplitterOutput::class, 'splitter_id');
+    }
+
+    /**
+     * Polymorphic source: when source_type = 'splitter_output', source_id = splitter_output_id
+     */
+    public function sourceOutput()
+    {
+        return $this->belongsTo(FiberSplitterOutput::class, 'source_id');
     }
 }

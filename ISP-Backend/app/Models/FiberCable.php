@@ -14,6 +14,7 @@ class FiberCable extends Model
 
     protected $fillable = [
         'tenant_id', 'pon_port_id', 'name', 'total_cores', 'color', 'length_meters', 'status',
+        'source_type', 'source_id',
     ];
 
     protected $casts = [
@@ -29,5 +30,13 @@ class FiberCable extends Model
     public function cores()
     {
         return $this->hasMany(FiberCore::class, 'fiber_cable_id');
+    }
+
+    /**
+     * Polymorphic source: when source_type = 'splitter', source_id = splitter_output_id
+     */
+    public function sourceOutput()
+    {
+        return $this->belongsTo(FiberSplitterOutput::class, 'source_id');
     }
 }

@@ -1397,6 +1397,8 @@ export type Database = {
           length_meters: number | null
           name: string
           pon_port_id: string | null
+          source_id: string | null
+          source_type: string | null
           status: string
           tenant_id: string
           total_cores: number
@@ -1409,6 +1411,8 @@ export type Database = {
           length_meters?: number | null
           name: string
           pon_port_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
           status?: string
           tenant_id: string
           total_cores?: number
@@ -1421,6 +1425,8 @@ export type Database = {
           length_meters?: number | null
           name?: string
           pon_port_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
           status?: string
           tenant_id?: string
           total_cores?: number
@@ -1710,7 +1716,7 @@ export type Database = {
       }
       fiber_splitters: {
         Row: {
-          core_id: string
+          core_id: string | null
           created_at: string
           id: string
           label: string | null
@@ -1718,12 +1724,14 @@ export type Database = {
           lng: number | null
           location: string | null
           ratio: string
+          source_id: string | null
+          source_type: string | null
           status: string
           tenant_id: string
           updated_at: string
         }
         Insert: {
-          core_id: string
+          core_id?: string | null
           created_at?: string
           id?: string
           label?: string | null
@@ -1731,12 +1739,14 @@ export type Database = {
           lng?: number | null
           location?: string | null
           ratio?: string
+          source_id?: string | null
+          source_type?: string | null
           status?: string
           tenant_id: string
           updated_at?: string
         }
         Update: {
-          core_id?: string
+          core_id?: string | null
           created_at?: string
           id?: string
           label?: string | null
@@ -1744,6 +1754,8 @@ export type Database = {
           lng?: number | null
           location?: string | null
           ratio?: string
+          source_id?: string | null
+          source_type?: string | null
           status?: string
           tenant_id?: string
           updated_at?: string

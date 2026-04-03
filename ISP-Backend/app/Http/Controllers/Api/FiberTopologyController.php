@@ -51,7 +51,7 @@ class FiberTopologyController extends Controller
     }
 
     /**
-     * Full topology tree
+     * Full topology tree - supports recursive splitter chaining
      */
     public function tree(Request $request)
     {
@@ -70,10 +70,85 @@ class FiberTopologyController extends Controller
                 ->latest('created_at')
                 ->get();
 
+            // Enrich outputs with chained children (fibers/splitters from outputs)
+            $allOutputIds = [];
+            $this->collectOutputIds($olts, $allOutputIds);
+
+            if (!empty($allOutputIds)) {
+                // Find cables sourced from splitter outputs
+                $childCables = FiberCable::where('tenant_id', $tenantId)
+                    ->where('source_type', 'splitter')
+                    ->whereIn('source_id', $allOutputIds)
+                    ->with('cores.splitter.outputs.onu.customer')
+                    ->get()
+                    ->groupBy('source_id');
+
+                // Find splitters sourced from splitter outputs
+                $childSplitters = FiberSplitter::where('tenant_id', $tenantId)
+                    ->where('source_type', 'splitter_output')
+                    ->whereIn('source_id', $allOutputIds)
+                    ->with('outputs.onu.customer')
+                    ->get()
+                    ->keyBy('source_id');
+
+                // Attach to outputs recursively (up to depth limit for safety)
+                $this->attachChainedChildren($olts, $childCables, $childSplitters, $tenantId, 0);
+            }
+
             return response()->json($olts);
         } catch (\Exception $e) {
             \Log::error('Fiber tree error: ' . $e->getMessage());
             return response()->json([], 200);
+        }
+    }
+
+    private function collectOutputIds($items, &$ids)
+    {
+        foreach ($items as $item) {
+            if (method_exists($item, 'ponPorts') && $item->relationLoaded('ponPorts')) {
+                foreach ($item->ponPorts as $port) {
+                    foreach ($port->cables as $cable) {
+                        foreach ($cable->cores as $core) {
+                            if ($core->splitter) {
+                                foreach ($core->splitter->outputs as $output) {
+                                    $ids[] = $output->id;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private function attachChainedChildren($olts, $childCables, $childSplitters, $tenantId, $depth)
+    {
+        if ($depth > 10) return; // Prevent infinite recursion
+
+        foreach ($olts as $olt) {
+            if (!$olt->relationLoaded('ponPorts')) continue;
+            foreach ($olt->ponPorts as $port) {
+                foreach ($port->cables as $cable) {
+                    $this->enrichCableCores($cable, $childCables, $childSplitters, $tenantId, $depth);
+                }
+            }
+        }
+    }
+
+    private function enrichCableCores($cable, $childCables, $childSplitters, $tenantId, $depth)
+    {
+        foreach ($cable->cores as $core) {
+            if (!$core->splitter) continue;
+            foreach ($core->splitter->outputs as $output) {
+                // Attach child cables
+                if (isset($childCables[$output->id])) {
+                    $output->setAttribute('child_cables', $childCables[$output->id]);
+                }
+                // Attach child splitter
+                if (isset($childSplitters[$output->id])) {
+                    $output->setAttribute('child_splitter', $childSplitters[$output->id]);
+                }
+            }
         }
     }
 
@@ -113,7 +188,7 @@ class FiberTopologyController extends Controller
     }
 
     /**
-     * Create Fiber Cable with colored cores
+     * Create Fiber Cable - supports source from OLT PON port or Splitter Output
      */
     public function storeCable(Request $request)
     {
@@ -122,6 +197,8 @@ class FiberTopologyController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'pon_port_id' => 'nullable|uuid',
+            'source_type' => 'nullable|in:olt,core,splitter',
+            'source_id' => 'nullable|uuid',
             'total_cores' => 'required|integer|min:1|max:144',
             'color' => 'nullable|string',
             'length_meters' => 'nullable|numeric',
@@ -134,12 +211,30 @@ class FiberTopologyController extends Controller
             return response()->json(['error' => 'Tenant context not found'], 422);
         }
 
+        $sourceType = $request->input('source_type', 'olt');
+        $sourceId = $request->input('source_id');
+
+        // If source is splitter output, update the output status
+        if ($sourceType === 'splitter' && $sourceId) {
+            $output = FiberSplitterOutput::where('tenant_id', $tenantId)->findOrFail($sourceId);
+            $output->update(['status' => 'used', 'connection_type' => 'fiber']);
+        }
+
         $cable = FiberCable::create([
             ...$request->only([
                 'name', 'pon_port_id', 'total_cores', 'color', 'length_meters', 'status',
             ]),
+            'source_type' => $sourceType,
+            'source_id' => $sourceId,
             'tenant_id' => $tenantId,
         ]);
+
+        // Update the output's connected_id
+        if ($sourceType === 'splitter' && $sourceId) {
+            FiberSplitterOutput::where('tenant_id', $tenantId)
+                ->where('id', $sourceId)
+                ->update(['connected_id' => $cable->id]);
+        }
 
         if ($request->has('cores') && is_array($request->cores)) {
             foreach ($request->cores as $core) {
@@ -253,14 +348,16 @@ class FiberTopologyController extends Controller
     }
 
     /**
-     * Create Splitter with GPS
+     * Create Splitter - supports source from Core or Splitter Output
      */
     public function storeSplitter(Request $request)
     {
         $tenantId = $this->applyAdminTenantContext($request);
 
         $request->validate([
-            'core_id' => 'required|uuid',
+            'core_id' => 'nullable|uuid',
+            'source_type' => 'nullable|in:core,splitter_output',
+            'source_id' => 'nullable|uuid',
             'ratio' => 'required|in:1:2,1:4,1:8,1:16,1:32',
             'location' => 'nullable|string',
             'label' => 'nullable|string',
@@ -273,20 +370,47 @@ class FiberTopologyController extends Controller
             return response()->json(['error' => 'Tenant context not found'], 422);
         }
 
-        $existing = FiberSplitter::where('tenant_id', $tenantId)->where('core_id', $request->core_id)->first();
-        if ($existing) {
-            return response()->json(['error' => 'This core already has a splitter assigned.'], 422);
+        $sourceType = $request->input('source_type', 'core');
+        $sourceId = $request->input('source_id');
+        $coreId = $request->input('core_id');
+
+        // Validate: must have either core_id or source from splitter_output
+        if (!$coreId && $sourceType !== 'splitter_output') {
+            return response()->json(['error' => 'Either core_id or splitter_output source is required.'], 422);
         }
 
-        $core = FiberCore::where('tenant_id', $tenantId)->findOrFail($request->core_id);
-        $core->update(['status' => 'used']);
+        // If from core, check existing
+        if ($coreId) {
+            $existing = FiberSplitter::where('tenant_id', $tenantId)->where('core_id', $coreId)->first();
+            if ($existing) {
+                return response()->json(['error' => 'This core already has a splitter assigned.'], 422);
+            }
+
+            $core = FiberCore::where('tenant_id', $tenantId)->findOrFail($coreId);
+            $core->update(['status' => 'used']);
+        }
+
+        // If from splitter output, update the output
+        if ($sourceType === 'splitter_output' && $sourceId) {
+            $output = FiberSplitterOutput::where('tenant_id', $tenantId)->findOrFail($sourceId);
+            $output->update(['status' => 'used', 'connection_type' => 'splitter']);
+        }
 
         $splitter = FiberSplitter::create([
             ...$request->only([
                 'core_id', 'ratio', 'location', 'label', 'status', 'lat', 'lng',
             ]),
+            'source_type' => $sourceType,
+            'source_id' => $sourceId,
             'tenant_id' => $tenantId,
         ]);
+
+        // Update connected_id on the output
+        if ($sourceType === 'splitter_output' && $sourceId) {
+            FiberSplitterOutput::where('tenant_id', $tenantId)
+                ->where('id', $sourceId)
+                ->update(['connected_id' => $splitter->id]);
+        }
 
         $outputCount = (int) explode(':', $request->ratio)[1];
         $defaultColors = ['Blue', 'Orange', 'Green', 'Brown', 'Slate', 'White', 'Red', 'Black', 'Yellow', 'Violet', 'Rose', 'Aqua'];
