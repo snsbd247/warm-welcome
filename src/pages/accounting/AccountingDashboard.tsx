@@ -106,7 +106,7 @@ export default function AccountingDashboard() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <DollarSign className={`h-8 w-8 ${netProfit >= 0 ? "text-green-500" : "text-destructive"}`} />
-                <div><p className={`text-2xl font-bold ${netProfit >= 0 ? "text-green-600" : "text-destructive"}`}>৳{netProfit.toLocaleString()}</p><p className="text-sm text-muted-foreground">Net Profit</p></div>
+                <div><p className={`text-2xl font-bold ${netProfit >= 0 ? "text-green-600" : "text-destructive"}`}>৳{netProfit.toLocaleString()}</p><p className="text-sm text-muted-foreground">{t.accounting.netProfit}</p></div>
               </div>
             </CardContent>
           </Card>
