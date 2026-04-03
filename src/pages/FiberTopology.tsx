@@ -481,6 +481,67 @@ export default function FiberTopology() {
     onError: (e: any) => toast.error(e?.message || e?.response?.data?.error || t.fiberTopology.error),
   });
 
+  // ─── Edit Mutations ─────────────────
+  const updateOlt = useMutation({
+    mutationFn: async (data: any) => {
+      const { _edit_id, ...rest } = data;
+      if (IS_LOVABLE) return updateFiberOltInSupabase(_edit_id, rest);
+      const response = await api.put(`/fiber-topology/olts/${_edit_id}`, rest);
+      return response.data ?? response;
+    },
+    onSuccess: async () => { toast.success("OLT updated"); await invalidateAll(); setDialogType(null); },
+    onError: (e: any) => toast.error(e?.message || "Update failed"),
+  });
+
+  const updateCable = useMutation({
+    mutationFn: async (data: any) => {
+      const { _edit_id, ...rest } = data;
+      if (IS_LOVABLE) return updateFiberCableInSupabase(_edit_id, rest);
+      const response = await api.put(`/fiber-topology/cables/${_edit_id}`, rest);
+      return response.data ?? response;
+    },
+    onSuccess: async () => { toast.success("Cable updated"); await invalidateAll(); setDialogType(null); },
+    onError: (e: any) => toast.error(e?.message || "Update failed"),
+  });
+
+  const updateSplitter = useMutation({
+    mutationFn: async (data: any) => {
+      const { _edit_id, ...rest } = data;
+      if (IS_LOVABLE) return updateFiberSplitterInSupabase(_edit_id, rest);
+      const response = await api.put(`/fiber-topology/splitters/${_edit_id}`, rest);
+      return response.data ?? response;
+    },
+    onSuccess: async () => { toast.success("Splitter updated"); await invalidateAll(); setDialogType(null); },
+    onError: (e: any) => toast.error(e?.message || "Update failed"),
+  });
+
+  const updateOnu = useMutation({
+    mutationFn: async (data: any) => {
+      const { _edit_id, ...rest } = data;
+      if (IS_LOVABLE) return updateFiberOnuInSupabase(_edit_id, rest);
+      const response = await api.put(`/fiber-topology/onus/${_edit_id}`, rest);
+      return response.data ?? response;
+    },
+    onSuccess: async () => { toast.success("ONU updated"); await invalidateAll(); setDialogType(null); },
+    onError: (e: any) => toast.error(e?.message || "Update failed"),
+  });
+
+  const updateSplice = useMutation({
+    mutationFn: async (data: any) => {
+      const { _edit_id, ...rest } = data;
+      if (IS_LOVABLE) return updateFiberSpliceInSupabase(_edit_id, rest);
+      const response = await api.put(`/fiber-topology/splices/${_edit_id}`, rest);
+      return response.data ?? response;
+    },
+    onSuccess: async () => { toast.success("Splice updated"); await invalidateAll(); setDialogType(null); },
+    onError: (e: any) => toast.error(e?.message || "Update failed"),
+  });
+
+  const handleEditNode = useCallback((type: string, data: any) => {
+    setFormData(data);
+    setDialogType(type);
+  }, []);
+
   const allPonPorts = useMemo(() =>
     safeTree.flatMap(olt => (olt.pon_ports || []).map(p => ({ ...p, oltName: olt.name }))),
     [safeTree]
