@@ -20,14 +20,17 @@ class FiberTopologyController extends Controller
      */
     public function tree(Request $request)
     {
-        $olts = FiberOlt::with([
-            'ponPorts.cables.cores.splitter.outputs.onu.customer',
-            'ponPorts.cables.cores.connectedPort',
-            'ponPorts.cables.cores.spliceFrom.toCore.cable',
-            'ponPorts.cables.cores.spliceTo.fromCore.cable',
-        ])->orderBy('name')->get();
+        try {
+            $olts = FiberOlt::with([
+                'ponPorts.cables.cores.splitter.outputs.onu.customer',
+                'ponPorts.cables.cores.connectedPort',
+            ])->orderBy('name')->get();
 
-        return response()->json($olts);
+            return response()->json($olts);
+        } catch (\Exception $e) {
+            \Log::error('Fiber tree error: ' . $e->getMessage());
+            return response()->json([], 200);
+        }
     }
 
     /**
