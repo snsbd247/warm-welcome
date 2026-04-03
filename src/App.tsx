@@ -290,6 +290,7 @@ function App() {
 
                 {/* Network Topology */}
                 <Route path="/network-map" element={<PermissionGuard module="settings"><NetworkMap /></PermissionGuard>} />
+                <Route path="/fiber-topology" element={<PermissionGuard module="settings"><FiberTopology /></PermissionGuard>} />
 
                 {/* Public Payment Link */}
                 <Route path="/pay" element={<PayBill />} />
