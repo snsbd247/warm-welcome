@@ -330,6 +330,8 @@ function buildCableNode(
     status: cable.status || "active",
     source_type: cable.source_type || undefined,
     source_id: cable.source_id || undefined,
+    lat: (cable as any).lat ?? undefined,
+    lng: (cable as any).lng ?? undefined,
     cores,
   };
 }
