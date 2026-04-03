@@ -90,7 +90,7 @@ export default function AccountingDashboard() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <ShoppingCart className="h-8 w-8 text-blue-500" />
-                <div><p className="text-2xl font-bold">৳{totalPurchases.toLocaleString()}</p><p className="text-sm text-muted-foreground">Total Purchases</p></div>
+                <div><p className="text-2xl font-bold">৳{totalPurchases.toLocaleString()}</p><p className="text-sm text-muted-foreground">{t.accounting.totalPurchases}</p></div>
               </div>
             </CardContent>
           </Card>
