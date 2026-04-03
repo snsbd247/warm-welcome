@@ -91,9 +91,9 @@ function SmsRechargeDialog({ tenantId, currentBalance, onSuccess }: {
 }
 
 // ─── Domain Add Dialog ───────────────────────────────────────
-function DomainAddDialog({
+function DomainAddDialog({ tenantId, onSuccess }: { tenantId: string; onSuccess: () => void }) {
   const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId, onSuccess }: { tenantId: string; onSuccess: () => void }) {
+  const sa = t.superAdmin;
   const [open, setOpen] = useState(false);
   const [domain, setDomain] = useState("");
 
