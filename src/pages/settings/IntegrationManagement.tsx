@@ -722,6 +722,7 @@ function NagadTab() {
 
 // ─── Shared Components ───────────────────────────────────────────
 function LedgerAccountSelect({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled: boolean }) {
+  const { t } = useLanguage();
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts-for-select"],
     staleTime: 120_000,
@@ -749,6 +750,7 @@ function LoadingState() {
 }
 
 function StatusBadge({ connected, label }: { connected: boolean; label: string }) {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center gap-3">
       {connected ? (
@@ -761,6 +763,7 @@ function StatusBadge({ connected, label }: { connected: boolean; label: string }
 }
 
 function GatewayStatusCard({ gateway, testMutation, label }: { gateway: any; testMutation: any; label: string }) {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardContent className="py-4">
