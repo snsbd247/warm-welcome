@@ -815,11 +815,12 @@ export default function FiberTopology() {
               ) : (
                 <TopologyMap markers={mapMarkers} loadingText={t.fiberTopology.loadingMap} />
               )}
-              <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-red-500 inline-block" /> OLT</span>
-                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-blue-500 inline-block" /> Cable</span>
-                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-green-500 inline-block" /> {t.fiberTopology.splitter}</span>
-                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-violet-500 inline-block" /> ONU</span>
+              <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground flex-wrap">
+                <span className="flex items-center gap-1"><span className="h-3 w-5 rounded text-[8px] font-bold text-white flex items-center justify-center" style={{background:"#dc2626"}}>OLT</span> OLT</span>
+                <span className="flex items-center gap-1"><span className="h-3 w-5 rounded text-[8px] font-bold text-white flex items-center justify-center" style={{background:"#2563eb"}}>CBL</span> Cable</span>
+                <span className="flex items-center gap-1"><span className="h-3 w-5 rounded text-[8px] font-bold text-white flex items-center justify-center" style={{background:"#7c3aed"}}>SPL</span> {t.fiberTopology.splitter}</span>
+                <span className="flex items-center gap-1"><span className="h-3 w-5 rounded text-[8px] font-bold text-white flex items-center justify-center" style={{background:"#059669"}}>ONU</span> ONU</span>
+                <span className="flex items-center gap-1"><span className="h-4 w-6 border-t-2" style={{borderColor:"#6b7280"}} /> Connection</span>
               </div>
             </CardContent>
           </Card>
