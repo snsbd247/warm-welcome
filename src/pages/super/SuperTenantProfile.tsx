@@ -28,11 +28,11 @@ import TenantFinancialReportsTab from "@/components/super/TenantFinancialReports
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // ─── SMS Recharge Dialog ─────────────────────────────────────
-function SmsRechargeDialog({
-  const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId, currentBalance, onSuccess }: {
+function SmsRechargeDialog({ tenantId, currentBalance, onSuccess }: {
   tenantId: string; currentBalance: number; onSuccess: () => void;
 }) {
+  const { t } = useLanguage();
+  const sa = t.superAdmin;
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
@@ -91,9 +91,9 @@ function SmsRechargeDialog({
 }
 
 // ─── Domain Add Dialog ───────────────────────────────────────
-function DomainAddDialog({
+function DomainAddDialog({ tenantId, onSuccess }: { tenantId: string; onSuccess: () => void }) {
   const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId, onSuccess }: { tenantId: string; onSuccess: () => void }) {
+  const sa = t.superAdmin;
   const [open, setOpen] = useState(false);
   const [domain, setDomain] = useState("");
 
@@ -134,11 +134,11 @@ function DomainAddDialog({
 }
 
 // ─── Subscription Assign Dialog ──────────────────────────────
-function SubscriptionDialog({
-  const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId, currentSub, onSuccess }: {
+function SubscriptionDialog({ tenantId, currentSub, onSuccess }: {
   tenantId: string; currentSub: any; onSuccess: () => void;
 }) {
+  const { t } = useLanguage();
+  const sa = t.superAdmin;
   const [open, setOpen] = useState(false);
   const [planId, setPlanId] = useState("");
   const [cycle, setCycle] = useState("monthly");
@@ -204,9 +204,9 @@ function SubscriptionDialog({
 }
 
 // ─── Impersonate Button ──────────────────────────────────────
-function ImpersonateButton({
+function ImpersonateButton({ tenantId, tenantName, tenantSubdomain }: { tenantId: string; tenantName: string; tenantSubdomain: string }) {
   const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId, tenantName, tenantSubdomain }: { tenantId: string; tenantName: string; tenantSubdomain: string }) {
+  const sa = t.superAdmin;
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -248,9 +248,9 @@ function ImpersonateButton({
 }
 
 // ─── Tenant Users Tab ────────────────────────────────────────
-function TenantUsersTab({
+function TenantUsersTab({ tenantId }: { tenantId: string }) {
   const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId }: { tenantId: string }) {
+  const sa = t.superAdmin;
   const qc = useQueryClient();
   const [editUser, setEditUser] = useState<any>(null);
   const [editMode, setEditMode] = useState<"info" | "password">("info");
@@ -598,9 +598,9 @@ function TenantUsersTab({
 }
 
 // ─── Tenant Activity Logs Tab ────────────────────────────────
-function TenantActivityTab({
+function TenantActivityTab({ tenantId }: { tenantId: string }) {
   const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId }: { tenantId: string }) {
+  const sa = t.superAdmin;
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["super-tenant-activity", tenantId],
     queryFn: () => superAdminApi.getTenantActivityLogs(tenantId),
@@ -663,9 +663,9 @@ function TenantActivityTab({
 }
 
 // ─── Tenant Login History Tab ────────────────────────────────
-function TenantLoginHistoryTab({
+function TenantLoginHistoryTab({ tenantId }: { tenantId: string }) {
   const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId }: { tenantId: string }) {
+  const sa = t.superAdmin;
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["super-tenant-login-history", tenantId],
     queryFn: () => superAdminApi.getTenantLoginHistory(tenantId),
@@ -718,9 +718,9 @@ function TenantLoginHistoryTab({
 }
 
 // ─── Tenant Sessions Tab ─────────────────────────────────────
-function TenantSessionsTab({
+function TenantSessionsTab({ tenantId }: { tenantId: string }) {
   const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId }: { tenantId: string }) {
+  const sa = t.superAdmin;
   const qc = useQueryClient();
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ["super-tenant-sessions", tenantId],
