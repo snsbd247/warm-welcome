@@ -90,11 +90,12 @@ export default function SuperUsers() {
         if (error) throw error;
 
         // Update role
-        const { error: roleErr } = await db.from("user_roles").upsert({
+        await db.from("user_roles").delete().eq("user_id", editingUser.id);
+        const { error: roleErr } = await db.from("user_roles").insert({
           user_id: editingUser.id,
-          role: form.role,
+          role: form.role as any,
           custom_role_id: form.custom_role_id || null,
-        }, { onConflict: "user_id" });
+        });
         if (roleErr) throw roleErr;
       } else {
         if (!form.password) throw new Error("Password is required");
