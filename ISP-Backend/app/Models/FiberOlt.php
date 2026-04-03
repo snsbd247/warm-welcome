@@ -22,10 +22,6 @@ class FiberOlt extends Model
         'lng' => 'float',
     ];
 
-    protected $casts = [
-        'total_pon_ports' => 'integer',
-    ];
-
     public function ponPorts()
     {
         return $this->hasMany(FiberPonPort::class, 'olt_id');
