@@ -722,6 +722,7 @@ function NagadTab() {
 
 // ─── Shared Components ───────────────────────────────────────────
 function LedgerAccountSelect({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled: boolean }) {
+  const { t } = useLanguage();
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts-for-select"],
     staleTime: 120_000,
