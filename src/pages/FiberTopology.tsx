@@ -258,7 +258,7 @@ function OnuHNode({ onu, t, onEdit }: { onu: FiberOnuData; t: any; onEdit?: (typ
   );
 }
 
-function OutputHNode({ output, t, isLast }: { output: SplitterOutput; t: any; isLast: boolean }) {
+function OutputHNode({ output, t, isLast, onEdit }: { output: SplitterOutput; t: any; isLast: boolean; onEdit?: (type: string, data: any) => void }) {
   const isFree = output.status === "free";
   const hasChildren = !!(output.onu || output.child_cables?.length || output.child_splitter);
 
@@ -274,30 +274,30 @@ function OutputHNode({ output, t, isLast }: { output: SplitterOutput; t: any; is
         {output.onu && !output.child_cables?.length && !output.child_splitter && (
           <>
             <span className="text-muted-foreground text-xs">→</span>
-            <OnuHNode onu={output.onu} t={t} />
+            <OnuHNode onu={output.onu} t={t} onEdit={onEdit} />
           </>
         )}
       </div>
       {hasChildren && (output.child_cables?.length || output.child_splitter) && (
         <HTreeChildren>
           {output.child_cables?.map((cable, i) => (
-            <CableHNode key={cable.id} cable={cable} t={t} isLast={i === (output.child_cables!.length - 1) && !output.child_splitter} />
+            <CableHNode key={cable.id} cable={cable} t={t} isLast={i === (output.child_cables!.length - 1) && !output.child_splitter} onEdit={onEdit} />
           ))}
           {output.child_splitter && (
-            <SplitterHNode splitter={output.child_splitter} t={t} isLast />
+            <SplitterHNode splitter={output.child_splitter} t={t} isLast onEdit={onEdit} />
           )}
         </HTreeChildren>
       )}
       {hasChildren && output.onu && (output.child_cables?.length || output.child_splitter) && (
         <div className="ml-6 flex items-center gap-1.5 mt-0.5">
-          <OnuHNode onu={output.onu} t={t} />
+          <OnuHNode onu={output.onu} t={t} onEdit={onEdit} />
         </div>
       )}
     </HTreeItem>
   );
 }
 
-function SplitterHNode({ splitter, t, isLast }: { splitter: Splitter; t: any; isLast: boolean }) {
+function SplitterHNode({ splitter, t, isLast, onEdit }: { splitter: Splitter; t: any; isLast: boolean; onEdit?: (type: string, data: any) => void }) {
   const freeCount = (splitter.outputs || []).filter(o => o.status === "free").length;
   const outputs = splitter.outputs || [];
 
@@ -308,6 +308,7 @@ function SplitterHNode({ splitter, t, isLast }: { splitter: Splitter; t: any; is
           text={`${t.fiberTopology.splitter} (${splitter.ratio})${splitter.label ? ` - ${splitter.label}` : ""}`}
           colorClass={NODE_COLORS.splitter}
           icon={GitBranch}
+          onEdit={onEdit ? () => onEdit("edit_splitter", { _edit_id: splitter.id, label: splitter.label || "", location: splitter.location || "", status: splitter.status, lat: splitter.lat, lng: splitter.lng, ratio: splitter.ratio }) : undefined}
         />
         {splitter.lat && <MapPin className="h-3 w-3 text-muted-foreground" />}
         {splitter.source_type === "splitter_output" && <Badge variant="outline" className="text-[9px] h-4 px-1">🔗</Badge>}
@@ -315,7 +316,7 @@ function SplitterHNode({ splitter, t, isLast }: { splitter: Splitter; t: any; is
       {outputs.length > 0 && (
         <HTreeChildren>
           {outputs.map((output, i) => (
-            <OutputHNode key={output.id} output={output} t={t} isLast={i === outputs.length - 1} />
+            <OutputHNode key={output.id} output={output} t={t} isLast={i === outputs.length - 1} onEdit={onEdit} />
           ))}
         </HTreeChildren>
       )}
@@ -323,7 +324,7 @@ function SplitterHNode({ splitter, t, isLast }: { splitter: Splitter; t: any; is
   );
 }
 
-function CoreHNode({ core, t, isLast }: { core: FiberCoreData; t: any; isLast: boolean }) {
+function CoreHNode({ core, t, isLast, onEdit }: { core: FiberCoreData; t: any; isLast: boolean; onEdit?: (type: string, data: any) => void }) {
   const hasSplitter = !!core.splitter;
 
   return (
@@ -341,14 +342,14 @@ function CoreHNode({ core, t, isLast }: { core: FiberCoreData; t: any; isLast: b
       </div>
       {hasSplitter && (
         <HTreeChildren>
-          <SplitterHNode splitter={core.splitter!} t={t} isLast />
+          <SplitterHNode splitter={core.splitter!} t={t} isLast onEdit={onEdit} />
         </HTreeChildren>
       )}
     </HTreeItem>
   );
 }
 
-function CableHNode({ cable, t, isLast }: { cable: FiberCableData; t: any; isLast: boolean }) {
+function CableHNode({ cable, t, isLast, onEdit }: { cable: FiberCableData; t: any; isLast: boolean; onEdit?: (type: string, data: any) => void }) {
   const freeCount = (cable.cores || []).filter(c => c.status === "free").length;
 
   return (
@@ -358,13 +359,14 @@ function CableHNode({ cable, t, isLast }: { cable: FiberCableData; t: any; isLas
           text={`${cable.name} (${cable.total_cores} ${t.fiberTopology.cores})`}
           colorClass={NODE_COLORS.cable}
           icon={Cable}
+          onEdit={onEdit ? () => onEdit("edit_cable", { _edit_id: cable.id, name: cable.name, color: cable.color || "", length_meters: cable.length_meters || "", status: cable.status, lat: cable.lat, lng: cable.lng }) : undefined}
         />
         {cable.source_type === "splitter" && <Badge variant="outline" className="text-[9px] h-4 px-1">🔗</Badge>}
       </div>
       {(cable.cores || []).length > 0 && (
         <HTreeChildren>
           {cable.cores.map((core, i) => (
-            <CoreHNode key={core.id} core={core} t={t} isLast={i === cable.cores.length - 1} />
+            <CoreHNode key={core.id} core={core} t={t} isLast={i === cable.cores.length - 1} onEdit={onEdit} />
           ))}
         </HTreeChildren>
       )}
