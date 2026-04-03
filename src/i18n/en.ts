@@ -2036,39 +2036,8 @@ const en = {
     nagadSettingsSaved: "Nagad settings saved",
   },
 
-  // ── Admin Users ──
-  adminUsers: {
-    title: "Users",
-    subtitle: "Manage admin & staff accounts",
-    addUser: "Add User",
-    editUser: "Edit User",
-    searchUsers: "Search users...",
-    fullName: "Full Name",
-    username: "Username",
-    mobile: "Mobile",
-    staffId: "Staff ID",
-    role: "Role",
-    newPasswordHint: "New Password (leave blank to keep)",
-    allStatus: "All Status",
-    disabled: "Disabled",
-    noUsersFound: "No users found",
-    notSet: "Not set",
-    noRole: "No role",
-    userCreated: "User created",
-    userUpdated: "User updated",
-    userDeleted: "User deleted",
-    userDisabled: "User disabled",
-    userEnabled: "User enabled",
-    passwordRequired: "Password is required",
-    usernameRequired: "Username is required",
-    usernameTaken: "Username already taken",
-    created: "Created",
-    selectRole: "Select role",
-    deleteUser: "Delete User",
-    deleteUserConfirm: "Are you sure you want to delete \"{name}\"? This cannot be undone.",
-  },
 
-  // ── Roles & Permissions ──
+
   roles: {
     title: "Roles & Permissions",
     subtitle: "Manage roles and assign permissions",
