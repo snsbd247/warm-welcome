@@ -115,7 +115,7 @@ export default function AccountingDashboard() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
-            <CardHeader><CardTitle>Income vs Expense (Monthly)</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.accounting.incomeVsExpense}</CardTitle></CardHeader>
             <CardContent>
               {monthlyData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
