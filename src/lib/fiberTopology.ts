@@ -524,6 +524,15 @@ export function buildFiberMapMarkersFromTree(tree: OltData[]): FiberMapMarker[] 
       });
     }
     splitter.outputs.forEach((output) => {
+      // ONU markers
+      if (output.onu && typeof output.onu.lat === "number" && typeof output.onu.lng === "number") {
+        markers.push({
+          id: output.onu.id, type: "onu",
+          name: `ONU: ${output.onu.serial_number}`,
+          lat: output.onu.lat, lng: output.onu.lng,
+          customer: output.onu.customer?.name || null,
+        });
+      }
       if (output.child_cables) {
         output.child_cables.forEach((cable) => walkCable(cable));
       }
@@ -532,6 +541,14 @@ export function buildFiberMapMarkersFromTree(tree: OltData[]): FiberMapMarker[] 
   }
 
   function walkCable(cable: FiberCableData) {
+    // Cable markers
+    if (typeof cable.lat === "number" && typeof cable.lng === "number") {
+      markers.push({
+        id: cable.id, type: "cable",
+        name: `Cable: ${cable.name}`,
+        lat: cable.lat, lng: cable.lng,
+      });
+    }
     cable.cores.forEach((core) => {
       if (core.splitter) walkSplitter(core.splitter, cable.name);
     });
