@@ -12,6 +12,8 @@ export interface FiberOnuData {
   mac_address: string;
   status: string;
   customer_id: string;
+  lat?: number;
+  lng?: number;
   customer?: FiberCustomer;
 }
 
