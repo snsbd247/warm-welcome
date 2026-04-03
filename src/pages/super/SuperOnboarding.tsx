@@ -240,7 +240,7 @@ export default function SuperOnboarding() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Rocket className="h-6 w-6" /> New Tenant Onboarding
+            <Rocket className="h-6 w-6" /> {sa.newTenantOnboarding}
           </h1>
           <p className="text-muted-foreground text-sm">Step-by-step ISP tenant setup wizard</p>
         </div>
@@ -311,11 +311,11 @@ export default function SuperOnboarding() {
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>ISP Name <span className="text-destructive">*</span></Label>
+                  <Label>{sa.ispName} <span className="text-destructive">*</span></Label>
                   <Input value={tenantForm.name} onChange={(e) => update({ tenantForm: { ...tenantForm, name: e.target.value } })} placeholder="e.g. SpeedNet BD" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Subdomain <span className="text-destructive">*</span></Label>
+                  <Label>{sa.subdomain} <span className="text-destructive">*</span></Label>
                   <div className="flex items-center gap-1">
                     <Input value={tenantForm.subdomain} onChange={(e) => update({ tenantForm: { ...tenantForm, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") } })} placeholder="speednet" />
                     <span className="text-xs text-muted-foreground whitespace-nowrap">.smartispapp.com</span>
@@ -324,11 +324,11 @@ export default function SuperOnboarding() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Email <span className="text-destructive">*</span></Label>
+                  <Label>{sa.emailUsername} <span className="text-destructive">*</span></Label>
                   <Input type="email" value={tenantForm.email} onChange={(e) => update({ tenantForm: { ...tenantForm, email: e.target.value } })} placeholder="admin@speednet.com" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Phone</Label>
+                  <Label>{sa.mobile}</Label>
                   <Input value={tenantForm.phone} onChange={(e) => update({ tenantForm: { ...tenantForm, phone: e.target.value } })} placeholder="01XXXXXXXXX" />
                 </div>
               </div>
@@ -349,12 +349,12 @@ export default function SuperOnboarding() {
                 <span>Default subdomain: <strong>{tenantForm.subdomain}.smartispapp.com</strong> is already active. Custom domain is optional.</span>
               </div>
               <div className="space-y-2">
-                <Label>Custom Domain (optional)</Label>
+                <Label>{sa.customDomainOptional}</Label>
                 <Input value={domainForm.domain} onChange={(e) => update({ domainForm: { domain: e.target.value } })} placeholder="billing.yourisp.com" />
               </div>
               {domainForm.domain && (
                 <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground space-y-1">
-                  <p className="font-medium text-foreground text-sm">DNS Instructions</p>
+                  <p className="font-medium text-foreground text-sm">{sa.dnsInstructions}</p>
                   <p>Add an <strong>A record</strong> → <code className="bg-muted px-1 rounded">185.158.133.1</code></p>
                   <p>Or <strong>CNAME</strong> → <code className="bg-muted px-1 rounded">smartispapp.com</code></p>
                 </div>
@@ -380,9 +380,9 @@ export default function SuperOnboarding() {
           {step === 2 && (
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label>Subscription Plan <span className="text-destructive">*</span></Label>
+                <Label>{sa.subscriptionPlan} <span className="text-destructive">*</span></Label>
                 <Select value={planForm.plan_id} onValueChange={(v) => update({ planForm: { ...planForm, plan_id: v } })}>
-                  <SelectTrigger><SelectValue placeholder="Choose a plan" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={sa.choosePlan} /></SelectTrigger>
                   <SelectContent>
                     {plans.map((p: any) => (
                       <SelectItem key={p.id} value={p.id}>
@@ -397,30 +397,30 @@ export default function SuperOnboarding() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
                     <p className="text-lg font-bold">৳{selectedPlan.price_monthly}</p>
-                    <p className="text-xs text-muted-foreground">Monthly</p>
+                    <p className="text-xs text-muted-foreground">{sa.monthly}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
                     <p className="text-lg font-bold">৳{selectedPlan.price_yearly}</p>
-                    <p className="text-xs text-muted-foreground">Yearly</p>
+                    <p className="text-xs text-muted-foreground">{sa.yearly}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
                     <p className="text-lg font-bold">{selectedPlan.max_customers || "∞"}</p>
-                    <p className="text-xs text-muted-foreground">Max Customers</p>
+                    <p className="text-xs text-muted-foreground">{sa.maxCustomers}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
                     <p className="text-lg font-bold">{selectedPlan.max_users || "∞"}</p>
-                    <p className="text-xs text-muted-foreground">Max Users</p>
+                    <p className="text-xs text-muted-foreground">{sa.maxUsers}</p>
                   </div>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label>Billing Cycle</Label>
+                <Label>{sa.billingCycle}</Label>
                 <Select value={planForm.billing_cycle} onValueChange={(v) => update({ planForm: { ...planForm, billing_cycle: v } })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly (Save ~17%)</SelectItem>
+                    <SelectItem value="monthly">{sa.monthly}</SelectItem>
+                    <SelectItem value="yearly">{sa.yearly}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -443,7 +443,7 @@ export default function SuperOnboarding() {
               {/* Auto/Manual toggle */}
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                 <div>
-                  <p className="font-medium">Auto Import All</p>
+                  <p className="font-medium">{sa.autoImportAll}</p>
                   <p className="text-sm text-muted-foreground">Automatically import all data at once</p>
                 </div>
                 <Switch checked={autoSetup} onCheckedChange={(v) => update({ autoSetup: v })} />
@@ -468,7 +468,7 @@ export default function SuperOnboarding() {
                         <span className={`text-sm ${done ? "text-primary font-medium" : "text-foreground"}`}>{item.label}</span>
                       </div>
                       {done ? (
-                        <Badge variant="outline" className="text-primary border-primary/30 text-xs">Done</Badge>
+                        <Badge variant="outline" className="text-primary border-primary/30 text-xs">{sa.done}</Badge>
                       ) : (
                         <Button variant="outline" size="sm" className="h-8" onClick={() => runSetupItem.mutate(item.key)} disabled={isPending || autoSetup}>
                           {isRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Import"}
@@ -482,7 +482,7 @@ export default function SuperOnboarding() {
               {/* Progress */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Import Progress</span>
+                  <span>{sa.importProgress}</span>
                   <span>{setupDoneCount}/{SETUP_ITEMS.length}</span>
                 </div>
                 <Progress value={(setupDoneCount / SETUP_ITEMS.length) * 100} className="h-2" />
@@ -522,34 +522,34 @@ export default function SuperOnboarding() {
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground">Tenant Ready!</h3>
+                <h3 className="text-xl font-bold text-foreground">{sa.tenantReady}</h3>
                 <p className="text-muted-foreground text-sm">Review the configuration below and activate.</p>
               </div>
 
               {/* Summary grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3.5 bg-muted/50 rounded-lg space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Building2 className="h-3 w-3" /> ISP Name</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Building2 className="h-3 w-3" /> {sa.ispName}</p>
                   <p className="font-medium">{tenantForm.name}</p>
                 </div>
                 <div className="p-3.5 bg-muted/50 rounded-lg space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" /> Subdomain</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" /> {sa.subdomain}</p>
                   <p className="font-medium">{tenantForm.subdomain}.smartispapp.com</p>
                 </div>
                 <div className="p-3.5 bg-muted/50 rounded-lg space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" /> Custom Domain</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" /> {sa.customDomain}</p>
                   <p className="font-medium">{domainForm.domain || "Not configured"}</p>
                 </div>
                 <div className="p-3.5 bg-muted/50 rounded-lg space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><CreditCard className="h-3 w-3" /> Plan</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><CreditCard className="h-3 w-3" /> {sa.plan}</p>
                   <p className="font-medium">{selectedPlan?.name || "Not assigned"} ({planForm.billing_cycle})</p>
                 </div>
                 <div className="p-3.5 bg-muted/50 rounded-lg space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Database className="h-3 w-3" /> Data Import</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Database className="h-3 w-3" /> {sa.dataImport}</p>
                   <p className="font-medium">{setupDoneCount}/{SETUP_ITEMS.length} completed</p>
                 </div>
                 <div className="p-3.5 bg-muted/50 rounded-lg space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><MessageSquare className="h-3 w-3" /> SMS Balance</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><MessageSquare className="h-3 w-3" /> {sa.smsBalance}</p>
                   <p className="font-medium">{smsRecharge} credits</p>
                 </div>
               </div>
@@ -557,7 +557,7 @@ export default function SuperOnboarding() {
               {/* SMS initial balance */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
-                  <MessageSquare className="h-4 w-4" /> Initial SMS Balance
+                  <MessageSquare className="h-4 w-4" /> {sa.initialSmsBalance}
                 </Label>
                 <div className="flex gap-2">
                   <Input type="number" value={smsRecharge} onChange={(e) => update({ smsRecharge: Number(e.target.value) })} min={0} className="max-w-[150px]" />

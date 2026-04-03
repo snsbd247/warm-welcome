@@ -229,7 +229,7 @@ export default function SuperBilling() {
 
   const statusBadge = (s: string) => {
     if (s === "paid") return <Badge className="bg-emerald-500/10 text-emerald-600"><CheckCircle className="h-3 w-3 mr-1" />Paid</Badge>;
-    if (s === "pending") return <Badge variant="outline" className="text-amber-600"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+    if (s === "pending") return <Badge variant="outline" className="text-amber-600"><Clock className="h-3 w-3 mr-1" />{sa.pending}</Badge>;
     return <Badge variant="destructive">{s}</Badge>;
   };
 
@@ -281,44 +281,44 @@ export default function SuperBilling() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">SaaS Billing & Subscriptions</h1>
+          <h1 className="text-2xl font-bold text-foreground">{sa.saasBilling}</h1>
           <p className="text-muted-foreground">Manage invoices, plan changes, and payment tracking</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => runPlanCheck.mutate()} disabled={runPlanCheck.isPending}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${runPlanCheck.isPending ? "animate-spin" : ""}`} /> Run Expiry Check
+            <RefreshCw className={`h-4 w-4 mr-2 ${runPlanCheck.isPending ? "animate-spin" : ""}`} /> {sa.runExpiryCheck}
           </Button>
           <Dialog open={showInvoice} onOpenChange={setShowInvoice}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Generate Invoice</Button></DialogTrigger>
+            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{sa.generateInvoice}</Button></DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Generate Subscription Invoice</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{sa.generateSubInvoice}</DialogTitle></DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); generateInvoice.mutate(invoiceForm); }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Tenant</Label>
+                  <Label>{sa.tenant}</Label>
                   <Select value={invoiceForm.tenant_id} onValueChange={(v) => setInvoiceForm({ ...invoiceForm, tenant_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select tenant" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={sa.selectTenant} /></SelectTrigger>
                     <SelectContent>{tenants.map((t: any) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Plan</Label>
+                  <Label>{sa.plan}</Label>
                   <Select value={invoiceForm.plan_id} onValueChange={(v) => setInvoiceForm({ ...invoiceForm, plan_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select plan" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={sa.selectPlan} /></SelectTrigger>
                     <SelectContent>{plans.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} — ৳{p.price_monthly}/mo</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Billing Cycle</Label>
+                  <Label>{sa.billingCycle}</Label>
                   <Select value={invoiceForm.billing_cycle} onValueChange={(v) => setInvoiceForm({ ...invoiceForm, billing_cycle: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="yearly">Yearly</SelectItem>
+                      <SelectItem value="monthly">{sa.monthly}</SelectItem>
+                      <SelectItem value="yearly">{sa.yearly}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Notes (optional)</Label>
+                  <Label>{sa.notes}</Label>
                   <Input value={invoiceForm.notes} onChange={(e) => setInvoiceForm({ ...invoiceForm, notes: e.target.value })} />
                 </div>
                 <Button type="submit" className="w-full" disabled={generateInvoice.isPending}>
@@ -334,7 +334,7 @@ export default function SuperBilling() {
       {expiringTenants.length > 0 && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Plan Expiry Alerts</AlertTitle>
+          <AlertTitle>{sa.planExpiryAlerts}</AlertTitle>
           <AlertDescription>
             <div className="mt-2 space-y-1">
               {expiringTenants.map((t: any) => (
@@ -355,25 +355,25 @@ export default function SuperBilling() {
         <Card><CardContent className="pt-6">
           <div className="flex items-center gap-3">
             <DollarSign className="h-8 w-8 text-emerald-500" />
-            <div><p className="text-sm text-muted-foreground">Total Revenue</p><p className="text-2xl font-bold">৳{totalRevenue.toLocaleString()}</p></div>
+            <div><p className="text-sm text-muted-foreground">{sa.totalRevenue}</p><p className="text-2xl font-bold">৳{totalRevenue.toLocaleString()}</p></div>
           </div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
           <div className="flex items-center gap-3">
             <Clock className="h-8 w-8 text-amber-500" />
-            <div><p className="text-sm text-muted-foreground">Pending</p><p className="text-2xl font-bold">৳{pendingAmount.toLocaleString()}</p></div>
+            <div><p className="text-sm text-muted-foreground">{sa.pending}</p><p className="text-2xl font-bold">৳{pendingAmount.toLocaleString()}</p></div>
           </div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
           <div className="flex items-center gap-3">
             <CreditCard className="h-8 w-8 text-primary" />
-            <div><p className="text-sm text-muted-foreground">Active Subs</p><p className="text-2xl font-bold">{activeSubCount}</p></div>
+            <div><p className="text-sm text-muted-foreground">{sa.activeSubs}</p><p className="text-2xl font-bold">{activeSubCount}</p></div>
           </div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-8 w-8 text-destructive" />
-            <div><p className="text-sm text-muted-foreground">Expiring Soon</p><p className="text-2xl font-bold">{expiringTenants.filter((t: any) => t.days_left >= 0).length}</p></div>
+            <div><p className="text-sm text-muted-foreground">{sa.expiringSoon}</p><p className="text-2xl font-bold">{expiringTenants.filter((t: any) => t.days_left >= 0).length}</p></div>
           </div>
         </CardContent></Card>
       </div>
@@ -381,33 +381,33 @@ export default function SuperBilling() {
       {/* Tabs */}
       <Tabs defaultValue="invoices">
         <TabsList>
-          <TabsTrigger value="invoices"><Receipt className="h-4 w-4 mr-1" />Invoices</TabsTrigger>
-          <TabsTrigger value="tenants"><TrendingUp className="h-4 w-4 mr-1" />Tenant Plans</TabsTrigger>
+          <TabsTrigger value="invoices"><Receipt className="h-4 w-4 mr-1" />{sa.invoices}</TabsTrigger>
+          <TabsTrigger value="tenants"><TrendingUp className="h-4 w-4 mr-1" />{sa.tenantPlanOverview}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="invoices">
           <Card>
-            <CardHeader><CardTitle>Subscription Invoices</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{sa.subscriptionInvoices}</CardTitle></CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Tenant</TableHead>
-                    <TableHead>Plan</TableHead>
-                    <TableHead>Cycle</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Proration</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>{sa.tenant}</TableHead>
+                    <TableHead>{sa.plan}</TableHead>
+                    <TableHead>{sa.cycle}</TableHead>
+                    <TableHead>{sa.amount}</TableHead>
+                    <TableHead>{sa.proration}</TableHead>
+                    <TableHead>{sa.total}</TableHead>
+                    <TableHead>{sa.dueDate}</TableHead>
+                    <TableHead>{t.common.status}</TableHead>
+                    <TableHead>{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loadingInvoices ? (
                     <TableRow><TableCell colSpan={9} className="text-center py-8"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></TableCell></TableRow>
                   ) : invoices.length === 0 ? (
-                    <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No invoices yet</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">{sa.noInvoicesYet}</TableCell></TableRow>
                   ) : invoices.map((inv: any) => (
                     <TableRow key={inv.id}>
                       <TableCell className="font-medium">{inv.tenant?.name || "—"}</TableCell>
@@ -425,7 +425,7 @@ export default function SuperBilling() {
                           </Button>
                           {inv.status === "pending" && (
                             <Button size="sm" onClick={() => markPaid.mutate(inv.id)} disabled={markPaid.isPending}>
-                              <CheckCircle className="h-3 w-3 mr-1" /> Mark Paid
+                              <CheckCircle className="h-3 w-3 mr-1" /> {sa.markPaid}
                             </Button>
                           )}
                           <Button size="icon" variant="ghost" onClick={() => { setEditInv({ ...inv, amount: inv.amount, tax_amount: inv.tax_amount || 0, total_amount: inv.total_amount, billing_cycle: inv.billing_cycle, due_date: inv.due_date, notes: inv.notes || "", status: inv.status }); setEditOpen(true); }}>
@@ -446,18 +446,18 @@ export default function SuperBilling() {
 
         <TabsContent value="tenants">
           <Card>
-            <CardHeader><CardTitle>Tenant Plan Overview</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{sa.tenantPlanOverview}</CardTitle></CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Tenant</TableHead>
-                    <TableHead>Current Plan</TableHead>
-                    <TableHead>Expiry Date</TableHead>
-                    <TableHead>Grace Days</TableHead>
-                    <TableHead>Days Left</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>{sa.tenant}</TableHead>
+                    <TableHead>{sa.currentPlanLabel}</TableHead>
+                    <TableHead>{sa.expiryDate}</TableHead>
+                    <TableHead>{sa.graceDays}</TableHead>
+                    <TableHead>{sa.daysLeftLabel}</TableHead>
+                    <TableHead>{t.common.status}</TableHead>
+                    <TableHead>{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -508,19 +508,19 @@ export default function SuperBilling() {
                 <p>Expires: <strong>{selectedTenant.plan_expire_date || "Not set"}</strong></p>
               </div>
               <div className="space-y-2">
-                <Label>New Plan</Label>
+                <Label>{sa.newPlan}</Label>
                 <Select value={upgradeForm.plan_id} onValueChange={(v) => setUpgradeForm({ ...upgradeForm, plan_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Select plan" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={sa.selectPlan} /></SelectTrigger>
                   <SelectContent>{plans.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} — ৳{p.price_monthly}/mo | ৳{p.price_yearly}/yr</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Billing Cycle</Label>
+                <Label>{sa.billingCycle}</Label>
                 <Select value={upgradeForm.billing_cycle} onValueChange={(v) => setUpgradeForm({ ...upgradeForm, billing_cycle: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
+                    <SelectItem value="monthly">{sa.monthly}</SelectItem>
+                    <SelectItem value="yearly">{sa.yearly}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -556,49 +556,49 @@ export default function SuperBilling() {
       {/* Edit Invoice Dialog */}
       <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) setEditInv(null); }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Edit Invoice</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{sa.editInvoice}</DialogTitle></DialogHeader>
           {editInv && (
             <form onSubmit={(e) => { e.preventDefault(); editInvoice.mutate(editInv); }} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>Amount</Label>
+                  <Label>{sa.amount}</Label>
                   <Input type="number" step="0.01" value={editInv.amount} onChange={(e) => setEditInv({ ...editInv, amount: e.target.value, total_amount: (Number(e.target.value) + Number(editInv.tax_amount) - Number(editInv.proration_credit || 0)).toFixed(2) })} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Tax</Label>
+                  <Label>{sa.tax}</Label>
                   <Input type="number" step="0.01" value={editInv.tax_amount} onChange={(e) => setEditInv({ ...editInv, tax_amount: e.target.value, total_amount: (Number(editInv.amount) + Number(e.target.value) - Number(editInv.proration_credit || 0)).toFixed(2) })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>Total</Label>
+                  <Label>{sa.total}</Label>
                   <Input type="number" step="0.01" value={editInv.total_amount} onChange={(e) => setEditInv({ ...editInv, total_amount: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Due Date</Label>
+                  <Label>{sa.dueDate}</Label>
                   <Input type="date" value={editInv.due_date || ""} onChange={(e) => setEditInv({ ...editInv, due_date: e.target.value })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>Billing Cycle</Label>
+                  <Label>{sa.billingCycle}</Label>
                   <Select value={editInv.billing_cycle} onValueChange={(v) => setEditInv({ ...editInv, billing_cycle: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="yearly">Yearly</SelectItem>
+                      <SelectItem value="monthly">{sa.monthly}</SelectItem>
+                      <SelectItem value="yearly">{sa.yearly}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Status</Label>
+                  <Label>{t.common.status}</Label>
                   <Select value={editInv.status} onValueChange={(v) => setEditInv({ ...editInv, status: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="pending">{sa.pending}</SelectItem>
                       <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="overdue">Overdue</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="overdue">{sa.overdue}</SelectItem>
+                      <SelectItem value="cancelled">{t.common.cancel}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -618,10 +618,10 @@ export default function SuperBilling() {
       {/* Delete Confirm Dialog */}
       <Dialog open={!!deleteId} onOpenChange={(o) => { if (!o) setDeleteId(null); }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Delete Invoice</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{sa.deleteInvoice}</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">Are you sure you want to delete this invoice? This action cannot be undone.</p>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteId(null)}>{t.common.cancel}</Button>
             <Button variant="destructive" onClick={() => deleteId && deleteInvoice.mutate(deleteId)} disabled={deleteInvoice.isPending}>
               {deleteInvoice.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Delete
             </Button>
@@ -670,14 +670,14 @@ export default function SuperBilling() {
                   {/* Invoiced To / Pay To */}
                   <div className="grid grid-cols-2 gap-6 mb-4">
                     <div>
-                      <h3 className="text-xs font-bold text-gray-500 uppercase mb-1">Invoiced To</h3>
+                      <h3 className="text-xs font-bold text-gray-500 uppercase mb-1">{sa.invoicedTo}</h3>
                       <p className="text-sm font-semibold text-gray-900">{tenantData?.name || "—"}</p>
                       {tenantData?.email && <p className="text-xs text-gray-500">{tenantData.email}</p>}
                       {tenantData?.phone && <p className="text-xs text-gray-500">{tenantData.phone}</p>}
                       {tenantData?.subdomain && <p className="text-xs text-gray-500">{tenantData.subdomain}</p>}
                     </div>
                     <div>
-                      <h3 className="text-xs font-bold text-gray-500 uppercase mb-1">Pay To</h3>
+                      <h3 className="text-xs font-bold text-gray-500 uppercase mb-1">{sa.payTo}</h3>
                       <p className="text-sm font-semibold text-gray-900">{b.company_name}</p>
                       {b.address && <p className="text-xs text-gray-500">{b.address}</p>}
                       {(b.support_phone || b.mobile) && <p className="text-xs text-gray-500">{b.support_phone || b.mobile}</p>}
@@ -687,32 +687,32 @@ export default function SuperBilling() {
                   {/* Date Row */}
                   <div className="grid grid-cols-3 gap-6 mb-6 border-t border-b border-gray-100 py-3">
                     <div>
-                      <span className="text-xs font-bold text-gray-500">Invoice Date</span>
+                      <span className="text-xs font-bold text-gray-500">{sa.invoiceDate}</span>
                       <p className="text-sm text-gray-800">
                         {previewInv.created_at ? format(new Date(previewInv.created_at), "dd-MM-yyyy") : "-"}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs font-bold text-gray-500">Due Date</span>
+                      <span className="text-xs font-bold text-gray-500">{sa.dueDate}</span>
                       <p className="text-sm text-gray-800">
                         {previewInv.due_date ? format(new Date(previewInv.due_date), "dd-MM-yyyy") : "-"}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs font-bold text-gray-500">Payment Method</span>
+                      <span className="text-xs font-bold text-gray-500">{sa.paymentMethod}</span>
                       <p className="text-sm text-gray-800">{previewInv.payment_method || "N/A"}</p>
                     </div>
                   </div>
 
                   {/* Items Table */}
-                  <h3 className="text-center text-base font-bold text-gray-800 mb-3">Invoice Items</h3>
+                  <h3 className="text-center text-base font-bold text-gray-800 mb-3">{sa.invoiceItems}</h3>
                   <table className="w-full text-sm mb-2">
                     <thead>
                       <tr className="border-b-2 border-gray-200">
-                        <th className="text-left py-2 font-bold text-gray-600">Description</th>
-                        <th className="text-center py-2 font-bold text-gray-600">Quantity</th>
-                        <th className="text-right py-2 font-bold text-gray-600">Rate</th>
-                        <th className="text-right py-2 font-bold text-gray-600">Amount</th>
+                        <th className="text-left py-2 font-bold text-gray-600">{t.common.description}</th>
+                        <th className="text-center py-2 font-bold text-gray-600">{sa.quantity}</th>
+                        <th className="text-right py-2 font-bold text-gray-600">{sa.rate}</th>
+                        <th className="text-right py-2 font-bold text-gray-600">{sa.amount}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -726,7 +726,7 @@ export default function SuperBilling() {
                       </tr>
                       {Number(previewInv.proration_credit || 0) > 0 && (
                         <tr className="border-b border-gray-100">
-                          <td className="py-2 text-emerald-700">Proration Credit</td>
+                          <td className="py-2 text-emerald-700">{sa.prorationCredit}</td>
                           <td className="py-2 text-center text-gray-600">-</td>
                           <td className="py-2 text-right text-gray-600">-</td>
                           <td className="py-2 text-right text-emerald-700">-{Number(previewInv.proration_credit).toFixed(2)} TK</td>
@@ -734,7 +734,7 @@ export default function SuperBilling() {
                       )}
                       {Number(previewInv.tax_amount || 0) > 0 && (
                         <tr className="border-b border-gray-100">
-                          <td className="py-2 text-gray-800">Tax</td>
+                          <td className="py-2 text-gray-800">{sa.tax}</td>
                           <td className="py-2 text-center text-gray-600">-</td>
                           <td className="py-2 text-right text-gray-600">-</td>
                           <td className="py-2 text-right text-gray-800">{Number(previewInv.tax_amount).toFixed(2)} TK</td>
@@ -743,7 +743,7 @@ export default function SuperBilling() {
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 border-gray-300">
-                        <td colSpan={3} className="py-2 text-right font-bold text-gray-700">Total</td>
+                        <td colSpan={3} className="py-2 text-right font-bold text-gray-700">{sa.total}</td>
                         <td className="py-2 text-right font-bold text-gray-900">{Number(previewInv.total_amount || 0).toFixed(2)} TK</td>
                       </tr>
                     </tfoot>
@@ -752,7 +752,7 @@ export default function SuperBilling() {
                   {/* Notes */}
                   {previewInv.notes && (
                     <div className="mt-4 p-3 bg-gray-50 rounded text-sm text-gray-600">
-                      <strong>Notes:</strong> {previewInv.notes}
+                      <strong>{sa.notes}:</strong> {previewInv.notes}
                     </div>
                   )}
 

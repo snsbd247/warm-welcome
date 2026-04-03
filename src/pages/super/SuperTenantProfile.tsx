@@ -51,17 +51,17 @@ function SmsRechargeDialog({ tenantId, currentBalance, onSuccess }: {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Recharge</Button>
+        <Button size="sm"><Plus className="h-4 w-4 mr-1" /> {sa.recharge}</Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>SMS Balance Recharge</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{sa.smsBalanceRecharge}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="p-3 rounded-lg bg-muted/50 text-center">
-            <p className="text-xs text-muted-foreground">Current Balance</p>
+            <p className="text-xs text-muted-foreground">{sa.currentBalance}</p>
             <p className="text-2xl font-bold">{currentBalance}</p>
           </div>
           <div className="space-y-2">
-            <Label>Amount (SMS Credits)</Label>
+            <Label>{sa.amountSmsCredits}</Label>
             <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 500" min="1" />
           </div>
           <div className="grid grid-cols-4 gap-2">
@@ -72,12 +72,12 @@ function SmsRechargeDialog({ tenantId, currentBalance, onSuccess }: {
             ))}
           </div>
           <div className="space-y-2">
-            <Label>Note (optional)</Label>
+            <Label>{sa.noteOptional}</Label>
             <Input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Recharge description" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>{t.common.cancel}</Button>
           <Button onClick={() => recharge.mutate()} disabled={!amount || Number(amount) < 1 || recharge.isPending}>
             {recharge.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
             Add {amount || 0} Credits
@@ -102,23 +102,23 @@ function DomainAddDialog({ tenantId, onSuccess }: { tenantId: string; onSuccess:
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" /> Add Domain</Button>
+        <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" /> {sa.addDomain}</Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Add Custom Domain</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{sa.addCustomDomain}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Domain Name</Label>
+            <Label>{sa.domainName}</Label>
             <Input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="billing.yourisp.com" />
           </div>
           <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground text-sm">DNS Configuration</p>
+            <p className="font-medium text-foreground text-sm">{sa.dnsConfiguration}</p>
             <p>Add an A record pointing to: <code className="bg-muted px-1 rounded">185.158.133.1</code></p>
             <p>Or CNAME to: <code className="bg-muted px-1 rounded">smartispapp.com</code></p>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>{t.common.cancel}</Button>
           <Button onClick={() => addDomain.mutate()} disabled={!domain || addDomain.isPending}>
             {addDomain.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
             Add Domain
@@ -157,14 +157,14 @@ function SubscriptionDialog({ tenantId, currentSub, onSuccess }: {
         <div className="space-y-4">
           {currentSub && (
             <div className="p-3 rounded-lg bg-muted/50 text-sm">
-              <p className="text-muted-foreground">Current Plan</p>
+              <p className="text-muted-foreground">{sa.currentPlanLabel}</p>
               <p className="font-medium">{currentSub.plan?.name} — {currentSub.billing_cycle}</p>
             </div>
           )}
           <div className="space-y-2">
-            <Label>Select Plan</Label>
+            <Label>{sa.selectPlan}</Label>
             <Select value={planId} onValueChange={setPlanId}>
-              <SelectTrigger><SelectValue placeholder="Choose a plan" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={sa.choosePlan} /></SelectTrigger>
               <SelectContent>
                 {plans.map((p: any) => (
                   <SelectItem key={p.id} value={p.id}>
@@ -175,18 +175,18 @@ function SubscriptionDialog({ tenantId, currentSub, onSuccess }: {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Billing Cycle</Label>
+            <Label>{sa.billingCycle}</Label>
             <Select value={cycle} onValueChange={setCycle}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="yearly">Yearly</SelectItem>
+                <SelectItem value="monthly">{sa.monthly}</SelectItem>
+                <SelectItem value="yearly">{sa.yearly}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>{t.common.cancel}</Button>
           <Button onClick={() => assign.mutate()} disabled={!planId || assign.isPending}>
             {assign.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
             Assign Plan
@@ -332,7 +332,7 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
               <CardDescription>Manage all users for this tenant</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Input placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-48 h-9" />
+              <Input placeholder={sa.searchUsers} value={search} onChange={(e) => setSearch(e.target.value)} className="w-48 h-9" />
               <Button size="sm" onClick={() => setShowAddUser(true)}>
                 <Plus className="h-4 w-4 mr-1" /> Add User
               </Button>
@@ -343,9 +343,9 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
           {users.length === 0 ? (
             <div className="text-center py-10 space-y-3">
               <Users className="h-12 w-12 mx-auto text-muted-foreground/50" />
-              <p className="text-muted-foreground font-medium">No users found for this tenant</p>
+              <p className="text-muted-foreground font-medium">{sa.noUsersFound}</p>
               <p className="text-xs text-muted-foreground">Click "Add User" to create the first admin user</p>
-              <Button size="sm" onClick={() => setShowAddUser(true)}><Plus className="h-4 w-4 mr-1" /> Create First User</Button>
+              <Button size="sm" onClick={() => setShowAddUser(true)}><Plus className="h-4 w-4 mr-1" /> {sa.createFirstUser}</Button>
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No users match "{search}"</p>
@@ -354,12 +354,12 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
+                    <TableHead>{sa.fullName}</TableHead>
                     <TableHead className="hidden sm:table-cell">Username</TableHead>
-                    <TableHead>Email / Mobile</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{sa.emailMobile}</TableHead>
+                    <TableHead>{sa.role}</TableHead>
+                    <TableHead>{t.common.status}</TableHead>
+                    <TableHead className="text-right">{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -431,36 +431,36 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
       <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add New Tenant User</DialogTitle>
+            <DialogTitle>{sa.addNewTenantUser}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Full Name <span className="text-destructive">*</span></Label>
+                <Label>{sa.fullName} <span className="text-destructive">*</span></Label>
                 <Input value={newUser.full_name} onChange={(e) => setNewUser(d => ({ ...d, full_name: e.target.value }))} placeholder="John Doe" />
               </div>
               <div>
-                <Label>Username <span className="text-destructive">*</span></Label>
+                <Label>{sa.username} <span className="text-destructive">*</span></Label>
                 <Input value={newUser.username} onChange={(e) => setNewUser(d => ({ ...d, username: e.target.value }))} placeholder="john.doe" />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Email</Label>
+                <Label>{sa.emailUsername}</Label>
                 <Input type="email" value={newUser.email} onChange={(e) => setNewUser(d => ({ ...d, email: e.target.value }))} placeholder="user@example.com" />
               </div>
               <div>
-                <Label>Mobile</Label>
+                <Label>{sa.mobile}</Label>
                 <Input value={newUser.mobile} onChange={(e) => setNewUser(d => ({ ...d, mobile: e.target.value }))} placeholder="01XXXXXXXXX" />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Password <span className="text-destructive">*</span></Label>
+                <Label>{sa.password} <span className="text-destructive">*</span></Label>
                 <Input type="password" value={newUser.password} onChange={(e) => setNewUser(d => ({ ...d, password: e.target.value }))} placeholder="Min 6 characters" />
               </div>
               <div>
-                <Label>Role <span className="text-destructive">*</span></Label>
+                <Label>{sa.role} <span className="text-destructive">*</span></Label>
                 <Select value={newUser.role} onValueChange={(v) => setNewUser(d => ({ ...d, role: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -471,11 +471,11 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Staff ID</Label>
+                <Label>{sa.staffId}</Label>
                 <Input value={newUser.staff_id} onChange={(e) => setNewUser(d => ({ ...d, staff_id: e.target.value }))} placeholder="Optional" />
               </div>
               <div>
-                <Label>Address</Label>
+                <Label>{t.common.description}</Label>
                 <Input value={newUser.address} onChange={(e) => setNewUser(d => ({ ...d, address: e.target.value }))} placeholder="Optional" />
               </div>
             </div>
@@ -485,7 +485,7 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddUser(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowAddUser(false)}>{t.common.cancel}</Button>
             <Button onClick={() => createMut.mutate()} disabled={!newUser.full_name || !newUser.username || !newUser.password || newUser.password.length < 6 || createMut.isPending}>
               {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
               Create User
@@ -506,7 +506,7 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
           {editMode === "password" ? (
             <div className="space-y-3">
               <div>
-                <Label>New Password</Label>
+                <Label>{sa.newPassword}</Label>
                 <Input type="password" value={editData.password || ""} onChange={(e) => setEditData({ password: e.target.value })} placeholder="Enter new password (min 6 chars)" />
               </div>
               <div className="p-2.5 rounded-lg bg-muted/50 text-xs text-muted-foreground">
@@ -527,21 +527,21 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label>Email</Label>
+                  <Label>{sa.emailUsername}</Label>
                   <Input value={editData.email || ""} onChange={(e) => setEditData((d: any) => ({ ...d, email: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Mobile</Label>
+                  <Label>{sa.mobile}</Label>
                   <Input value={editData.mobile || ""} onChange={(e) => setEditData((d: any) => ({ ...d, mobile: e.target.value }))} />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label>Staff ID</Label>
+                  <Label>{sa.staffId}</Label>
                   <Input value={editData.staff_id || ""} onChange={(e) => setEditData((d: any) => ({ ...d, staff_id: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Role</Label>
+                  <Label>{sa.role}</Label>
                   <Select value={editData.role || "staff"} onValueChange={(v) => setEditData((d: any) => ({ ...d, role: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -551,11 +551,11 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
                 </div>
               </div>
               <div>
-                <Label>Address</Label>
+                <Label>{t.common.description}</Label>
                 <Input value={editData.address || ""} onChange={(e) => setEditData((d: any) => ({ ...d, address: e.target.value }))} />
               </div>
               <div>
-                <Label>Status</Label>
+                <Label>{t.common.status}</Label>
                 <Select value={editData.status || "active"} onValueChange={(v) => setEditData((d: any) => ({ ...d, status: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -567,7 +567,7 @@ function TenantUsersTab({ tenantId }: { tenantId: string }) {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setEditUser(null)}>{t.common.cancel}</Button>
             <Button
               onClick={() => {
                 const payload = editMode === "password"
@@ -609,22 +609,22 @@ function TenantActivityTab({ tenantId }: { tenantId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2"><Activity className="h-5 w-5" /> Activity Logs</CardTitle>
+        <CardTitle className="text-lg flex items-center gap-2"><Activity className="h-5 w-5" /> {sa.activityLogs}</CardTitle>
         <CardDescription>Recent user actions in this tenant</CardDescription>
       </CardHeader>
       <CardContent>
         {logs.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No activity logs yet</p>
+          <p className="text-center text-muted-foreground py-8">{sa.noActivityLogs}</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Module</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>IP</TableHead>
+                <TableHead>{sa.time}</TableHead>
+                <TableHead>{sa.user}</TableHead>
+                <TableHead>{sa.action}</TableHead>
+                <TableHead>{sa.module}</TableHead>
+                <TableHead>{t.common.description}</TableHead>
+                <TableHead>{sa.ip}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -662,22 +662,22 @@ function TenantLoginHistoryTab({ tenantId }: { tenantId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2"><History className="h-5 w-5" /> Login History</CardTitle>
+        <CardTitle className="text-lg flex items-center gap-2"><History className="h-5 w-5" /> {sa.loginHistory}</CardTitle>
         <CardDescription>All login attempts for this tenant</CardDescription>
       </CardHeader>
       <CardContent>
         {logs.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No login history yet</p>
+          <p className="text-center text-muted-foreground py-8">{sa.noLoginHistory}</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Device</TableHead>
-                <TableHead>Browser</TableHead>
-                <TableHead>IP</TableHead>
+                <TableHead>{sa.time}</TableHead>
+                <TableHead>{sa.user}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead>{sa.device}</TableHead>
+                <TableHead>{sa.browser}</TableHead>
+                <TableHead>{sa.ip}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -729,26 +729,26 @@ function TenantSessionsTab({ tenantId }: { tenantId: string }) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg flex items-center gap-2"><Shield className="h-5 w-5" /> Active Sessions</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2"><Shield className="h-5 w-5" /> {sa.activeSessions}</CardTitle>
             <CardDescription>{activeSessions.length} active session(s)</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         {sessions.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No sessions found</p>
+          <p className="text-center text-muted-foreground py-8">{sa.noSessions}</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Device</TableHead>
-                <TableHead>Browser</TableHead>
-                <TableHead>IP</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{sa.user}</TableHead>
+                <TableHead>{sa.device}</TableHead>
+                <TableHead>{sa.browser}</TableHead>
+                <TableHead>{sa.ip}</TableHead>
+                <TableHead>{t.common.description}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead>{sa.lastActive}</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -940,8 +940,8 @@ export default function SuperTenantProfile() {
     return (
       <div className="text-center py-20">
         <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-        <p className="text-muted-foreground">Tenant not found</p>
-        <Button variant="link" onClick={() => navigate("/super/tenants")}>Back to Tenants</Button>
+        <p className="text-muted-foreground">{sa.tenantNotFound}</p>
+        <Button variant="link" onClick={() => navigate("/super/tenants")}>{sa.backToTenants}</Button>
       </div>
     );
   }
@@ -1181,7 +1181,7 @@ export default function SuperTenantProfile() {
                       <TableHead>Date</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Amount</TableHead>
-                      <TableHead>Description</TableHead>
+                      <TableHead>{t.common.description}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1423,7 +1423,7 @@ export default function SuperTenantProfile() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowResetConfirm(false); setResetConfirmText(""); }}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setShowResetConfirm(false); setResetConfirmText(""); }}>{t.common.cancel}</Button>
             <Button
               variant="destructive"
               onClick={() => resetMut.mutate()}
