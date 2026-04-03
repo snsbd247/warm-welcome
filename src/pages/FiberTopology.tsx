@@ -208,12 +208,17 @@ const NODE_COLORS = {
   customer: "bg-green-600 text-white",
 };
 
-function HNodeLabel({ text, colorClass, icon: Icon, sub }: { text: string; colorClass: string; icon?: any; sub?: string }) {
+function HNodeLabel({ text, colorClass, icon: Icon, sub, onEdit }: { text: string; colorClass: string; icon?: any; sub?: string; onEdit?: () => void }) {
   return (
-    <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap shadow-sm", colorClass)}>
+    <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap shadow-sm group/node", colorClass)}>
       {Icon && <Icon className="h-3 w-3 shrink-0" />}
       <span className="truncate max-w-[180px]">{text}</span>
       {sub && <span className="opacity-70 text-[10px]">{sub}</span>}
+      {onEdit && (
+        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="opacity-0 group-hover/node:opacity-100 transition-opacity ml-0.5 hover:scale-110">
+          <Pencil className="h-2.5 w-2.5" />
+        </button>
+      )}
     </div>
   );
 }
