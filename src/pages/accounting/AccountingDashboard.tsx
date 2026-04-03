@@ -163,10 +163,10 @@ export default function AccountingDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead className="text-right">Stock</TableHead>
-                    <TableHead className="text-right">Alert Level</TableHead>
+                     <TableHead>{t.accounting.product}</TableHead>
+                     <TableHead>{t.accounting.sku}</TableHead>
+                     <TableHead className="text-right">{t.accounting.stock}</TableHead>
+                     <TableHead className="text-right">{t.accounting.alertLevel}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
