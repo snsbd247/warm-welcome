@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, subDays } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const LOW_BALANCE_THRESHOLD = 100;
 
@@ -51,6 +52,8 @@ const chartConfig = {
 };
 
 export default function SuperSmsManagement() {
+  const { t } = useLanguage();
+  const sa = t.superAdmin;
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [rechargeOpen, setRechargeOpen] = useState(false);
@@ -308,7 +311,7 @@ export default function SuperSmsManagement() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">SMS Management</h1>
+        <h1 className="text-2xl font-bold text-foreground">{sa.smsManagement}</h1>
         <p className="text-muted-foreground">Global SMS gateway, analytics, profit tracking & tenant balance management</p>
       </div>
 
@@ -320,7 +323,7 @@ export default function SuperSmsManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Zap className="h-3.5 w-3.5" /> Live API Balance
+                  <Zap className="h-3.5 w-3.5" /> {sa.liveApiBalance}
                 </div>
                 {balanceLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin mt-1" />
@@ -346,7 +349,7 @@ export default function SuperSmsManagement() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground flex items-center gap-1">
-              <MessageSquare className="h-3.5 w-3.5" /> Tenant Balance
+              <MessageSquare className="h-3.5 w-3.5" /> {sa.tenantBalance}
             </div>
             <div className="text-2xl font-bold">৳{totalBalance.toFixed(2)}</div>
             <div className="text-xs text-muted-foreground">{wallets.length} tenants</div>
@@ -357,7 +360,7 @@ export default function SuperSmsManagement() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground flex items-center gap-1">
-              <TrendingUp className="h-3.5 w-3.5" /> Total Sent (API)
+              <TrendingUp className="h-3.5 w-3.5" /> {sa.totalSentApi}
             </div>
             {balanceLoading ? (
               <Loader2 className="h-5 w-5 animate-spin mt-1" />
@@ -373,7 +376,7 @@ export default function SuperSmsManagement() {
         <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 to-transparent">
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground flex items-center gap-1">
-              <DollarSign className="h-3.5 w-3.5" /> SMS Profit (30d)
+              <DollarSign className="h-3.5 w-3.5" /> {sa.smsProfit30d}
             </div>
             <div className="text-2xl font-bold text-green-600">৳{totalProfit.toFixed(2)}</div>
             <div className="text-xs text-muted-foreground">
@@ -386,13 +389,13 @@ export default function SuperSmsManagement() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground flex items-center gap-1">
-              <Activity className="h-3.5 w-3.5" /> Gateway Status
+              <Activity className="h-3.5 w-3.5" /> {sa.gatewayStatus}
             </div>
             <div className="mt-1">
               {smsSettings?.api_token ? (
-                <Badge className="bg-green-600 text-white gap-1"><Wifi className="h-3 w-3" /> Active</Badge>
+                <Badge className="bg-green-600 text-white gap-1"><Wifi className="h-3 w-3" /> {t.common.active}</Badge>
               ) : (
-                <Badge variant="destructive" className="gap-1"><WifiOff className="h-3 w-3" /> Not Configured</Badge>
+                <Badge variant="destructive" className="gap-1"><WifiOff className="h-3 w-3" /> {sa.notConfiguredGateway}</Badge>
               )}
             </div>
             {apiBalance?.rate && (
@@ -432,17 +435,17 @@ export default function SuperSmsManagement() {
       {/* ── Tabs ───────────────────────────────── */}
       <Tabs defaultValue="analytics" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="analytics">📊 Analytics</TabsTrigger>
-          <TabsTrigger value="profit">💰 Profit</TabsTrigger>
-          <TabsTrigger value="wallets">🏦 Wallets</TabsTrigger>
-          <TabsTrigger value="settings">⚙️ Settings</TabsTrigger>
+          <TabsTrigger value="analytics">{`📊 ${sa.analytics}`}</TabsTrigger>
+          <TabsTrigger value="profit">{`💰 ${sa.profit}`}</TabsTrigger>
+          <TabsTrigger value="wallets">{`🏦 ${sa.wallets}`}</TabsTrigger>
+          <TabsTrigger value="settings">{`⚙️ ${sa.settings}`}</TabsTrigger>
         </TabsList>
 
         {/* ── Analytics Tab ────────────────────── */}
         <TabsContent value="analytics" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">SMS Usage (Last 30 Days)</CardTitle>
+              <CardTitle className="text-lg">{sa.smsUsage30d}</CardTitle>
               <CardDescription>Daily sent vs failed breakdown</CardDescription>
             </CardHeader>
             <CardContent>
@@ -462,11 +465,11 @@ export default function SuperSmsManagement() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Tenant SMS Consumption (30 Days)</CardTitle>
+                <CardTitle className="text-lg">{sa.tenantSmsConsumption}</CardTitle>
               </CardHeader>
               <CardContent>
                 {tenantConsumption.length === 0 ? (
-                  <p className="text-muted-foreground text-sm text-center py-8">No SMS data</p>
+                  <p className="text-muted-foreground text-sm text-center py-8">{sa.noSmsData}</p>
                 ) : (
                   <ChartContainer config={chartConfig} className="h-[250px] w-full">
                     <BarChart data={tenantConsumption.slice(0, 8)} layout="vertical" margin={{ left: 10, right: 10 }}>
@@ -483,11 +486,11 @@ export default function SuperSmsManagement() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">SMS by Type (30 Days)</CardTitle>
+                <CardTitle className="text-lg">{sa.smsByType}</CardTitle>
               </CardHeader>
               <CardContent>
                 {typeBreakdown.length === 0 ? (
-                  <p className="text-muted-foreground text-sm text-center py-8">No SMS data</p>
+                  <p className="text-muted-foreground text-sm text-center py-8">{sa.noSmsData}</p>
                 ) : (
                   <div className="flex items-center gap-4">
                     <ChartContainer config={chartConfig} className="h-[220px] w-[220px] shrink-0">
@@ -521,7 +524,7 @@ export default function SuperSmsManagement() {
           {/* Daily Revenue vs Cost */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Revenue vs Cost (Last 30 Days)</CardTitle>
+              <CardTitle className="text-lg">{sa.revenueCost30d}</CardTitle>
               <CardDescription>Daily tenant revenue charged vs admin SMS cost</CardDescription>
             </CardHeader>
             <CardContent>
@@ -542,7 +545,7 @@ export default function SuperSmsManagement() {
           {/* Tenant-wise Profit Table */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Tenant-wise SMS Profit (30 Days)</CardTitle>
+              <CardTitle className="text-lg">{sa.tenantSmsProfit}</CardTitle>
               <CardDescription>Revenue charged to tenants vs your GreenWeb cost</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
@@ -550,11 +553,11 @@ export default function SuperSmsManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Tenant</TableHead>
-                    <TableHead className="text-right">SMS Sent</TableHead>
+                    <TableHead className="text-right">{sa.smsSent}</TableHead>
                     <TableHead className="text-right">Revenue (৳)</TableHead>
-                    <TableHead className="text-right">Admin Cost (৳)</TableHead>
+                    <TableHead className="text-right">{sa.adminCost}</TableHead>
                     <TableHead className="text-right">Profit (৳)</TableHead>
-                    <TableHead className="text-right">Margin</TableHead>
+                    <TableHead className="text-right">{sa.margin}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -575,7 +578,7 @@ export default function SuperSmsManagement() {
                   })}
                   {tenantConsumption.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No SMS data for profit analysis</TableCell>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">{sa.noSmsDataProfit}</TableCell>
                     </TableRow>
                   )}
                   {tenantConsumption.length > 0 && (
@@ -601,7 +604,7 @@ export default function SuperSmsManagement() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" /> Tenant SMS Balances
+                <MessageSquare className="h-5 w-5" /> {sa.tenantSmsBalances}
               </CardTitle>
               <CardDescription>Manage SMS credit for each tenant</CardDescription>
             </CardHeader>
@@ -615,8 +618,8 @@ export default function SuperSmsManagement() {
                       <TableHead>Tenant</TableHead>
                       <TableHead>Subdomain</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Rate (৳/SMS)</TableHead>
-                      <TableHead className="text-right">Balance (৳)</TableHead>
+                      <TableHead className="text-right">{sa.ratePerSms}</TableHead>
+                      <TableHead className="text-right">{sa.balance}</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -654,7 +657,7 @@ export default function SuperSmsManagement() {
                     ))}
                     {wallets.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No tenants found</TableCell>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">{sa.noTenantsFoundSms}</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
@@ -680,10 +683,10 @@ export default function SuperSmsManagement() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Type</TableHead>
+                        <TableHead>{sa.time}</TableHead>
+                        <TableHead>{sa.type}</TableHead>
                         <TableHead>Amount</TableHead>
-                        <TableHead>Balance After</TableHead>
+                        <TableHead>{sa.balanceAfter}</TableHead>
                         <TableHead>Description</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -707,7 +710,7 @@ export default function SuperSmsManagement() {
                       ))}
                       {transactions.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">No transactions</TableCell>
+                          <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">{sa.noTransactions}</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
@@ -723,7 +726,7 @@ export default function SuperSmsManagement() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" /> Global SMS Gateway (GreenWeb)
+                <Settings className="h-5 w-5" /> {sa.globalSmsGateway}
               </CardTitle>
               <CardDescription>This API is used to send SMS for all tenants</CardDescription>
             </CardHeader>
@@ -734,19 +737,19 @@ export default function SuperSmsManagement() {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label>API Token</Label>
+                      <Label>{sa.apiToken}</Label>
                       <Input type="password" value={form?.api_token || ""}
                         onChange={(e) => setForm({ ...form, api_token: e.target.value })}
                         placeholder="GreenWeb API Token" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Sender ID</Label>
+                      <Label>{sa.senderId}</Label>
                       <Input value={form?.sender_id || ""}
                         onChange={(e) => setForm({ ...form, sender_id: e.target.value })}
                         placeholder="SmartISP" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Admin Cost Rate (৳/SMS)</Label>
+                      <Label>{sa.adminCostRate}</Label>
                       <Input type="number" value={form?.admin_cost_rate ?? 0.25}
                         onChange={(e) => setForm({ ...form, admin_cost_rate: parseFloat(e.target.value) || 0 })}
                         placeholder="0.25" min="0" step="0.01" />
