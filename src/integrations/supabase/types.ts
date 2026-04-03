@@ -1340,6 +1340,351 @@ export type Database = {
         }
         Relationships: []
       }
+      fiber_cables: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          length_meters: number | null
+          name: string
+          pon_port_id: string | null
+          status: string
+          tenant_id: string
+          total_cores: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          length_meters?: number | null
+          name: string
+          pon_port_id?: string | null
+          status?: string
+          tenant_id: string
+          total_cores?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          length_meters?: number | null
+          name?: string
+          pon_port_id?: string | null
+          status?: string
+          tenant_id?: string
+          total_cores?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiber_cables_pon_port_id_fkey"
+            columns: ["pon_port_id"]
+            isOneToOne: false
+            referencedRelation: "fiber_pon_ports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiber_cables_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiber_cores: {
+        Row: {
+          color: string | null
+          core_number: number
+          created_at: string
+          fiber_cable_id: string
+          id: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          core_number: number
+          created_at?: string
+          fiber_cable_id: string
+          id?: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          core_number?: number
+          created_at?: string
+          fiber_cable_id?: string
+          id?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiber_cores_fiber_cable_id_fkey"
+            columns: ["fiber_cable_id"]
+            isOneToOne: false
+            referencedRelation: "fiber_cables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiber_cores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiber_olts: {
+        Row: {
+          created_at: string
+          id: string
+          location: string | null
+          name: string
+          status: string
+          tenant_id: string
+          total_pon_ports: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          name: string
+          status?: string
+          tenant_id: string
+          total_pon_ports?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          name?: string
+          status?: string
+          tenant_id?: string
+          total_pon_ports?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiber_olts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiber_onus: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          id: string
+          mac_address: string | null
+          serial_number: string
+          signal_strength: string | null
+          splitter_output_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          mac_address?: string | null
+          serial_number: string
+          signal_strength?: string | null
+          splitter_output_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          mac_address?: string | null
+          serial_number?: string
+          signal_strength?: string | null
+          splitter_output_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiber_onus_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiber_onus_splitter_output_id_fkey"
+            columns: ["splitter_output_id"]
+            isOneToOne: true
+            referencedRelation: "fiber_splitter_outputs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiber_onus_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiber_pon_ports: {
+        Row: {
+          created_at: string
+          id: string
+          olt_id: string
+          port_number: number
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          olt_id: string
+          port_number: number
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          olt_id?: string
+          port_number?: number
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiber_pon_ports_olt_id_fkey"
+            columns: ["olt_id"]
+            isOneToOne: false
+            referencedRelation: "fiber_olts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiber_pon_ports_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiber_splitter_outputs: {
+        Row: {
+          created_at: string
+          id: string
+          output_number: number
+          splitter_id: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          output_number: number
+          splitter_id: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          output_number?: number
+          splitter_id?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiber_splitter_outputs_splitter_id_fkey"
+            columns: ["splitter_id"]
+            isOneToOne: false
+            referencedRelation: "fiber_splitters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiber_splitter_outputs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiber_splitters: {
+        Row: {
+          core_id: string
+          created_at: string
+          id: string
+          label: string | null
+          location: string | null
+          ratio: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          core_id: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          location?: string | null
+          ratio?: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          core_id?: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          location?: string | null
+          ratio?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiber_splitters_core_id_fkey"
+            columns: ["core_id"]
+            isOneToOne: true
+            referencedRelation: "fiber_cores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiber_splitters_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       general_settings: {
         Row: {
           address: string | null
