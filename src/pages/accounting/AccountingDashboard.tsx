@@ -73,7 +73,7 @@ export default function AccountingDashboard() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{t.accounting.title}</h1>
-          <p className="text-muted-foreground text-sm">{t.accounting.financialOverview}</p>
+          <p className="text-muted-foreground text-sm">Financial overview and analytics</p>
         </div>
 
         {/* Summary Cards */}
@@ -82,7 +82,7 @@ export default function AccountingDashboard() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <TrendingUp className="h-8 w-8 text-green-500" />
-                <div><p className="text-2xl font-bold">৳{totalSales.toLocaleString()}</p><p className="text-sm text-muted-foreground">{t.accounting.totalSales}</p></div>
+                <div><p className="text-2xl font-bold">৳{totalSales.toLocaleString()}</p><p className="text-sm text-muted-foreground">Total Sales</p></div>
               </div>
             </CardContent>
           </Card>
@@ -90,7 +90,7 @@ export default function AccountingDashboard() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <ShoppingCart className="h-8 w-8 text-blue-500" />
-                <div><p className="text-2xl font-bold">৳{totalPurchases.toLocaleString()}</p><p className="text-sm text-muted-foreground">{t.accounting.totalPurchases}</p></div>
+                <div><p className="text-2xl font-bold">৳{totalPurchases.toLocaleString()}</p><p className="text-sm text-muted-foreground">Total Purchases</p></div>
               </div>
             </CardContent>
           </Card>
@@ -98,7 +98,7 @@ export default function AccountingDashboard() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <TrendingDown className="h-8 w-8 text-destructive" />
-                <div><p className="text-2xl font-bold">৳{totalExpenses.toLocaleString()}</p><p className="text-sm text-muted-foreground">{t.accounting.totalExpenses}</p></div>
+                <div><p className="text-2xl font-bold">৳{totalExpenses.toLocaleString()}</p><p className="text-sm text-muted-foreground">Total Expenses</p></div>
               </div>
             </CardContent>
           </Card>
@@ -106,7 +106,7 @@ export default function AccountingDashboard() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <DollarSign className={`h-8 w-8 ${netProfit >= 0 ? "text-green-500" : "text-destructive"}`} />
-                <div><p className={`text-2xl font-bold ${netProfit >= 0 ? "text-green-600" : "text-destructive"}`}>৳{netProfit.toLocaleString()}</p><p className="text-sm text-muted-foreground">{t.accounting.netProfit}</p></div>
+                <div><p className={`text-2xl font-bold ${netProfit >= 0 ? "text-green-600" : "text-destructive"}`}>৳{netProfit.toLocaleString()}</p><p className="text-sm text-muted-foreground">Net Profit</p></div>
               </div>
             </CardContent>
           </Card>
@@ -115,7 +115,7 @@ export default function AccountingDashboard() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
-            <CardHeader><CardTitle>{t.accounting.incomeVsExpense}</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Income vs Expense (Monthly)</CardTitle></CardHeader>
             <CardContent>
               {monthlyData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
@@ -124,18 +124,18 @@ export default function AccountingDashboard() {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip formatter={(v: number) => `৳${v.toLocaleString()}`} />
-                    <Bar dataKey="income" fill="hsl(var(--primary))" name={t.accounting.income} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="expense" fill="hsl(var(--destructive))" name={t.accounting.expense} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="income" fill="hsl(var(--primary))" name="Income" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="expense" fill="hsl(var(--destructive))" name="Expense" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-center text-muted-foreground py-12">{t.accounting.noDataYet}</p>
+                <p className="text-center text-muted-foreground py-12">No data yet</p>
               )}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>{t.accounting.expensesByCategory}</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Expenses by Category</CardTitle></CardHeader>
             <CardContent>
               {expenseByCategory.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
@@ -147,7 +147,7 @@ export default function AccountingDashboard() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-center text-muted-foreground py-12">{t.accounting.noExpensesRecorded}</p>
+                <p className="text-center text-muted-foreground py-12">No expenses recorded</p>
               )}
             </CardContent>
           </Card>
@@ -157,16 +157,16 @@ export default function AccountingDashboard() {
         {lowStockProducts.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" />{t.accounting.lowStockAlerts}</CardTitle>
+              <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" />Low Stock Alerts</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                     <TableHead>{t.accounting.product}</TableHead>
-                     <TableHead>{t.accounting.sku}</TableHead>
-                     <TableHead className="text-right">{t.accounting.stock}</TableHead>
-                     <TableHead className="text-right">{t.accounting.alertLevel}</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead className="text-right">Stock</TableHead>
+                    <TableHead className="text-right">Alert Level</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
