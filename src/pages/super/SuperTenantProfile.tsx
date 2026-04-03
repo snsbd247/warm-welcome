@@ -204,9 +204,9 @@ function SubscriptionDialog({ tenantId, currentSub, onSuccess }: {
 }
 
 // ─── Impersonate Button ──────────────────────────────────────
-function ImpersonateButton({
+function ImpersonateButton({ tenantId, tenantName, tenantSubdomain }: { tenantId: string; tenantName: string; tenantSubdomain: string }) {
   const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId, tenantName, tenantSubdomain }: { tenantId: string; tenantName: string; tenantSubdomain: string }) {
+  const sa = t.superAdmin;
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
