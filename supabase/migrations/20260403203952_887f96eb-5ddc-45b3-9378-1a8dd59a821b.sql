@@ -1,0 +1,2 @@
+ALTER TABLE fiber_cables ADD COLUMN IF NOT EXISTS lat double precision, ADD COLUMN IF NOT EXISTS lng double precision;
+ALTER TABLE fiber_onus ADD COLUMN IF NOT EXISTS lat double precision, ADD COLUMN IF NOT EXISTS lng double precision;

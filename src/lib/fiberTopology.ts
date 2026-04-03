@@ -12,6 +12,8 @@ export interface FiberOnuData {
   mac_address: string;
   status: string;
   customer_id: string;
+  lat?: number;
+  lng?: number;
   customer?: FiberCustomer;
 }
 
@@ -59,6 +61,8 @@ export interface FiberCableData {
   status: string;
   source_type?: string;
   source_id?: string;
+  lat?: number;
+  lng?: number;
   cores: FiberCoreData[];
 }
 
@@ -96,11 +100,12 @@ export interface Stats {
 
 export interface FiberMapMarker {
   id: string;
-  type: "olt" | "splitter";
+  type: "olt" | "splitter" | "cable" | "onu";
   name: string;
   lat: number;
   lng: number;
   cable?: string | null;
+  customer?: string | null;
 }
 
 export interface FiberSearchResult {
@@ -325,6 +330,8 @@ function buildCableNode(
     status: cable.status || "active",
     source_type: cable.source_type || undefined,
     source_id: cable.source_id || undefined,
+    lat: (cable as any).lat ?? undefined,
+    lng: (cable as any).lng ?? undefined,
     cores,
   };
 }
@@ -372,6 +379,8 @@ export async function fetchFiberTopologyTreeFromSupabase(): Promise<OltData[]> {
       id: onu.id, serial_number: onu.serial_number,
       mac_address: onu.mac_address || "", status: onu.status || "active",
       customer_id: onu.customer_id || "",
+      lat: (onu as any).lat ?? undefined,
+      lng: (onu as any).lng ?? undefined,
       customer: onu.customer_id ? customersById.get(onu.customer_id) : undefined,
     });
   });
@@ -519,6 +528,15 @@ export function buildFiberMapMarkersFromTree(tree: OltData[]): FiberMapMarker[] 
       });
     }
     splitter.outputs.forEach((output) => {
+      // ONU markers
+      if (output.onu && typeof output.onu.lat === "number" && typeof output.onu.lng === "number") {
+        markers.push({
+          id: output.onu.id, type: "onu",
+          name: `ONU: ${output.onu.serial_number}`,
+          lat: output.onu.lat, lng: output.onu.lng,
+          customer: output.onu.customer?.name || null,
+        });
+      }
       if (output.child_cables) {
         output.child_cables.forEach((cable) => walkCable(cable));
       }
@@ -527,6 +545,14 @@ export function buildFiberMapMarkersFromTree(tree: OltData[]): FiberMapMarker[] 
   }
 
   function walkCable(cable: FiberCableData) {
+    // Cable markers
+    if (typeof cable.lat === "number" && typeof cable.lng === "number") {
+      markers.push({
+        id: cable.id, type: "cable",
+        name: `Cable: ${cable.name}`,
+        lat: cable.lat, lng: cable.lng,
+      });
+    }
     cable.cores.forEach((core) => {
       if (core.splitter) walkSplitter(core.splitter, cable.name);
     });
@@ -711,6 +737,8 @@ export async function createFiberCableInSupabase(payload: Record<string, unknown
       status: nullableString(payload.status) || "active",
       source_type: sourceType,
       source_id: sourceId,
+      lat: nullableNumber(payload.lat),
+      lng: nullableNumber(payload.lng),
     })
     .select()
     .single();
@@ -839,6 +867,8 @@ export async function createFiberOnuInSupabase(payload: Record<string, unknown>)
       customer_id: nullableString(payload.customer_id),
       status: nullableString(payload.status) || "active",
       signal_strength: nullableString(payload.signal_strength),
+      lat: nullableNumber(payload.lat),
+      lng: nullableNumber(payload.lng),
     })
     .select()
     .single();

@@ -1408,7 +1408,9 @@ export type Database = {
           color: string | null
           created_at: string
           id: string
+          lat: number | null
           length_meters: number | null
+          lng: number | null
           name: string
           pon_port_id: string | null
           source_id: string | null
@@ -1422,7 +1424,9 @@ export type Database = {
           color?: string | null
           created_at?: string
           id?: string
+          lat?: number | null
           length_meters?: number | null
+          lng?: number | null
           name: string
           pon_port_id?: string | null
           source_id?: string | null
@@ -1436,7 +1440,9 @@ export type Database = {
           color?: string | null
           created_at?: string
           id?: string
+          lat?: number | null
           length_meters?: number | null
+          lng?: number | null
           name?: string
           pon_port_id?: string | null
           source_id?: string | null
@@ -1573,6 +1579,8 @@ export type Database = {
           created_at: string
           customer_id: string | null
           id: string
+          lat: number | null
+          lng: number | null
           mac_address: string | null
           serial_number: string
           signal_strength: string | null
@@ -1585,6 +1593,8 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           mac_address?: string | null
           serial_number: string
           signal_strength?: string | null
@@ -1597,6 +1607,8 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           mac_address?: string | null
           serial_number?: string
           signal_strength?: string | null

@@ -143,6 +143,26 @@ function TopologyMap({ markers, loadingText }: { markers: any[]; loadingText: st
     shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
   });
+  const cableIcon = new L.Icon({
+    iconUrl: "https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-blue.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+  });
+  const onuIcon = new L.Icon({
+    iconUrl: "https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-violet.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+  });
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "olt": return oltIcon;
+      case "splitter": return splitterIcon;
+      case "cable": return cableIcon;
+      case "onu": return onuIcon;
+      default: return splitterIcon;
+    }
+  };
 
   return (
     <div className="h-[400px] rounded-lg overflow-hidden border border-border">
@@ -150,12 +170,13 @@ function TopologyMap({ markers, loadingText }: { markers: any[]; loadingText: st
       <MapContainer center={center} zoom={13} className="h-full w-full" scrollWheelZoom>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OSM" />
         {markers.map((m: any) => (
-          <Marker key={m.id} position={[m.lat, m.lng]} icon={m.type === "olt" ? oltIcon : splitterIcon}>
+          <Marker key={m.id} position={[m.lat, m.lng]} icon={getIcon(m.type)}>
             <Popup>
               <div className="text-sm">
                 <div className="font-bold">{m.name}</div>
                 <div className="text-muted-foreground capitalize">{m.type}</div>
                 {m.cable && <div className="text-xs">Cable: {m.cable}</div>}
+                {m.customer && <div className="text-xs">Customer: {m.customer}</div>}
               </div>
             </Popup>
           </Marker>
@@ -686,7 +707,9 @@ export default function FiberTopology() {
               )}
               <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-red-500 inline-block" /> OLT</span>
+                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-blue-500 inline-block" /> Cable</span>
                 <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-green-500 inline-block" /> {t.fiberTopology.splitter}</span>
+                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-violet-500 inline-block" /> ONU</span>
               </div>
             </CardContent>
           </Card>
@@ -764,6 +787,10 @@ export default function FiberTopology() {
               </div>
             </div>
             <div><Label>{t.fiberTopology.lengthMeters}</Label><Input type="number" value={formData.length_meters || ""} onChange={e => setFormData({ ...formData, length_meters: parseFloat(e.target.value) })} /></div>
+            <div>
+              <Label>{t.fiberTopology.gpsLocation}</Label>
+              <MapLocationPicker lat={formData.lat} lng={formData.lng} onSelect={(lat, lng) => setFormData({ ...formData, lat, lng })} />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogType(null)}>{t.fiberTopology.cancel}</Button>
@@ -897,6 +924,10 @@ export default function FiberTopology() {
             </div>
             <div><Label>{t.fiberTopology.serialNumber} *</Label><Input value={formData.serial_number || ""} onChange={e => setFormData({ ...formData, serial_number: e.target.value })} placeholder="HWTC-XXXX" /></div>
             <div><Label>{t.fiberTopology.macAddress}</Label><Input value={formData.mac_address || ""} onChange={e => setFormData({ ...formData, mac_address: e.target.value })} placeholder="AA:BB:CC:DD:EE:FF" /></div>
+            <div>
+              <Label>{t.fiberTopology.gpsLocation}</Label>
+              <MapLocationPicker lat={formData.lat} lng={formData.lng} onSelect={(lat, lng) => setFormData({ ...formData, lat, lng })} />
+            </div>
             <div>
               <Label>{t.fiberTopology.customer}</Label>
               <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
