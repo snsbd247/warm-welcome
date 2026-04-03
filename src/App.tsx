@@ -65,7 +65,7 @@ const UserLoginHistory = lazy(() => import("@/pages/UserLoginHistory"));
 const SessionManagement = lazy(() => import("@/pages/SessionManagement"));
 const SecurityDashboard = lazy(() => import("@/pages/SecurityDashboard"));
 const RoleManagement = lazy(() => import("@/pages/settings/RoleManagement"));
-const BackupRestore = lazy(() => import("@/pages/settings/BackupRestore"));
+
 const FooterSettings = lazy(() => import("@/pages/settings/FooterSettings"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const AccPurchases = lazy(() => import("@/pages/accounting/Purchases"));
