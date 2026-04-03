@@ -137,10 +137,11 @@ export default function FiberTopology() {
     onError: (e: any) => toast.error(e?.response?.data?.error || "ত্রুটি হয়েছে"),
   });
 
+  const safeTree = Array.isArray(tree) ? tree : [];
   // All PON ports for cable assignment
-  const allPonPorts = tree.flatMap(olt => (olt.pon_ports || []).map(p => ({ ...p, oltName: olt.name })));
+  const allPonPorts = safeTree.flatMap(olt => (olt.pon_ports || []).map(p => ({ ...p, oltName: olt.name })));
   // All free cores for splitter assignment
-  const allFreeCores = tree.flatMap(olt =>
+  const allFreeCores = safeTree.flatMap(olt =>
     (olt.pon_ports || []).flatMap(pp =>
       (pp.cables || []).flatMap(cable =>
         (cable.cores || []).filter(c => c.status === "free").map(c => ({ ...c, cableName: cable.name, oltName: olt.name }))
@@ -148,7 +149,7 @@ export default function FiberTopology() {
     )
   );
   // All free outputs for ONU assignment
-  const allFreeOutputs = tree.flatMap(olt =>
+  const allFreeOutputs = safeTree.flatMap(olt =>
     (olt.pon_ports || []).flatMap(pp =>
       (pp.cables || []).flatMap(cable =>
         (cable.cores || []).flatMap(core =>
