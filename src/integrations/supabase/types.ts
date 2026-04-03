@@ -3576,6 +3576,7 @@ export type Database = {
           setup_accounts: boolean | null
           setup_geo: boolean | null
           setup_ledger: boolean | null
+          setup_payment_gateways: boolean | null
           setup_status: string | null
           setup_templates: boolean | null
           status: string | null
@@ -3602,6 +3603,7 @@ export type Database = {
           setup_accounts?: boolean | null
           setup_geo?: boolean | null
           setup_ledger?: boolean | null
+          setup_payment_gateways?: boolean | null
           setup_status?: string | null
           setup_templates?: boolean | null
           status?: string | null
@@ -3628,6 +3630,7 @@ export type Database = {
           setup_accounts?: boolean | null
           setup_geo?: boolean | null
           setup_ledger?: boolean | null
+          setup_payment_gateways?: boolean | null
           setup_status?: string | null
           setup_templates?: boolean | null
           status?: string | null

@@ -1,0 +1,1 @@
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS setup_payment_gateways boolean DEFAULT false;
