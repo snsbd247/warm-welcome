@@ -82,7 +82,7 @@ export default function AccountingDashboard() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <TrendingUp className="h-8 w-8 text-green-500" />
-                <div><p className="text-2xl font-bold">৳{totalSales.toLocaleString()}</p><p className="text-sm text-muted-foreground">Total Sales</p></div>
+                <div><p className="text-2xl font-bold">৳{totalSales.toLocaleString()}</p><p className="text-sm text-muted-foreground">{t.accounting.totalSales}</p></div>
               </div>
             </CardContent>
           </Card>
