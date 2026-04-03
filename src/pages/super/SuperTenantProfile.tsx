@@ -1161,6 +1161,9 @@ export default function SuperTenantProfile() {
           <TabsTrigger value="sessions"><Shield className="h-4 w-4 mr-1" /> Sessions</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="reports">
+          <TenantFinancialReportsTab tenantId={id!} />
+        </TabsContent>
 
         <TabsContent value="sms">
           {smsTransactions.length > 0 ? (
