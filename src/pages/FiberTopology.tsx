@@ -1068,6 +1068,157 @@ export default function FiberTopology() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ─── EDIT DIALOGS ─────────────────── */}
+
+      {/* Edit OLT Dialog */}
+      <Dialog open={dialogType === "edit_olt"} onOpenChange={(o) => !o && setDialogType(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle><Pencil className="h-4 w-4 inline mr-1" /> Edit OLT</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>{t.fiberTopology.name} *</Label><Input value={formData.name || ""} onChange={e => setFormData({ ...formData, name: e.target.value })} /></div>
+            <div><Label>{t.fiberTopology.location}</Label><Input value={formData.location || ""} onChange={e => setFormData({ ...formData, location: e.target.value })} /></div>
+            <div>
+              <Label>{t.fiberTopology.gpsLocation}</Label>
+              <MapLocationPicker lat={formData.lat} lng={formData.lng} onSelect={(lat, lng) => setFormData({ ...formData, lat, lng })} />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select value={formData.status || "active"} onValueChange={v => setFormData({ ...formData, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogType(null)}>{t.fiberTopology.cancel}</Button>
+            <Button onClick={handleSubmit} disabled={updateOlt.isPending}>{updateOlt.isPending ? "Updating..." : "Update"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Cable Dialog */}
+      <Dialog open={dialogType === "edit_cable"} onOpenChange={(o) => !o && setDialogType(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle><Pencil className="h-4 w-4 inline mr-1" /> Edit Cable</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>{t.fiberTopology.name} *</Label><Input value={formData.name || ""} onChange={e => setFormData({ ...formData, name: e.target.value })} /></div>
+            <div><Label>{t.fiberTopology.lengthMeters}</Label><Input type="number" value={formData.length_meters || ""} onChange={e => setFormData({ ...formData, length_meters: parseFloat(e.target.value) })} /></div>
+            <div>
+              <Label>{t.fiberTopology.gpsLocation}</Label>
+              <MapLocationPicker lat={formData.lat} lng={formData.lng} onSelect={(lat, lng) => setFormData({ ...formData, lat, lng })} />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select value={formData.status || "active"} onValueChange={v => setFormData({ ...formData, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="damaged">Damaged</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogType(null)}>{t.fiberTopology.cancel}</Button>
+            <Button onClick={handleSubmit} disabled={updateCable.isPending}>{updateCable.isPending ? "Updating..." : "Update"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Splitter Dialog */}
+      <Dialog open={dialogType === "edit_splitter"} onOpenChange={(o) => !o && setDialogType(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle><Pencil className="h-4 w-4 inline mr-1" /> Edit Splitter</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>{t.fiberTopology.label}</Label><Input value={formData.label || ""} onChange={e => setFormData({ ...formData, label: e.target.value })} /></div>
+            <div><Label>{t.fiberTopology.location}</Label><Input value={formData.location || ""} onChange={e => setFormData({ ...formData, location: e.target.value })} /></div>
+            <div>
+              <Label>{t.fiberTopology.gpsLocation}</Label>
+              <MapLocationPicker lat={formData.lat} lng={formData.lng} onSelect={(lat, lng) => setFormData({ ...formData, lat, lng })} />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select value={formData.status || "active"} onValueChange={v => setFormData({ ...formData, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogType(null)}>{t.fiberTopology.cancel}</Button>
+            <Button onClick={handleSubmit} disabled={updateSplitter.isPending}>{updateSplitter.isPending ? "Updating..." : "Update"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit ONU Dialog */}
+      <Dialog open={dialogType === "edit_onu"} onOpenChange={(o) => !o && setDialogType(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle><Pencil className="h-4 w-4 inline mr-1" /> Edit ONU</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>{t.fiberTopology.serialNumber} *</Label><Input value={formData.serial_number || ""} onChange={e => setFormData({ ...formData, serial_number: e.target.value })} /></div>
+            <div><Label>{t.fiberTopology.macAddress}</Label><Input value={formData.mac_address || ""} onChange={e => setFormData({ ...formData, mac_address: e.target.value })} /></div>
+            <div>
+              <Label>{t.fiberTopology.gpsLocation}</Label>
+              <MapLocationPicker lat={formData.lat} lng={formData.lng} onSelect={(lat, lng) => setFormData({ ...formData, lat, lng })} />
+            </div>
+            <div>
+              <Label>{t.fiberTopology.customer}</Label>
+              <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start font-normal">
+                    {selectedCustomer
+                      ? `${selectedCustomer.name} (${selectedCustomer.customer_id})`
+                      : t.fiberTopology.selectCustomer}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[350px] p-0" align="start">
+                  <div className="p-2 border-b">
+                    <Input placeholder={t.fiberTopology.searchCustomer} value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} className="h-9" />
+                  </div>
+                  <div className="max-h-[200px] overflow-y-auto">
+                    {filteredCustomers.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">{t.fiberTopology.noCustomerFound}</div>
+                    ) : (
+                      filteredCustomers.map(c => (
+                        <button key={c.id} className="w-full text-left px-3 py-2 hover:bg-accent text-sm flex items-center gap-2" onClick={() => { setFormData({ ...formData, customer_id: c.id }); setCustomerPopoverOpen(false); setCustomerSearch(""); }}>
+                          <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="truncate">{c.name}</span>
+                          <span className="text-muted-foreground ml-auto shrink-0">#{c.customer_id}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select value={formData.status || "active"} onValueChange={v => setFormData({ ...formData, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="offline">Offline</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogType(null)}>{t.fiberTopology.cancel}</Button>
+            <Button onClick={handleSubmit} disabled={updateOnu.isPending}>{updateOnu.isPending ? "Updating..." : "Update"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
     </DashboardLayout>
   );
