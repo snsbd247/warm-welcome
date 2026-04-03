@@ -30,7 +30,7 @@ interface Stats { total_olts: number; total_cables: number; total_cores: number;
 // ─── API calls ──────────────────────────
 const fetchTree = async (): Promise<OltData[]> => {
   const { data } = await api.get("/api/fiber-topology/tree");
-  return data;
+  return Array.isArray(data) ? data : [];
 };
 const fetchStats = async (): Promise<Stats> => {
   const { data } = await api.get("/api/fiber-topology/stats");
@@ -137,10 +137,11 @@ export default function FiberTopology() {
     onError: (e: any) => toast.error(e?.response?.data?.error || "ত্রুটি হয়েছে"),
   });
 
+  const safeTree = Array.isArray(tree) ? tree : [];
   // All PON ports for cable assignment
-  const allPonPorts = tree.flatMap(olt => (olt.pon_ports || []).map(p => ({ ...p, oltName: olt.name })));
+  const allPonPorts = safeTree.flatMap(olt => (olt.pon_ports || []).map(p => ({ ...p, oltName: olt.name })));
   // All free cores for splitter assignment
-  const allFreeCores = tree.flatMap(olt =>
+  const allFreeCores = safeTree.flatMap(olt =>
     (olt.pon_ports || []).flatMap(pp =>
       (pp.cables || []).flatMap(cable =>
         (cable.cores || []).filter(c => c.status === "free").map(c => ({ ...c, cableName: cable.name, oltName: olt.name }))
@@ -148,7 +149,7 @@ export default function FiberTopology() {
     )
   );
   // All free outputs for ONU assignment
-  const allFreeOutputs = tree.flatMap(olt =>
+  const allFreeOutputs = safeTree.flatMap(olt =>
     (olt.pon_ports || []).flatMap(pp =>
       (pp.cables || []).flatMap(cable =>
         (cable.cores || []).flatMap(core =>
@@ -242,14 +243,14 @@ export default function FiberTopology() {
             <div className="flex items-center justify-center py-12">
               <Activity className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : tree.length === 0 ? (
+          ) : safeTree.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Network className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p className="text-sm">কোন OLT পাওয়া যায়নি। প্রথমে একটি OLT তৈরি করুন।</p>
             </div>
           ) : (
             <div className="space-y-1">
-              {tree.map(olt => (
+              {safeTree.map(olt => (
                 <TreeNode key={olt.id} label={`${olt.name} ${olt.location ? `(${olt.location})` : ""}`} icon={Server} iconColor="text-red-500" badge={`${olt.total_pon_ports} পোর্ট`} defaultOpen>
                   {(olt.pon_ports || []).map(pp => (
                     <TreeNode key={pp.id} label={`PON Port ${pp.port_number}`} icon={Hash} iconColor="text-orange-500" badge={`${(pp.cables || []).length} ক্যাবল`} level={1}>
