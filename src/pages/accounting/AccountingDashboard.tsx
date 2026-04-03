@@ -157,7 +157,7 @@ export default function AccountingDashboard() {
         {lowStockProducts.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" />Low Stock Alerts</CardTitle>
+              <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" />{t.accounting.lowStockAlerts}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
