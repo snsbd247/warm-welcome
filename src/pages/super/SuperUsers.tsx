@@ -134,7 +134,8 @@ export default function SuperUsers() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await db.from("users").delete().eq("id", id);
+      await db.from("user_roles").delete().eq("user_id", id);
+      const { error } = await db.from("profiles").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
