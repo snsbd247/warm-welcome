@@ -15,16 +15,41 @@ use Illuminate\Http\Request;
 
 class FiberTopologyController extends Controller
 {
+    private function applyAdminTenantContext(Request $request): ?string
+    {
+        $adminUser = $request->admin_user ?? null;
+        $tenantId = $adminUser->tenant_id ?? tenant_id();
+
+        if ($tenantId && !app()->bound('tenant')) {
+            $tenant = \App\Models\Tenant::find($tenantId);
+            if ($tenant) {
+                app()->instance('tenant', $tenant);
+                app()->instance(\App\Models\Tenant::class, $tenant);
+            }
+        }
+
+        return $tenantId;
+    }
+
     /**
      * Full topology tree
      */
     public function tree(Request $request)
     {
         try {
-            $olts = FiberOlt::with([
-                'ponPorts.cables.cores.splitter.outputs.onu.customer',
-                'ponPorts.cables.cores.connectedPort',
-            ])->orderBy('name')->get();
+            $tenantId = $this->applyAdminTenantContext($request);
+            if (!$tenantId) {
+                return response()->json([]);
+            }
+
+            $olts = FiberOlt::query()
+                ->where('tenant_id', $tenantId)
+                ->with([
+                    'ponPorts.cables.cores.splitter.outputs.onu.customer',
+                    'ponPorts.cables.cores.connectedPort',
+                ])
+                ->orderBy('name')
+                ->get();
 
             return response()->json($olts);
         } catch (\Exception $e) {
@@ -38,6 +63,8 @@ class FiberTopologyController extends Controller
      */
     public function storeOlt(Request $request)
     {
+        $tenantId = $this->applyAdminTenantContext($request);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'nullable|string',
@@ -46,13 +73,20 @@ class FiberTopologyController extends Controller
             'lng' => 'nullable|numeric',
         ]);
 
-        $olt = FiberOlt::create($request->only(['name', 'location', 'total_pon_ports', 'status', 'lat', 'lng']));
+        if (!$tenantId) {
+            return response()->json(['message' => 'Tenant context not found'], 422);
+        }
+
+        $olt = FiberOlt::create([
+            ...$request->only(['name', 'location', 'total_pon_ports', 'status', 'lat', 'lng']),
+            'tenant_id' => $tenantId,
+        ]);
 
         for ($i = 1; $i <= $request->total_pon_ports; $i++) {
             FiberPonPort::create([
                 'olt_id' => $olt->id,
                 'port_number' => $i,
-                'tenant_id' => $olt->tenant_id,
+                'tenant_id' => $tenantId,
             ]);
         }
 
@@ -64,6 +98,8 @@ class FiberTopologyController extends Controller
      */
     public function storeCable(Request $request)
     {
+        $tenantId = $this->applyAdminTenantContext($request);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'pon_port_id' => 'nullable|uuid',
@@ -75,9 +111,16 @@ class FiberTopologyController extends Controller
             'cores.*.color' => 'string',
         ]);
 
-        $cable = FiberCable::create($request->only([
-            'name', 'pon_port_id', 'total_cores', 'color', 'length_meters', 'status',
-        ]));
+        if (!$tenantId) {
+            return response()->json(['error' => 'Tenant context not found'], 422);
+        }
+
+        $cable = FiberCable::create([
+            ...$request->only([
+                'name', 'pon_port_id', 'total_cores', 'color', 'length_meters', 'status',
+            ]),
+            'tenant_id' => $tenantId,
+        ]);
 
         if ($request->has('cores') && is_array($request->cores)) {
             foreach ($request->cores as $core) {
@@ -85,7 +128,7 @@ class FiberTopologyController extends Controller
                     'fiber_cable_id' => $cable->id,
                     'core_number' => $core['number'],
                     'color' => $core['color'] ?? null,
-                    'tenant_id' => $cable->tenant_id,
+                    'tenant_id' => $tenantId,
                 ]);
             }
         } else {
@@ -95,7 +138,7 @@ class FiberTopologyController extends Controller
                     'fiber_cable_id' => $cable->id,
                     'core_number' => $i,
                     'color' => $colors[($i - 1) % count($colors)],
-                    'tenant_id' => $cable->tenant_id,
+                    'tenant_id' => $tenantId,
                 ]);
             }
         }
@@ -108,12 +151,14 @@ class FiberTopologyController extends Controller
      */
     public function mapCoreToPort(Request $request)
     {
+        $tenantId = $this->applyAdminTenantContext($request);
+
         $request->validate([
             'core_id' => 'required|uuid',
             'pon_port_id' => 'required|uuid',
         ]);
 
-        $core = FiberCore::findOrFail($request->core_id);
+        $core = FiberCore::where('tenant_id', $tenantId)->findOrFail($request->core_id);
         $core->update(['connected_olt_port_id' => $request->pon_port_id]);
 
         return response()->json($core);
@@ -124,27 +169,39 @@ class FiberTopologyController extends Controller
      */
     public function storeSplice(Request $request)
     {
+        $tenantId = $this->applyAdminTenantContext($request);
+
         $request->validate([
             'from_core_id' => 'required|uuid',
             'to_core_id' => 'required|uuid',
             'label' => 'nullable|string',
         ]);
 
+        if (!$tenantId) {
+            return response()->json(['error' => 'Tenant context not found'], 422);
+        }
+
         if ($request->from_core_id === $request->to_core_id) {
             return response()->json(['error' => 'Cannot splice a core to itself.'], 422);
         }
 
-        $existing = CoreConnection::where(function ($q) use ($request) {
-            $q->where('from_core_id', $request->from_core_id)->where('to_core_id', $request->to_core_id);
-        })->orWhere(function ($q) use ($request) {
-            $q->where('from_core_id', $request->to_core_id)->where('to_core_id', $request->from_core_id);
-        })->first();
+        $existing = CoreConnection::where('tenant_id', $tenantId)
+            ->where(function ($q) use ($request) {
+                $q->where('from_core_id', $request->from_core_id)->where('to_core_id', $request->to_core_id);
+            })->orWhere(function ($q) use ($request, $tenantId) {
+                $q->where('tenant_id', $tenantId)
+                  ->where('from_core_id', $request->to_core_id)
+                  ->where('to_core_id', $request->from_core_id);
+            })->first();
 
         if ($existing) {
             return response()->json(['error' => 'These cores are already spliced.'], 422);
         }
 
-        $splice = CoreConnection::create($request->only(['from_core_id', 'to_core_id', 'label']));
+        $splice = CoreConnection::create([
+            ...$request->only(['from_core_id', 'to_core_id', 'label']),
+            'tenant_id' => $tenantId,
+        ]);
 
         return response()->json($splice->load(['fromCore.cable', 'toCore.cable']), 201);
     }
@@ -152,18 +209,26 @@ class FiberTopologyController extends Controller
     /**
      * List all splices
      */
-    public function splices()
+    public function splices(Request $request)
     {
-        $splices = CoreConnection::with(['fromCore.cable', 'toCore.cable'])->get();
+        $tenantId = $this->applyAdminTenantContext($request);
+        if (!$tenantId) {
+            return response()->json([]);
+        }
+
+        $splices = CoreConnection::where('tenant_id', $tenantId)
+            ->with(['fromCore.cable', 'toCore.cable'])
+            ->get();
         return response()->json($splices);
     }
 
     /**
      * Delete a splice
      */
-    public function deleteSplice($id)
+    public function deleteSplice(Request $request, $id)
     {
-        $splice = CoreConnection::findOrFail($id);
+        $tenantId = $this->applyAdminTenantContext($request);
+        $splice = CoreConnection::where('tenant_id', $tenantId)->findOrFail($id);
         $splice->delete();
         return response()->json(['message' => 'Splice deleted']);
     }
@@ -173,6 +238,8 @@ class FiberTopologyController extends Controller
      */
     public function storeSplitter(Request $request)
     {
+        $tenantId = $this->applyAdminTenantContext($request);
+
         $request->validate([
             'core_id' => 'required|uuid',
             'ratio' => 'required|in:1:2,1:4,1:8,1:16,1:32',
@@ -183,17 +250,24 @@ class FiberTopologyController extends Controller
             'output_colors' => 'nullable|array',
         ]);
 
-        $existing = FiberSplitter::where('core_id', $request->core_id)->first();
+        if (!$tenantId) {
+            return response()->json(['error' => 'Tenant context not found'], 422);
+        }
+
+        $existing = FiberSplitter::where('tenant_id', $tenantId)->where('core_id', $request->core_id)->first();
         if ($existing) {
             return response()->json(['error' => 'This core already has a splitter assigned.'], 422);
         }
 
-        $core = FiberCore::findOrFail($request->core_id);
+        $core = FiberCore::where('tenant_id', $tenantId)->findOrFail($request->core_id);
         $core->update(['status' => 'used']);
 
-        $splitter = FiberSplitter::create($request->only([
-            'core_id', 'ratio', 'location', 'label', 'status', 'lat', 'lng',
-        ]));
+        $splitter = FiberSplitter::create([
+            ...$request->only([
+                'core_id', 'ratio', 'location', 'label', 'status', 'lat', 'lng',
+            ]),
+            'tenant_id' => $tenantId,
+        ]);
 
         $outputCount = (int) explode(':', $request->ratio)[1];
         $defaultColors = ['Blue', 'Orange', 'Green', 'Brown', 'Slate', 'White', 'Red', 'Black', 'Yellow', 'Violet', 'Rose', 'Aqua'];
@@ -204,7 +278,7 @@ class FiberTopologyController extends Controller
                 'splitter_id' => $splitter->id,
                 'output_number' => $i,
                 'color' => $outputColors[$i - 1] ?? $defaultColors[($i - 1) % count($defaultColors)],
-                'tenant_id' => $splitter->tenant_id,
+                'tenant_id' => $tenantId,
             ]);
         }
 
@@ -216,6 +290,8 @@ class FiberTopologyController extends Controller
      */
     public function storeOnu(Request $request)
     {
+        $tenantId = $this->applyAdminTenantContext($request);
+
         $request->validate([
             'splitter_output_id' => 'required|uuid',
             'serial_number' => 'required|string',
@@ -223,17 +299,24 @@ class FiberTopologyController extends Controller
             'customer_id' => 'nullable|uuid',
         ]);
 
-        $existingOnu = FiberOnu::where('splitter_output_id', $request->splitter_output_id)->first();
+        if (!$tenantId) {
+            return response()->json(['error' => 'Tenant context not found'], 422);
+        }
+
+        $existingOnu = FiberOnu::where('tenant_id', $tenantId)->where('splitter_output_id', $request->splitter_output_id)->first();
         if ($existingOnu) {
             return response()->json(['error' => 'This splitter output already has an ONU assigned.'], 422);
         }
 
-        $output = FiberSplitterOutput::findOrFail($request->splitter_output_id);
+        $output = FiberSplitterOutput::where('tenant_id', $tenantId)->findOrFail($request->splitter_output_id);
         $output->update(['status' => 'used', 'connection_type' => 'onu']);
 
-        $onu = FiberOnu::create($request->only([
-            'splitter_output_id', 'serial_number', 'mac_address', 'customer_id', 'status', 'signal_strength',
-        ]));
+        $onu = FiberOnu::create([
+            ...$request->only([
+                'splitter_output_id', 'serial_number', 'mac_address', 'customer_id', 'status', 'signal_strength',
+            ]),
+            'tenant_id' => $tenantId,
+        ]);
 
         return response()->json($onu->load('customer'), 201);
     }
@@ -243,32 +326,36 @@ class FiberTopologyController extends Controller
      */
     public function search(Request $request)
     {
+        $tenantId = $this->applyAdminTenantContext($request);
         $q = $request->input('q', '');
-        if (strlen($q) < 2) {
+        if (!$tenantId || strlen($q) < 2) {
             return response()->json([]);
         }
 
         $results = [];
 
-        $olts = FiberOlt::where('name', 'like', "%{$q}%")->limit(5)->get();
+        $olts = FiberOlt::where('tenant_id', $tenantId)->where('name', 'like', "%{$q}%")->limit(5)->get();
         foreach ($olts as $olt) {
             $results[] = ['type' => 'OLT', 'id' => $olt->id, 'label' => $olt->name];
         }
 
-        $cables = FiberCable::where('name', 'like', "%{$q}%")->limit(5)->get();
+        $cables = FiberCable::where('tenant_id', $tenantId)->where('name', 'like', "%{$q}%")->limit(5)->get();
         foreach ($cables as $cable) {
             $results[] = ['type' => 'Cable', 'id' => $cable->id, 'label' => $cable->name];
         }
 
-        // Search by core color
-        $cores = FiberCore::where('color', 'like', "%{$q}%")->with('cable')->limit(5)->get();
+        $cores = FiberCore::where('tenant_id', $tenantId)->where('color', 'like', "%{$q}%")->with('cable')->limit(5)->get();
         foreach ($cores as $core) {
             $results[] = ['type' => 'Core', 'id' => $core->id, 'label' => ($core->cable->name ?? '') . ' → Core ' . $core->core_number . ' (' . $core->color . ')'];
         }
 
-        $onus = FiberOnu::where('serial_number', 'like', "%{$q}%")
-            ->orWhere('mac_address', 'like', "%{$q}%")
-            ->limit(5)->get();
+        $onus = FiberOnu::where('tenant_id', $tenantId)
+            ->where(function ($query) use ($q) {
+                $query->where('serial_number', 'like', "%{$q}%")
+                    ->orWhere('mac_address', 'like', "%{$q}%");
+            })
+            ->limit(5)
+            ->get();
         foreach ($onus as $onu) {
             $results[] = ['type' => 'ONU', 'id' => $onu->id, 'label' => $onu->serial_number];
         }
@@ -279,21 +366,31 @@ class FiberTopologyController extends Controller
     /**
      * Stats
      */
-    public function stats()
+    public function stats(Request $request)
     {
         try {
+            $tenantId = $this->applyAdminTenantContext($request);
+            if (!$tenantId) {
+                return response()->json([
+                    'total_olts' => 0, 'total_cables' => 0, 'total_cores' => 0,
+                    'free_cores' => 0, 'used_cores' => 0, 'total_splitters' => 0,
+                    'total_outputs' => 0, 'free_outputs' => 0, 'used_outputs' => 0,
+                    'total_onus' => 0, 'total_splices' => 0,
+                ]);
+            }
+
             return response()->json([
-                'total_olts' => FiberOlt::count(),
-                'total_cables' => FiberCable::count(),
-                'total_cores' => FiberCore::count(),
-                'free_cores' => FiberCore::where('status', 'free')->count(),
-                'used_cores' => FiberCore::where('status', 'used')->count(),
-                'total_splitters' => FiberSplitter::count(),
-                'total_outputs' => FiberSplitterOutput::count(),
-                'free_outputs' => FiberSplitterOutput::where('status', 'free')->count(),
-                'used_outputs' => FiberSplitterOutput::where('status', 'used')->count(),
-                'total_onus' => FiberOnu::count(),
-                'total_splices' => CoreConnection::count(),
+                'total_olts' => FiberOlt::where('tenant_id', $tenantId)->count(),
+                'total_cables' => FiberCable::where('tenant_id', $tenantId)->count(),
+                'total_cores' => FiberCore::where('tenant_id', $tenantId)->count(),
+                'free_cores' => FiberCore::where('tenant_id', $tenantId)->where('status', 'free')->count(),
+                'used_cores' => FiberCore::where('tenant_id', $tenantId)->where('status', 'used')->count(),
+                'total_splitters' => FiberSplitter::where('tenant_id', $tenantId)->count(),
+                'total_outputs' => FiberSplitterOutput::where('tenant_id', $tenantId)->count(),
+                'free_outputs' => FiberSplitterOutput::where('tenant_id', $tenantId)->where('status', 'free')->count(),
+                'used_outputs' => FiberSplitterOutput::where('tenant_id', $tenantId)->where('status', 'used')->count(),
+                'total_onus' => FiberOnu::where('tenant_id', $tenantId)->count(),
+                'total_splices' => CoreConnection::where('tenant_id', $tenantId)->count(),
             ]);
         } catch (\Exception $e) {
             \Log::error('Fiber stats error: ' . $e->getMessage());
@@ -309,11 +406,16 @@ class FiberTopologyController extends Controller
     /**
      * Map markers for OLTs and Splitters with GPS
      */
-    public function mapData()
+    public function mapData(Request $request)
     {
+        $tenantId = $this->applyAdminTenantContext($request);
+        if (!$tenantId) {
+            return response()->json([]);
+        }
+
         $markers = [];
 
-        $olts = FiberOlt::whereNotNull('lat')->whereNotNull('lng')->get();
+        $olts = FiberOlt::where('tenant_id', $tenantId)->whereNotNull('lat')->whereNotNull('lng')->get();
         foreach ($olts as $olt) {
             $markers[] = [
                 'id' => $olt->id,
@@ -324,7 +426,7 @@ class FiberTopologyController extends Controller
             ];
         }
 
-        $splitters = FiberSplitter::whereNotNull('lat')->whereNotNull('lng')->with('core.cable')->get();
+        $splitters = FiberSplitter::where('tenant_id', $tenantId)->whereNotNull('lat')->whereNotNull('lng')->with('core.cable')->get();
         foreach ($splitters as $sp) {
             $markers[] = [
                 'id' => $sp->id,
