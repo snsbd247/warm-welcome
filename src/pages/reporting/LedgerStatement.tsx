@@ -138,15 +138,15 @@ export default function ReportLedgerStatement() {
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <BookOpen className="h-6 w-6" />
-              Ledger Statement
+              {t.ledgerStatement.title}
             </h1>
             <p className="text-muted-foreground text-sm">
-              Chart of Accounts থেকে যেকোনো লেজার এর স্টেটমেন্ট দেখুন
+              {t.ledgerStatement.subtitle}
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handlePrint} disabled={!selectedAccountId}>
-              <Printer className="h-4 w-4 mr-1" /> Print
+              <Printer className="h-4 w-4 mr-1" /> {t.common.print}
             </Button>
           </div>
         </div>
@@ -156,10 +156,10 @@ export default function ReportLedgerStatement() {
           <CardContent className="pt-4 pb-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
               <div className="md:col-span-2">
-                <Label className="text-xs font-medium">Select Account / Ledger</Label>
+                <Label className="text-xs font-medium">{t.ledgerStatement.selectAccount}</Label>
                 <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="-- Select an account --" />
+                    <SelectValue placeholder={t.ledgerStatement.selectAccountPlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
                     {accounts.map((acc: any) => (
@@ -172,11 +172,11 @@ export default function ReportLedgerStatement() {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs font-medium">From Date</Label>
+                <Label className="text-xs font-medium">{t.ledgerStatement.fromDate}</Label>
                 <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
               </div>
               <div>
-                <Label className="text-xs font-medium">To Date</Label>
+                <Label className="text-xs font-medium">{t.ledgerStatement.toDate}</Label>
                 <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function ReportLedgerStatement() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by description, reference..."
+                    placeholder={t.ledgerStatement.searchByDescription}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9"
@@ -198,7 +198,7 @@ export default function ReportLedgerStatement() {
 
         {/* Print Header (visible only on print) */}
         <div className="hidden print:block text-center mb-4">
-          <h2 className="text-xl font-bold">Ledger Statement</h2>
+          <h2 className="text-xl font-bold">{t.ledgerStatement.title}</h2>
           {selectedAccount && (
             <p className="text-sm">
               Account: {selectedAccount.code ? `${selectedAccount.code} - ` : ""}{selectedAccount.name} ({selectedAccount.type})
@@ -215,7 +215,7 @@ export default function ReportLedgerStatement() {
             <CardContent className="py-16 text-center">
               <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
               <p className="text-muted-foreground">
-                উপরে থেকে একটি Account/Ledger সিলেক্ট করুন স্টেটমেন্ট দেখতে
+                {t.ledgerStatement.selectAccountPrompt}
               </p>
             </CardContent>
           </Card>
@@ -245,7 +245,7 @@ export default function ReportLedgerStatement() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-orange-50 dark:bg-orange-950/30 print:bg-orange-50">
-                        <TableHead className="w-[50px] text-center font-bold text-orange-700 dark:text-orange-400">SN</TableHead>
+                        <TableHead className="w-[50px] text-center font-bold text-orange-700 dark:text-orange-400">{t.ledgerStatement.refNo && "SN"}</TableHead>
                         <TableHead className="w-[100px] font-bold text-orange-700 dark:text-orange-400">Vch. Date</TableHead>
                         <TableHead className="w-[90px] font-bold text-orange-700 dark:text-orange-400">Vch Type</TableHead>
                         <TableHead className="w-[120px] font-bold text-orange-700 dark:text-orange-400">Ref No</TableHead>
@@ -260,7 +260,7 @@ export default function ReportLedgerStatement() {
                       {rows.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
-                            এই সময়ের মধ্যে কোনো ট্রানজেকশন পাওয়া যায়নি
+                            {t.ledgerStatement.noTransactions}
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -300,7 +300,7 @@ export default function ReportLedgerStatement() {
                           {/* Totals Row */}
                           <TableRow className="font-bold bg-orange-50 dark:bg-orange-950/30 border-t-2 border-orange-300 print:bg-orange-50">
                             <TableCell colSpan={6} className="text-right font-bold text-orange-700 dark:text-orange-400">
-                              Total
+                              {t.common.total}
                             </TableCell>
                             <TableCell className="text-right font-mono font-bold">
                               {fmt(totalDebit)}
@@ -327,25 +327,25 @@ export default function ReportLedgerStatement() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 print:hidden">
             <Card>
               <CardContent className="pt-4 pb-3">
-                <p className="text-xs text-muted-foreground">Total Entries</p>
+                <p className="text-xs text-muted-foreground">{t.ledgerStatement.totalEntries}</p>
                 <p className="text-lg font-bold">{rows.length}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4 pb-3">
-                <p className="text-xs text-muted-foreground">Total Debit</p>
+                <p className="text-xs text-muted-foreground">{t.ledgerStatement.totalDebit}</p>
                 <p className="text-lg font-bold text-blue-600">৳{fmt(totalDebit)}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4 pb-3">
-                <p className="text-xs text-muted-foreground">Total Credit</p>
+                <p className="text-xs text-muted-foreground">{t.ledgerStatement.totalCredit}</p>
                 <p className="text-lg font-bold text-green-600">৳{fmt(totalCredit)}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4 pb-3">
-                <p className="text-xs text-muted-foreground">Closing Balance</p>
+                <p className="text-xs text-muted-foreground">{t.ledgerStatement.closingBalance}</p>
                 <p className={`text-lg font-bold ${closingBalance < 0 ? "text-destructive" : ""}`}>
                   ৳{fmt(closingBalance)}
                 </p>

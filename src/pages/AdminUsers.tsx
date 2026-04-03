@@ -319,23 +319,23 @@ export default function AdminUsers() {
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Users</h1>
-          <p className="text-muted-foreground mt-1">Manage admin & staff accounts</p>
+          <h1 className="text-2xl font-bold text-foreground">{t.adminUsers.title}</h1>
+          <p className="text-muted-foreground mt-1">{t.adminUsers.subtitle}</p>
         </div>
-        <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add User</Button>
+        <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> {t.adminUsers.addUser}</Button>
       </div>
 
       <div className="mb-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder={t.adminUsers.searchUsers} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="disabled">Disabled</SelectItem>
+            <SelectItem value="all">{t.adminUsers.allStatus}</SelectItem>
+            <SelectItem value="active">{t.common.active}</SelectItem>
+            <SelectItem value="disabled">{t.adminUsers.disabled}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -348,14 +348,14 @@ export default function AdminUsers() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">SL#</TableHead>
-                <TableHead>Full Name</TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Mobile</TableHead>
-                <TableHead>Staff ID</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>{t.adminUsers.fullName}</TableHead>
+                <TableHead>{t.adminUsers.username}</TableHead>
+                <TableHead>{t.common.email}</TableHead>
+                <TableHead>{t.adminUsers.mobile}</TableHead>
+                <TableHead>{t.adminUsers.staffId}</TableHead>
+                <TableHead>{t.adminUsers.role}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead>{t.adminUsers.created}</TableHead>
                 <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
@@ -375,7 +375,7 @@ export default function AdminUsers() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={isUserDisabled(u) ? "secondary" : "default"}>
-                      {isUserDisabled(u) ? "Disabled" : "Active"}
+                      {isUserDisabled(u) ? t.adminUsers.disabled : t.common.active}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
@@ -397,7 +397,7 @@ export default function AdminUsers() {
                 </TableRow>
               ))}
               {(!filtered || filtered.length === 0) && (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">{t.adminUsers.noUsersFound}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -407,44 +407,44 @@ export default function AdminUsers() {
       {/* Add/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editUser ? "Edit User" : "Add User"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editUser ? t.adminUsers.editUser : t.adminUsers.addUser}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Full Name *</Label>
+                <Label>{t.adminUsers.fullName} *</Label>
                 <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
               </div>
               <div className="space-y-1.5">
-                <Label>Username *</Label>
+                <Label>{t.adminUsers.username} *</Label>
                 <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required placeholder="unique username" autoComplete="off" />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Email</Label>
+                <Label>{t.common.email}</Label>
                 <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
               <div className="space-y-1.5">
-                <Label>{editUser ? "New Password (leave blank to keep)" : "Password *"}</Label>
+                <Label>{editUser ? t.adminUsers.newPasswordHint : `${t.adminUsers.password} *`}</Label>
                 <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editUser} />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Mobile</Label>
+                <Label>{t.adminUsers.mobile}</Label>
                 <Input value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} />
               </div>
               <div className="space-y-1.5">
-                <Label>Staff ID</Label>
+                <Label>{t.adminUsers.staffId}</Label>
                 <Input value={form.staff_id} onChange={(e) => setForm({ ...form, staff_id: e.target.value })} />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Address</Label>
+              <Label>{t.common.address}</Label>
               <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Role *</Label>
+              <Label>{t.adminUsers.role} *</Label>
               <Select value={form.custom_role_id || form.role} onValueChange={(v) => {
                 const customRole = customRoles?.find((cr: any) => cr.id === v);
                 if (customRole) {
@@ -453,7 +453,7 @@ export default function AdminUsers() {
                   setForm({ ...form, role: v, custom_role_id: "" });
                 }
               }}>
-                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t.adminUsers.selectRole} /></SelectTrigger>
                 <SelectContent>
                 {customRoles && customRoles.length > 0 ? (
                   customRoles.filter((cr: any) => canViewSuperAdmins || cr.db_role !== "super_admin").map((cr: any) => (
@@ -472,7 +472,7 @@ export default function AdminUsers() {
             <div className="flex justify-end">
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                {editUser ? "Update" : "Create"}
+                {editUser ? t.common.update : t.common.create}
               </Button>
             </div>
           </form>
@@ -483,8 +483,8 @@ export default function AdminUsers() {
       <AlertDialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete User</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to delete "{deleteUser?.full_name || deleteUser?.username}"? This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t.adminUsers.deleteUser}</AlertDialogTitle>
+            <AlertDialogDescription>{t.adminUsers.deleteUserConfirm.replace("{name}", deleteUser?.full_name || deleteUser?.username || "")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>

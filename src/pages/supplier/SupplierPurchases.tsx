@@ -237,28 +237,28 @@ export default function SupplierPurchases() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Purchases</h1>
-            <p className="text-muted-foreground text-sm">Purchase from suppliers and track inventory</p>
+            <h1 className="text-2xl font-bold text-foreground">{t.purchases.title}</h1>
+            <p className="text-muted-foreground text-sm">{t.purchases.subtitle}</p>
           </div>
           <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />New Purchase</Button></DialogTrigger>
+            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{t.purchases.newPurchase}</Button></DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>{editId ? "Edit Purchase" : "Create Purchase"}</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editId ? t.purchases.editPurchase : t.purchases.createPurchase}</DialogTitle></DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); if (!form.supplier_id) { toast.error("Select a supplier"); return; } saveMutation.mutate(); }} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Supplier *</Label>
+                  <div><Label>{t.purchases.supplier} *</Label>
                     <Select value={form.supplier_id} onValueChange={v => setForm({ ...form, supplier_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Select supplier" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t.purchases.selectSupplier} /></SelectTrigger>
                       <SelectContent>{suppliers.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Date</Label><Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
+                  <div><Label>{t.common.date}</Label><Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <Label className="text-base font-semibold">Items</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={addItem}><Plus className="h-3 w-3 mr-1" />Add Item</Button>
+                    <Label className="text-base font-semibold">{t.purchases.items}</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={addItem}><Plus className="h-3 w-3 mr-1" />{t.purchases.addItem}</Button>
                   </div>
                   <div className="space-y-2">
                     {items.map((item, i) => (
@@ -267,7 +267,7 @@ export default function SupplierPurchases() {
                           <Select value={item.product_id || "custom"} onValueChange={v => updateItem(i, "product_id", v === "custom" ? "" : v)}>
                             <SelectTrigger><SelectValue placeholder="Product" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="custom">— Custom Item —</SelectItem>
+                              <SelectItem value="custom">{t.purchases.customItem}</SelectItem>
                               {products.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ""}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -282,11 +282,11 @@ export default function SupplierPurchases() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Paid Amount</Label><Input type="number" step="0.01" value={form.paid_amount} onChange={e => setForm({ ...form, paid_amount: +e.target.value })} /></div>
+                  <div><Label>{t.purchases.paidAmount}</Label><Input type="number" step="0.01" value={form.paid_amount} onChange={e => setForm({ ...form, paid_amount: +e.target.value })} /></div>
                   <div className="flex items-end"><div className="text-right w-full"><p className="text-sm text-muted-foreground">Total</p><p className="text-2xl font-bold text-foreground">৳{subtotal.toLocaleString()}</p></div></div>
                 </div>
 
-                <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+                <div><Label>{t.purchases.notes}</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={closeDialog}>{t.common.cancel}</Button>
@@ -301,20 +301,20 @@ export default function SupplierPurchases() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search purchases..." value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs" />
+              <Input placeholder={t.purchases.searchPurchases} value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs" />
             </div>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Purchase #</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead className="text-right">Due</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t.purchases.purchaseNo}</TableHead>
+                  <TableHead>{t.purchases.supplier}</TableHead>
+                  <TableHead>{t.common.date}</TableHead>
+                  <TableHead className="text-right">{t.common.total}</TableHead>
+                  <TableHead className="text-right">{t.common.paid}</TableHead>
+                  <TableHead className="text-right">{t.purchases.due}</TableHead>
+                  <TableHead>{t.common.status}</TableHead>
                   <TableHead className="text-right">{t.common.actions}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -322,7 +322,7 @@ export default function SupplierPurchases() {
                 {isLoading ? (
                   <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">{t.common.loading}</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No purchases found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">{t.purchases.noPurchasesFound}</TableCell></TableRow>
                 ) : filtered.map((p: any) => {
                   const due = Number(p.total_amount) - Number(p.paid_amount);
                   return (
@@ -365,7 +365,7 @@ export default function SupplierPurchases() {
       {/* Payment Adjustment Dialog */}
       <Dialog open={payOpen} onOpenChange={v => { if (!v) { setPayOpen(false); setPayTarget(null); } }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Payment Adjustment</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t.purchases.paymentAdjustment}</DialogTitle></DialogHeader>
           {payTarget && (
             <div className="space-y-4">
               <div className="p-4 rounded-lg bg-muted space-y-1">
@@ -388,11 +388,11 @@ export default function SupplierPurchases() {
               </div>
 
               <div className="space-y-3">
-                <div><Label>Payment Amount *</Label>
+                <div><Label>{t.purchases.paymentAmount} *</Label>
                   <Input type="number" step="0.01" value={payAmount} onChange={e => setPayAmount(e.target.value)}
                     placeholder={`Max: ৳${(Number(payTarget.total_amount) - Number(payTarget.paid_amount)).toLocaleString()}`} />
                 </div>
-                <div><Label>Payment Method</Label>
+                <div><Label>{t.purchases.paymentMethod}</Label>
                   <Select value={payMethod} onValueChange={setPayMethod}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -403,13 +403,13 @@ export default function SupplierPurchases() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Note</Label><Input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="Optional note" /></div>
+                <div><Label>{t.common.note}</Label><Input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="Optional note" /></div>
               </div>
 
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setPayOpen(false)}>{t.common.cancel}</Button>
                 <Button onClick={() => payMutation.mutate()} disabled={payMutation.isPending || !payAmount}>
-                  {payMutation.isPending ? "Processing..." : "Record Payment"}
+                  {payMutation.isPending ? "Processing..." : t.purchases.recordPayment}
                 </Button>
               </div>
             </div>

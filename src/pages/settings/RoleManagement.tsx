@@ -225,10 +225,10 @@ export default function RoleManagement() {
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Roles & Permissions</h1>
-          <p className="text-muted-foreground mt-1">Manage roles and assign permissions</p>
+          <h1 className="text-2xl font-bold text-foreground">{t.roles.title}</h1>
+          <p className="text-muted-foreground mt-1">{t.roles.subtitle}</p>
         </div>
-        <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Role</Button>
+        <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> {t.roles.addRole}</Button>
       </div>
 
       {rolesLoading ? (
@@ -239,11 +239,11 @@ export default function RoleManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">SL#</TableHead>
-                <TableHead>Role Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>DB Role</TableHead>
-                <TableHead>Permissions</TableHead>
-                <TableHead>System</TableHead>
+                <TableHead>{t.roles.roleName}</TableHead>
+                <TableHead>{t.common.description}</TableHead>
+                <TableHead>{t.roles.dbRole}</TableHead>
+                <TableHead>{t.roles.permissions}</TableHead>
+                <TableHead>{t.roles.system}</TableHead>
                 <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
@@ -271,7 +271,7 @@ export default function RoleManagement() {
                 </TableRow>
               ))}
               {(!roles || roles.length === 0) && (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No roles found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{t.roles.noRolesFound}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -284,17 +284,17 @@ export default function RoleManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              {editRole ? "Edit Role" : "Create Role"}
+              {editRole ? t.roles.editRole : t.roles.createRole}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Role Name *</Label>
+                <Label>{t.roles.roleName} *</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="e.g., Operator" />
               </div>
               <div className="space-y-1.5">
-                <Label>Database Role *</Label>
+                <Label>{t.roles.databaseRole} *</Label>
                 <Select value={form.db_role} onValueChange={(v) => setForm({ ...form, db_role: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -312,7 +312,7 @@ export default function RoleManagement() {
 
             {/* Permissions Grid */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Permissions</Label>
+              <Label className="text-base font-semibold">{t.roles.permissions}</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(groupedPermissions).map(([module, perms]) => {
                   const modulePerms = perms as any[];
@@ -354,7 +354,7 @@ export default function RoleManagement() {
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>{t.common.cancel}</Button>
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                {editRole ? "Update Role" : "Create Role"}
+                {editRole ? t.roles.updateRole : t.roles.createRole}
               </Button>
             </div>
           </form>
@@ -365,8 +365,8 @@ export default function RoleManagement() {
       <AlertDialog open={!!deleteRole} onOpenChange={() => setDeleteRole(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Role</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to delete the role "{deleteRole?.name}"? Users assigned this role will lose their permissions.</AlertDialogDescription>
+            <AlertDialogTitle>{t.roles.deleteRole}</AlertDialogTitle>
+            <AlertDialogDescription>{t.roles.deleteRoleConfirm.replace("{name}", deleteRole?.name || "")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>

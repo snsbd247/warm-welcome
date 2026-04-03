@@ -35,18 +35,18 @@ export default function SupplierPayments() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Supplier Payments</h1>
+        <h1 className="text-2xl font-bold">{t.supplierPayments.title}</h1>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Add Payment</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{t.supplierPayments.addPayment}</Button></DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Record Payment</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t.supplierPayments.recordPayment}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v })}><SelectTrigger><SelectValue placeholder="Supplier" /></SelectTrigger><SelectContent>{suppliers.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select>
-              <Input placeholder="Amount" type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+              <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v })}><SelectTrigger><SelectValue placeholder={t.purchases.supplier} /></SelectTrigger><SelectContent>{suppliers.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select>
+              <Input placeholder={t.common.amount} type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
               <Select value={form.payment_method} onValueChange={(v) => setForm({ ...form, payment_method: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">Cash</SelectItem><SelectItem value="bank_transfer">Bank Transfer</SelectItem><SelectItem value="bkash">bKash</SelectItem></SelectContent></Select>
-              <Input placeholder="Reference" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
-              <Input placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-              <Button onClick={() => save.mutate()} disabled={!form.supplier_id || !form.amount || save.isPending} className="w-full">{save.isPending ? "Saving..." : "Record Payment"}</Button>
+              <Input placeholder={t.supplierPayments.reference} value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
+              <Input placeholder={t.purchases.notes} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              <Button onClick={() => save.mutate()} disabled={!form.supplier_id || !form.amount || save.isPending} className="w-full">{save.isPending ? "Saving..." : t.supplierPayments.recordPayment}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -61,7 +61,7 @@ export default function SupplierPayments() {
                 {rows.map((r: any) => (
                   <TableRow key={r.id}><TableCell>{safeFormat(r.paid_date, "dd MMM yyyy")}</TableCell><TableCell className="font-medium">{getSupName(r.supplier_id)}</TableCell><TableCell className="font-semibold">৳{Number(r.amount).toLocaleString()}</TableCell><TableCell><Badge variant="outline">{r.payment_method}</Badge></TableCell><TableCell>{r.reference || "—"}</TableCell><TableCell>{r.notes || "—"}</TableCell></TableRow>
                 ))}
-                {rows.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No payments</TableCell></TableRow>}
+                {rows.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">{t.supplierPayments.noPayments}</TableCell></TableRow>}
               </TableBody>
             </Table>
           )}
