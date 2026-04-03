@@ -288,7 +288,7 @@ export default function AppSidebar() {
           )}>
           {location.pathname === "/network-map" && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-sidebar-primary" />}
           <MapPin className={cn("h-[18px] w-[18px] shrink-0", location.pathname === "/network-map" ? "text-sidebar-primary" : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70")} />
-          {(!collapsed || isMobile) && <span>Network Map</span>}
+          {(!collapsed || isMobile) && <span>{t.sidebar.networkMap}</span>}
         </NavLink>
 
         {/* Fiber Topology - standalone item */}
