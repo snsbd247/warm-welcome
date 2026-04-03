@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-import { useLanguage } from "@/contexts/LanguageContext";
   Building2, Users, CreditCard, TrendingUp, MessageSquare,
   Activity, CheckCircle2, AlertTriangle, Globe, BarChart3
 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SuperAnalytics() {
   const { t } = useLanguage();
