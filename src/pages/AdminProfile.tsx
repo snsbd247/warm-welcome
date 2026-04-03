@@ -279,7 +279,7 @@ export default function AdminProfile() {
               />
             </div>
             <div>
-              <Label>Confirm Password</Label>
+              <Label>{t.profilePage.confirmPassword}</Label>
               <Input
                 type="password"
                 value={passwordForm.confirmPassword}
