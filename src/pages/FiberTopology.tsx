@@ -621,7 +621,7 @@ export default function FiberTopology() {
       if (error) throw error;
       return data || [];
     },
-    enabled: dialogType === "onu",
+    enabled: dialogType === "onu" || dialogType === "edit_onu",
   });
 
   const [customerSearch, setCustomerSearch] = useState("");
