@@ -763,6 +763,7 @@ function StatusBadge({ connected, label }: { connected: boolean; label: string }
 }
 
 function GatewayStatusCard({ gateway, testMutation, label }: { gateway: any; testMutation: any; label: string }) {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardContent className="py-4">
