@@ -106,6 +106,9 @@ export interface FiberMapMarker {
   lng: number;
   cable?: string | null;
   customer?: string | null;
+  parentLat?: number;
+  parentLng?: number;
+  lineColor?: string;
 }
 
 export interface FiberSearchResult {
