@@ -40,9 +40,10 @@ export default function CustomerDevices() {
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ["customer_devices"],
     queryFn: async () => {
-      const { data } = await (db as any).from("customer_devices")
+      const { data, error } = await (db as any).from("customer_devices")
         .select("*,customer:customers(name,customer_id),product:products(name)")
         .order("assigned_at", { ascending: false });
+      if (error) throw error;
       return data || [];
     },
   });
