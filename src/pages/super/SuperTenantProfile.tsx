@@ -28,11 +28,11 @@ import TenantFinancialReportsTab from "@/components/super/TenantFinancialReports
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // ─── SMS Recharge Dialog ─────────────────────────────────────
-function SmsRechargeDialog({
-  const { t } = useLanguage();
-  const sa = t.superAdmin; tenantId, currentBalance, onSuccess }: {
+function SmsRechargeDialog({ tenantId, currentBalance, onSuccess }: {
   tenantId: string; currentBalance: number; onSuccess: () => void;
 }) {
+  const { t } = useLanguage();
+  const sa = t.superAdmin;
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
