@@ -286,16 +286,16 @@ export default function MikroTikRouters() {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">MikroTik Routers</h1>
-          <p className="text-muted-foreground mt-1">Manage MikroTik router connections</p>
+          <h1 className="text-2xl font-bold text-foreground">{t.mikrotik.title}</h1>
+          <p className="text-muted-foreground mt-1">{t.mikrotik.subtitle}</p>
         </div>
-        <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Router</Button>
+        <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> {t.mikrotik.addRouter}</Button>
       </div>
 
       <div className="mb-4 max-w-sm">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search routers..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder={t.mikrotik.searchRouters} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
       </div>
 
@@ -306,12 +306,12 @@ export default function MikroTikRouters() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>API Port</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t.common.name}</TableHead>
+                <TableHead>{t.mikrotik.ipAddress}</TableHead>
+                <TableHead>{t.mikrotik.username}</TableHead>
+                <TableHead>{t.mikrotik.apiPort}</TableHead>
+                <TableHead>{t.common.description}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
                 <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
@@ -344,10 +344,10 @@ export default function MikroTikRouters() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => importUsers(router)}>
-                            <Users className="h-4 w-4 mr-2" /> Import Customers
+                            <Users className="h-4 w-4 mr-2" /> {t.mikrotik.importCustomers}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importPackages(router)}>
-                            <Package className="h-4 w-4 mr-2" /> Import Packages
+                            <Package className="h-4 w-4 mr-2" /> {t.mikrotik.importPackages}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -361,7 +361,7 @@ export default function MikroTikRouters() {
                 </TableRow>
               ))}
               {filtered?.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No routers found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{t.mikrotik.noRoutersFound}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -371,48 +371,48 @@ export default function MikroTikRouters() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editRouter ? "Edit Router" : "Add Router"}</DialogTitle>
-            <DialogDescription>Configure MikroTik router connection settings</DialogDescription>
+            <DialogTitle>{editRouter ? t.mikrotik.editRouter : t.mikrotik.addRouter}</DialogTitle>
+            <DialogDescription>{t.mikrotik.configureConnection}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Router Name *</Label>
+                <Label>{t.mikrotik.routerName} *</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               </div>
               <div className="space-y-1.5">
-                <Label>IP Address *</Label>
+                <Label>{t.mikrotik.ipAddress} *</Label>
                 <Input placeholder="192.168.1.1" value={form.ip_address} onChange={(e) => setForm({ ...form, ip_address: e.target.value })} required />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Username *</Label>
+                <Label>{t.mikrotik.username} *</Label>
                 <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required />
               </div>
               <div className="space-y-1.5">
-                <Label>{editRouter ? "New Password (leave blank to keep)" : "Password *"}</Label>
+                <Label>{editRouter ? t.mikrotik.newPasswordHint : `${t.adminUsers.password} *`}</Label>
                 <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editRouter} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>API Port</Label>
+                <Label>{t.mikrotik.apiPort}</Label>
                 <Input type="number" value={form.api_port} onChange={(e) => setForm({ ...form, api_port: e.target.value })} />
               </div>
               <div className="space-y-1.5">
-                <Label>Description</Label>
+                <Label>{t.common.description}</Label>
                 <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={testFormConnection} disabled={testing === "form"}>
                 {testing === "form" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wifi className="h-4 w-4 mr-2" />}
-                Test Connection
+                {t.mikrotik.testConnection}
               </Button>
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                {editRouter ? "Update" : "Add Router"}
+                {editRouter ? t.common.update : t.mikrotik.addRouter}
               </Button>
             </div>
           </form>
@@ -422,8 +422,8 @@ export default function MikroTikRouters() {
       <AlertDialog open={!!deleteRouter} onOpenChange={() => setDeleteRouter(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Router</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to delete "{deleteRouter?.name}"? This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t.mikrotik.deleteRouter}</AlertDialogTitle>
+            <AlertDialogDescription>{t.mikrotik.deleteRouterConfirm.replace("{name}", deleteRouter?.name || "")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>

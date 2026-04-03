@@ -74,23 +74,23 @@ export default function SupplierList() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Suppliers</h1>
-            <p className="text-muted-foreground text-sm">Manage suppliers, purchases & payments</p>
+            <h1 className="text-2xl font-bold text-foreground">{t.suppliers.title}</h1>
+            <p className="text-muted-foreground text-sm">{t.suppliers.subtitle}</p>
           </div>
           <Dialog open={open} onOpenChange={(v) => { if (!v) closeDialog(); else setOpen(true); }}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Add Supplier</Button></DialogTrigger>
+            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{t.suppliers.addSupplier}</Button></DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>{editId ? "Edit" : "Add"} Supplier</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editId ? t.suppliers.editSupplier : t.suppliers.addSupplier}</DialogTitle></DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-                  <div><Label>Company</Label><Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} /></div>
+                  <div><Label>{t.common.name} *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
+                  <div><Label>{t.suppliers.company}</Label><Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-                  <div><Label>Email</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+                  <div><Label>{t.common.phone}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+                  <div><Label>{t.common.email}</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
                 </div>
-                <div><Label>Address</Label><Textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+                <div><Label>{t.common.address}</Label><Textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={closeDialog}>{t.common.cancel}</Button>
                   <Button type="submit" disabled={!form.name || save.isPending}>{save.isPending ? "Saving..." : "Save"}</Button>
@@ -101,15 +101,15 @@ export default function SupplierList() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Truck className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{rows.length}</p><p className="text-sm text-muted-foreground">Total Suppliers</p></div></div></CardContent></Card>
-          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Truck className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">৳{totalDue.toLocaleString()}</p><p className="text-sm text-muted-foreground">Total Due</p></div></div></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Truck className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{rows.length}</p><p className="text-sm text-muted-foreground">{t.suppliers.totalSuppliers}</p></div></div></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Truck className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">৳{totalDue.toLocaleString()}</p><p className="text-sm text-muted-foreground">{t.suppliers.totalDue}</p></div></div></CardContent></Card>
         </div>
 
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search suppliers..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+              <Input placeholder={t.suppliers.searchSuppliers} value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
             </div>
           </CardHeader>
           <CardContent>
@@ -117,17 +117,17 @@ export default function SupplierList() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead className="text-right">Total Due</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t.common.name}</TableHead>
+                    <TableHead>{t.suppliers.company}</TableHead>
+                    <TableHead>{t.common.phone}</TableHead>
+                    <TableHead className="text-right">{t.suppliers.totalDue}</TableHead>
+                    <TableHead>{t.common.status}</TableHead>
                     <TableHead className="text-right">{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No suppliers found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">{t.suppliers.noSuppliersFound}</TableCell></TableRow>
                   ) : filtered.map((r: any) => (
                     <TableRow key={r.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/supplier/${r.id}`)}>
                       <TableCell className="font-medium">{r.name}</TableCell>
