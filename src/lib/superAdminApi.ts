@@ -956,4 +956,17 @@ export const superAdminApi = {
     const params = year ? `?year=${year}` : "";
     return request(`/tenants/${tenantId}/reports/cash-flow${params}`);
   },
+
+  // ── Backup & Recovery ──────────────────────────────
+  getBackupLogs: () => request("/backups/logs"),
+  createFullBackup: () => request("/backups/full", { method: "POST" }),
+  createTenantBackup: (tenantId: string) => request("/backups/tenant", { method: "POST", body: JSON.stringify({ tenant_id: tenantId }) }),
+  restoreFullBackup: (filePath: string) => request("/backups/restore-full", { method: "POST", body: JSON.stringify({ file_path: filePath }) }),
+  restoreTenantBackup: (tenantId: string, filePath: string) => request("/backups/restore-tenant", { method: "POST", body: JSON.stringify({ tenant_id: tenantId, file_path: filePath }) }),
+  verifyBackup: (filePath: string) => request("/backups/verify", { method: "POST", body: JSON.stringify({ file_path: filePath }) }),
+  rollbackBackup: (type: string, tenantId?: string) => request("/backups/rollback", { method: "POST", body: JSON.stringify({ type, tenant_id: tenantId }) }),
+  deleteBackup: (filePath: string) => request("/backups/delete", { method: "POST", body: JSON.stringify({ file_path: filePath }) }),
+  cleanupBackups: (keepDays: number) => request("/backups/cleanup", { method: "POST", body: JSON.stringify({ keep_days: keepDays }) }),
+  getAutoBackupSettings: () => request("/backups/auto-settings"),
+  updateAutoBackupSettings: (data: { enabled: boolean; frequency: string; keep_count: number }) => request("/backups/auto-settings", { method: "PUT", body: JSON.stringify(data) }),
 };
