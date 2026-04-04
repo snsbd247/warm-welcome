@@ -865,7 +865,7 @@ export default function SuperTenantProfile() {
     mutationFn: async (step: string) => {
       setSetupRunning(step);
       if (step === "all") {
-        const result: FullSetupResult = await setupAll(forceReimport);
+        const result: FullSetupResult = await setupAll(forceReimport, id!);
         if (!result.overall) {
         const failures = [
             !result.geo.success && `Geo: ${result.geo.message}`,
@@ -884,7 +884,7 @@ export default function SuperTenantProfile() {
         });
         return result;
       } else {
-        const result: SetupResult = await runSetupStep(step, forceReimport);
+        const result: SetupResult = await runSetupStep(step, forceReimport, id!);
         if (!result.success) throw new Error(result.message);
         await superAdminApi.updateTenant(id!, { [`setup_${step}`]: true });
         return result;

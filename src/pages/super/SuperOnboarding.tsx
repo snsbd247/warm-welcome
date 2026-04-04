@@ -152,7 +152,7 @@ export default function SuperOnboarding() {
   const runSetupItem = useMutation({
     mutationFn: async (itemKey: string) => {
       setRunningItem(itemKey);
-      const result = await runSetupStep(itemKey);
+      const result = await runSetupStep(itemKey, false, createdTenantId || undefined);
       if (!result.success) throw new Error(result.message);
       if (createdTenantId) {
         await superAdminApi.updateTenant(createdTenantId, { [`setup_${itemKey}`]: true });
