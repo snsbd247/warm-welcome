@@ -24,7 +24,7 @@ export default function ProfitLossReport() {
     }, enabled: customerIds.length > 0,
   });
   const { data: expenses = [] } = useQuery({
-    queryKey: ["pl-expenses", tenantId], queryFn: async () => { const { data } = await db.from("expenses").select("amount, date, created_at"); return data || []; },
+    queryKey: ["pl-expenses", tenantId], queryFn: async () => { let q: any = db.from("expenses").select("amount, date, created_at"); if (tenantId) q = q.eq("tenant_id", tenantId); const { data } = await q; return data || []; },
   });
 
   const completed = payments.filter((p: any) => p.status === "completed");

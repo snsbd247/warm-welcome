@@ -135,8 +135,10 @@ export default function Dashboard() {
   const { data: merchantPayments, isLoading: loadingMerchant } = useQuery({
     queryKey: ["merchant-payments-today", todayStr, tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("merchant_payments").select("id, amount, status")
+      let q: any = db.from("merchant_payments").select("id, amount, status")
         .gte("created_at", `${todayStr}T00:00:00`).lte("created_at", `${todayStr}T23:59:59`);
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
