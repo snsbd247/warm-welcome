@@ -45,7 +45,7 @@ export default function SupplierList() {
   const save = useMutation({
     mutationFn: async () => {
       if (editId) await ( db as any).from("suppliers").update(form).eq("id", editId);
-      else await ( db as any).from("suppliers").insert(form);
+      else await ( db as any).from("suppliers").insert({ ...form, ...(tenantId ? { tenant_id: tenantId } : {}) });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["suppliers"] });
