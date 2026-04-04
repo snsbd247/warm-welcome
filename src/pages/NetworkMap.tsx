@@ -175,7 +175,7 @@ export default function NetworkMap() {
   const { data: nodes = [], isLoading: nodesLoading } = useQuery({
     queryKey: ["network-nodes", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("network_nodes").select("*").order("created_at", { ascending: false });
+      const { data, error } = await scopeByTenant(db.from("network_nodes").select("*").order("created_at", { ascending: false }), tenantId);
       if (error) throw error;
       return (data || []) as NetworkNode[];
     },
