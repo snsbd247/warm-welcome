@@ -404,6 +404,10 @@ export async function importLedgerSettings(force = false): Promise<SetupResult> 
     const { data: accounts, error: accountsErr } = await (supabase.from as any)("accounts").select("id, code");
     if (accountsErr) throw new Error(`Accounts lookup failed: ${accountsErr.message}`);
 
+    if (!accounts || accounts.length === 0) {
+      throw new Error("Chart of Accounts not found. Please import Chart of Accounts first before importing Ledger Mapping Settings.");
+    }
+
     const codeToId: Record<string, string> = {};
     (accounts || []).forEach((account: any) => {
       if (account.code) codeToId[account.code] = account.id;
@@ -415,7 +419,7 @@ export async function importLedgerSettings(force = false): Promise<SetupResult> 
       .filter((code) => !codeToId[code]);
 
     if (missingCodes.length > 0) {
-      throw new Error(`Required ledger accounts are missing: ${missingCodes.join(", ")}`);
+      throw new Error(`Required ledger accounts are missing (codes: ${missingCodes.join(", ")}). Please import Chart of Accounts first.`);
     }
 
     const { error: expErr } = await (supabase.from as any)("expense_heads").insert(DEFAULT_EXPENSE_HEADS);

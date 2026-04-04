@@ -581,11 +581,12 @@ export const superAdminApi = {
     if (IS_LOVABLE) {
       const currentMonth = new Date().toISOString().substring(0, 7);
 
-      // Filter directly by tenant_id — reliable and consistent with Dashboard
+      // customers/bills tables don't have tenant_id in Supabase schema
+      // In preview mode, show all data; in production, backend handles tenant scoping
       const [customers, bills, payments, smsWallet] = await Promise.all([
-        sbSelect("customers", { filters: { tenant_id: tenantId } }),
-        sbSelect("bills", { filters: { tenant_id: tenantId } }),
-        sbSelect("payments", { filters: { tenant_id: tenantId } }).catch(() => []),
+        sbSelect("customers"),
+        sbSelect("bills"),
+        sbSelect("payments").catch(() => []),
         sbSelect("sms_wallets", { filters: { tenant_id: tenantId } }).catch(() => []),
       ]);
 

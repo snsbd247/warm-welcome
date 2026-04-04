@@ -81,22 +81,18 @@ export default function Dashboard() {
 
   // ── Core data queries (scoped by tenant_id) ──
   const { data: customers, isLoading: loadingCustomers } = useQuery({
-    queryKey: ["customers-stats", tenantId],
+    queryKey: ["customers-stats"],
     queryFn: async () => {
-      let query = db.from("customers").select("id, status, monthly_bill, connection_status");
-      if (tenantId) query = (query as any).eq("tenant_id", tenantId);
-      const { data, error } = await query;
+      const { data, error } = await db.from("customers").select("id, status, monthly_bill, connection_status");
       if (error) throw error;
       return data;
     },
   });
 
   const { data: bills, isLoading: loadingBills } = useQuery({
-    queryKey: ["bills-stats", tenantId],
+    queryKey: ["bills-stats"],
     queryFn: async () => {
-      let query = db.from("bills").select("id, amount, status, month, created_at").gte("created_at", format(subMonths(new Date(), 5), "yyyy-MM-01"));
-      if (tenantId) query = (query as any).eq("tenant_id", tenantId);
-      const { data, error } = await query;
+      const { data, error } = await db.from("bills").select("id, amount, status, month, created_at").gte("created_at", format(subMonths(new Date(), 5), "yyyy-MM-01"));
       if (error) throw error;
       return data;
     },
