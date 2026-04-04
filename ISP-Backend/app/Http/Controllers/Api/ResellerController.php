@@ -100,10 +100,16 @@ class ResellerController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'area' => 'required|string|max:255',
-            'monthly_bill' => 'required|numeric|min:1', // Reseller cannot create free (0) bills
-            'package_id' => 'nullable|uuid|exists:packages,id',
+            'package_id' => 'required|uuid|exists:packages,id',
             'zone_id' => 'nullable|uuid|exists:reseller_zones,id',
         ]);
+
+        // Force monthly_bill from package price — reseller cannot override
+        $package = \App\Models\Package::findOrFail($request->package_id);
+        $monthlyBill = (float) $package->price;
+        if ($monthlyBill <= 0) {
+            return response()->json(['error' => 'Package price must be greater than 0'], 422);
+        }
 
         // SECURITY: Strip fields reseller cannot control
         $request->request->remove('router_id');
