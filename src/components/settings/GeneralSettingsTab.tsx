@@ -43,10 +43,10 @@ export default function GeneralSettingsTab() {
     queryFn: async () => {
       if (!tenantId) return null;
       const { data } = await db.from("tenants")
-        .select("name, email, phone, logo_url, address")
+        .select("name, email, phone, logo_url")
         .eq("id", tenantId)
         .maybeSingle();
-      return data;
+      return data as any;
     },
     enabled: !!tenantId,
   });
