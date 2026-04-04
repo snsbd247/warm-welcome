@@ -14,7 +14,7 @@ const api = axios.create({
 
 // Attach admin auth token + start timer
 api.interceptors.request.use((config: any) => {
-  const token = localStorage.getItem('admin_token');
+  const token = sessionStore.getItem('admin_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
