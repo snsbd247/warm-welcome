@@ -68,12 +68,14 @@ export default function LedgerSettingsTab() {
     try {
       for (const [key, value] of Object.entries(values)) {
         if (!value) continue;
+        const row: any = { setting_key: key, setting_value: value, updated_at: new Date().toISOString() };
+        if (tenantId) row.tenant_id = tenantId;
         await (db as any).from("system_settings").upsert(
-          { setting_key: key, setting_value: value, updated_at: new Date().toISOString() },
-          { onConflict: "setting_key" }
+          row,
+          { onConflict: "tenant_id,setting_key" }
         );
       }
-      queryClient.invalidateQueries({ queryKey: ["ledger-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["ledger-settings", tenantId] });
       toast.success(t.settings.ledgerSettingsSaved);
     } catch {
       toast.error(t.settings.failedToSave);
