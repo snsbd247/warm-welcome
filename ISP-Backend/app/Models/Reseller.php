@@ -31,6 +31,11 @@ class Reseller extends Model
         return $this->hasMany(Customer::class, 'reseller_id');
     }
 
+    public function assignedPackages()
+    {
+        return $this->hasMany(ResellerPackage::class, 'reseller_id');
+    }
+
     public function sessions()
     {
         return $this->hasMany(ResellerSession::class, 'reseller_id');
