@@ -65,7 +65,7 @@ export default function GeneralSettingsTab() {
       // Pre-populate from tenant profile if no general_settings row exists
       setForm({
         site_name: tenantInfo.name || "",
-        address: "",
+        address: (tenantInfo as any).address || "",
         email: tenantInfo.email || "",
         mobile: tenantInfo.phone || "",
         logo_url: tenantInfo.logo_url || "",
