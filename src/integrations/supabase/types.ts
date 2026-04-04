@@ -993,6 +993,71 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approved_modules: Json | null
+          company_name: string
+          contact_name: string
+          created_at: string
+          email: string
+          expires_at: string | null
+          id: string
+          message: string | null
+          notes: string | null
+          phone: string | null
+          status: string
+          subdomain: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_modules?: Json | null
+          company_name: string
+          contact_name: string
+          created_at?: string
+          email: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          subdomain?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_modules?: Json | null
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          subdomain?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       designations: {
         Row: {
           created_at: string
