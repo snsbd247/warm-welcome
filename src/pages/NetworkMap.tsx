@@ -184,7 +184,7 @@ export default function NetworkMap() {
   const { data: links = [] } = useQuery({
     queryKey: ["network-links", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("network_links").select("*");
+      const { data, error } = await scopeByTenant(db.from("network_links").select("*"), tenantId);
       if (error) throw error;
       return (data || []) as NetworkLink[];
     },
