@@ -167,27 +167,11 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
     if (pkg) update("monthly_bill", pkg.monthly_price.toString());
   };
 
-  const syncPPPoE = async (customerId: string, customerData: any, pkg: any, isUpdate: boolean) => {
-    const profileName = pkg?.mikrotik_profile_name || pkg?.name || "default";
-    const endpoint = isUpdate ? "update-pppoe" : "create-pppoe";
-
+  const syncPPPoE = async (customerId: string) => {
     try {
-      const body: any = {
-        customer_id: customerId,
-        pppoe_username: customerData.pppoe_username,
-        pppoe_password: customerData.pppoe_password,
-        profile_name: profileName,
-        comment: `${customerData.name}`,
-        router_id: customerData.router_id,
-      };
-
-      if (isUpdate && customer?.pppoe_username && customer.pppoe_username !== customerData.pppoe_username) {
-        body.old_pppoe_username = customer.pppoe_username;
-      }
-
-      const { data } = await api.post(`/mikrotik/${endpoint}`, body);
+      const { data } = await api.post(`/mikrotik/sync`, { customer_id: customerId });
       if (data.success) {
-        toast.success(`PPPoE user ${isUpdate ? "updated" : "created"} on MikroTik`);
+        toast.success(`PPPoE synced to MikroTik successfully`);
       } else {
         toast.warning(`Customer saved but MikroTik sync failed: ${data.error || "Unknown error"}. You can retry later.`);
       }
@@ -301,7 +285,7 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
 
         if (needsSync) {
           await db.from("customers").update({ mikrotik_sync_status: "pending" }).eq("id", customer.id);
-          await syncPPPoE(customer.id, payload, pkg, true);
+          await syncPPPoE(customer.id);
         }
 
         if (customer.status !== form.status && form.pppoe_username && form.router_id) {
@@ -508,7 +492,7 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
         }
 
         if (data && form.router_id && form.pppoe_username) {
-          await syncPPPoE(data.id, payload, pkg, false);
+          await syncPPPoE(data.id);
         }
 
         if (data) generateCustomerPDF(data, invoiceFooter);
