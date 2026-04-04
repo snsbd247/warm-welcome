@@ -7,7 +7,7 @@ import {
   Shield, LayoutDashboard, Building2, CreditCard, Globe, LogOut, Loader2,
   Package, MessageSquare, Rocket, BarChart3, Mail, Menu, X, ChevronLeft,
   Receipt, Palette, Sun, Moon, Users, ShieldCheck, Activity, FileText,
-  Languages,
+  Languages, DatabaseBackup,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { type Language } from "@/i18n";

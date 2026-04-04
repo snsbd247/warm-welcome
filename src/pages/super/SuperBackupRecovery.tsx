@@ -519,7 +519,7 @@ export default function SuperBackupRecovery() {
                   {logs.slice(0, 20).map(log => (
                     <div key={log.id} className="flex items-center gap-3 p-3 rounded-lg border text-sm">
                       {log.status === "completed" ? (
-                        <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-primary shrink-0" />
                       ) : (
                         <XCircle className="h-4 w-4 text-destructive shrink-0" />
                       )}
