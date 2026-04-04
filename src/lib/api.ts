@@ -2,6 +2,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '@/lib/apiBaseUrl';
 import { apiHealth, friendlyErrorMessage } from '@/lib/apiHealth';
 import { toast } from 'sonner';
+import { sessionStore } from '@/lib/sessionStore';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
