@@ -7,7 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   LayoutDashboard, Users, Receipt, CreditCard, LogOut, Wifi,
   ChevronLeft, ChevronDown, Ticket, MessageSquare, Settings, Bell, UserCircle,
-  Package, MapPin, Router, Shield, Wallet, BarChart3, FileText, Menu, X, ClipboardList, Wrench, KeyRound,
+  Package, Router, Shield, Wallet, BarChart3, FileText, Menu, X, ClipboardList, Wrench, KeyRound,
   Sun, Moon, Plug, Building2, ShoppingCart, DollarSign, TrendingUp, BoxIcon,
   Briefcase, CalendarDays, CalendarCheck, Banknote, FileSpreadsheet, Truck, Activity,
   UserPlus, UserCheck, UserX, WifiOff, UserMinus, Globe, BookOpen, Scale, Tag, Network, HelpCircle, PieChart,
@@ -278,18 +278,6 @@ export default function AppSidebar() {
         {filterItems(tCustomerNav).length > 0 && <NavGroup label={t.sidebar.customers} icon={Users} items={filterItems(tCustomerNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
         {filterItems(tBillingNav).length > 0 && <NavGroup label={t.sidebar.billingPayments} icon={Receipt} items={filterItems(tBillingNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
         {filterItems(tSupportNav).length > 0 && <NavGroup label={t.sidebar.supportSms} icon={Ticket} items={filterItems(tSupportNav)} collapsed={!isMobile && collapsed} location={location} onNavigate={isMobile ? () => setMobileOpen(false) : undefined} />}
-
-        {/* Network Map - standalone item */}
-        <NavLink to="/network-map" onClick={isMobile ? () => setMobileOpen(false) : undefined}
-          className={cn("flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 relative group",
-            location.pathname === "/network-map"
-              ? "bg-gradient-to-r from-sidebar-primary/20 to-sidebar-primary/10 text-sidebar-primary"
-              : "text-sidebar-foreground/55 hover:text-sidebar-foreground hover:bg-sidebar-accent/70"
-          )}>
-          {location.pathname === "/network-map" && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-sidebar-primary" />}
-          <MapPin className={cn("h-[18px] w-[18px] shrink-0", location.pathname === "/network-map" ? "text-sidebar-primary" : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70")} />
-          {(!collapsed || isMobile) && <span>{t.sidebar.networkMap}</span>}
-        </NavLink>
 
         {/* Fiber Topology - standalone item */}
         <NavLink to="/fiber-topology" onClick={isMobile ? () => setMobileOpen(false) : undefined}

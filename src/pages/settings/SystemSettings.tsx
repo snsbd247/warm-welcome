@@ -1,9 +1,8 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, FileText, MessageSquare, Receipt, Wallet, BookOpen, Globe } from "lucide-react";
+import { Settings, MessageSquare, Receipt, Wallet, BookOpen, Globe } from "lucide-react";
 import GeneralSettingsTab from "@/components/settings/GeneralSettingsTab";
-import FooterSettingsTab from "@/components/settings/FooterSettingsTab";
 import InvoiceSettingsTab from "@/components/settings/InvoiceSettingsTab";
 import SmsTemplatesTab from "@/components/settings/SmsTemplatesTab";
 import PaymentSettingsTab from "@/components/settings/PaymentSettingsTab";
@@ -36,9 +35,6 @@ export default function SystemSettings() {
           <TabsTrigger value="language" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <Globe className="h-4 w-4" /> {t.settings.language}
           </TabsTrigger>
-          <TabsTrigger value="footer" className="flex items-center gap-1.5 text-xs sm:text-sm">
-            <FileText className="h-4 w-4" /> {t.settings.footer}
-          </TabsTrigger>
           <TabsTrigger value="invoice" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <Receipt className="h-4 w-4" /> {t.settings.invoice}
           </TabsTrigger>
@@ -51,7 +47,7 @@ export default function SystemSettings() {
         <TabsContent value="payment"><PaymentSettingsTab /></TabsContent>
         <TabsContent value="ledger"><LedgerSettingsTab /></TabsContent>
         <TabsContent value="language"><LanguageSettingsTab /></TabsContent>
-        <TabsContent value="footer"><FooterSettingsTab /></TabsContent>
+        
         <TabsContent value="invoice"><InvoiceSettingsTab /></TabsContent>
         <TabsContent value="sms-templates"><SmsTemplatesTab /></TabsContent>
       </Tabs>
