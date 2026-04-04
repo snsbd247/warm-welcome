@@ -34,6 +34,7 @@ export default function CustomerProfilePage() {
   const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const tenantId = useTenantId();
   const [generating, setGenerating] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
