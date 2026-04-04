@@ -755,7 +755,7 @@ export const superAdminApi = {
 
   getTenantReportPayments: async (tenantId: string) => {
     if (IS_LOVABLE) {
-      const payments = await sbSelect("payments");
+      const payments = await sbSelectByTenantCustomers("payments", tenantId);
       const recent = payments.sort((a: any, b: any) => (b.paid_at || b.created_at || "").localeCompare(a.paid_at || a.created_at || "")).slice(0, 50);
       return { payments: recent, total: payments.length };
     }
@@ -764,7 +764,7 @@ export const superAdminApi = {
 
   getTenantReportCustomers: async (tenantId: string) => {
     if (IS_LOVABLE) {
-      const customers = await sbSelect("customers");
+      const customers = await sbSelect("customers", { filters: { tenant_id: tenantId } });
       const byArea: Record<string, number> = {};
       const byStatus: Record<string, number> = {};
       customers.forEach((c: any) => {
