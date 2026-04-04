@@ -32,8 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initializeAuth = async () => {
-      const token = localStorage.getItem("admin_token");
-      const savedUser = localStorage.getItem("admin_user");
+      const token = sessionStore.getItem("admin_token");
+      const savedUser = sessionStore.getItem("admin_user");
       if (token && savedUser) {
         try {
           const parsedUser = JSON.parse(savedUser) as AdminUser;
