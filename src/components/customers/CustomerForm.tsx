@@ -872,7 +872,7 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
                   <SelectContent>
                     <SelectItem value="__none__">No Reseller (Direct)</SelectItem>
                     {resellers.map((r: any) => (
-                      <SelectItem key={r.id} value={r.id}>{r.company_name} — {r.contact_person}</SelectItem>
+                      <SelectItem key={r.id} value={r.id}>{r.company_name} — {r.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
