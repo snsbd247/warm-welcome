@@ -524,7 +524,6 @@ export default function ResellerManagement() {
                 <Input type="number" value={form.default_commission} onChange={(e) => setForm({ ...form, default_commission: e.target.value })} placeholder="Fixed amount per customer" />
                 <p className="text-xs text-muted-foreground">Reseller keeps this amount as profit per customer activation</p>
               </div>
-              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Status</Label>
