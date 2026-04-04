@@ -656,7 +656,7 @@ export default function ResellerCustomers() {
                       <Label className="text-xs">Package</Label>
                       <Select value={form.package_id} onValueChange={(v) => {
                         const pkg = packages.find((p: any) => p.id === v);
-                        setForm(prev => ({ ...prev, package_id: v, monthly_bill: pkg?.price?.toString() || prev.monthly_bill }));
+                        setForm(prev => ({ ...prev, package_id: v, monthly_bill: pkg?.price?.toString() || "0" }));
                       }}>
                         <SelectTrigger className="h-9"><SelectValue placeholder="Select package" /></SelectTrigger>
                         <SelectContent>
