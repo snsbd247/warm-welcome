@@ -152,7 +152,7 @@ export default function SuperOnboarding() {
   const runSetupItem = useMutation({
     mutationFn: async (itemKey: string) => {
       setRunningItem(itemKey);
-      const result = await runSetupStep(itemKey);
+      const result = await runSetupStep(itemKey, false, createdTenantId || undefined);
       if (!result.success) throw new Error(result.message);
       if (createdTenantId) {
         await superAdminApi.updateTenant(createdTenantId, { [`setup_${itemKey}`]: true });
@@ -171,7 +171,7 @@ export default function SuperOnboarding() {
   const runFullSetup = useMutation({
     mutationFn: async () => {
       setRunningItem("all");
-      const result = await setupAll();
+      const result = await setupAll(false, createdTenantId || undefined);
       if (createdTenantId) {
         await superAdminApi.updateTenant(createdTenantId, {
           setup_geo: result.geo.success,
