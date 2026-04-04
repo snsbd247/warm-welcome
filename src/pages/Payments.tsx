@@ -32,6 +32,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Payments() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
