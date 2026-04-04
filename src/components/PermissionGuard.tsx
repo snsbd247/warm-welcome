@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Loader2 } from "lucide-react";
+import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 
 interface PermissionGuardProps {
   children: ReactNode;
@@ -26,7 +27,7 @@ export default function PermissionGuard({ children, module, action = "view", fal
   if (!user) return <Navigate to="/admin/login" replace />;
 
   if (isSuperAdmin || hasPermission(module, action)) {
-    return <>{children}</>;
+    return <SubscriptionGuard>{children}</SubscriptionGuard>;
   }
 
   if (fallback) return <>{fallback}</>;
