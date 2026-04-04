@@ -35,6 +35,7 @@ const DEFAULT_SETTINGS: InvoiceSettings = {
 };
 
 export default function InvoiceSettingsTab() {
+  const tenantId = useTenantId();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<InvoiceSettings>(DEFAULT_SETTINGS);
