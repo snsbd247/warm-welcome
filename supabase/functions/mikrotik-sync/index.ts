@@ -739,12 +739,15 @@ Deno.serve(async (req: Request) => {
     if (req.method === "POST" && path === "bulk-sync-packages") {
       const body = await req.json().catch(() => ({}));
       const requestedRouterId = body?.router_id || null;
+      const tenantId = body?.tenant_id || null;
       const providedRouter = getProvidedRouter(body);
       const supabase = getSupabaseAdmin();
-      const { data: packages } = await supabase
+      let pkgQuery = supabase
         .from("packages")
         .select("*")
         .eq("is_active", true);
+      if (tenantId) pkgQuery = pkgQuery.eq("tenant_id", tenantId);
+      const { data: packages } = await pkgQuery;
 
       let routers = providedRouter ? [providedRouter] : null;
       if (!routers) {
