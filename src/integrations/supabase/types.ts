@@ -608,6 +608,84 @@ export type Database = {
           },
         ]
       }
+      customer_bandwidth_usages: {
+        Row: {
+          created_at: string
+          customer_id: string
+          date: string
+          download_mb: number
+          id: string
+          reseller_id: string | null
+          tenant_id: string
+          total_mb: number
+          updated_at: string
+          upload_mb: number
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          date?: string
+          download_mb?: number
+          id?: string
+          reseller_id?: string | null
+          tenant_id: string
+          total_mb?: number
+          updated_at?: string
+          upload_mb?: number
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          date?: string
+          download_mb?: number
+          id?: string
+          reseller_id?: string | null
+          tenant_id?: string
+          total_mb?: number
+          updated_at?: string
+          upload_mb?: number
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_bandwidth_usages_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_bandwidth_usages_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_bandwidth_usages_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_bandwidth_usages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_bandwidth_usages_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_devices: {
         Row: {
           assigned_at: string | null
