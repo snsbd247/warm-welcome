@@ -100,7 +100,7 @@ class ResellerController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'area' => 'required|string|max:255',
-            'monthly_bill' => 'required|numeric|min:0',
+            'monthly_bill' => 'required|numeric|min:1', // Reseller cannot create free (0) bills
             'package_id' => 'nullable|uuid|exists:packages,id',
             'zone_id' => 'nullable|uuid|exists:reseller_zones,id',
         ]);
