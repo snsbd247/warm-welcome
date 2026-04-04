@@ -13,6 +13,8 @@ import { ThemeProvider } from "next-themes";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PermissionGuard from "@/components/PermissionGuard";
 import CustomerProtectedRoute from "@/components/CustomerProtectedRoute";
+import ResellerProtectedRoute from "@/components/ResellerProtectedRoute";
+import { ResellerAuthProvider } from "@/contexts/ResellerAuthContext";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import Login from "@/pages/Login";
