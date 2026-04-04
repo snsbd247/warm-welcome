@@ -35,9 +35,6 @@ export default function SystemSettings() {
           <TabsTrigger value="language" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <Globe className="h-4 w-4" /> {t.settings.language}
           </TabsTrigger>
-          <TabsTrigger value="footer" className="flex items-center gap-1.5 text-xs sm:text-sm">
-            <FileText className="h-4 w-4" /> {t.settings.footer}
-          </TabsTrigger>
           <TabsTrigger value="invoice" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <Receipt className="h-4 w-4" /> {t.settings.invoice}
           </TabsTrigger>
