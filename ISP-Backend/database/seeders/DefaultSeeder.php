@@ -316,7 +316,7 @@ class DefaultSeeder extends Seeder
             'customers', 'billing', 'payments', 'merchant_payments',
             'tickets', 'sms', 'accounting', 'inventory', 'hr',
             'supplier', 'reports', 'settings', 'users', 'roles',
-            'mikrotik', 'packages',
+            'mikrotik', 'packages', 'fiber_network', 'reseller', 'network_map',
         ];
 
         $permissionIds = [];
@@ -379,14 +379,22 @@ class DefaultSeeder extends Seeder
             }
         }
 
-        // Technician → view customers, tickets, mikrotik + create/edit tickets
+        // Technician → network, mikrotik, fiber, customers/tickets view/edit
         if (isset($roles['Technician'])) {
+            $techFullModules = ['mikrotik', 'fiber_network', 'network_map'];
             foreach ($permissionIds as $key => $permId) {
                 [$mod, $act] = explode('.', $key);
-                if (($mod === 'customers' && $act === 'view') ||
-                    ($mod === 'tickets') ||
-                    ($mod === 'mikrotik') ||
-                    ($mod === 'reports' && $act === 'view')) {
+                if (in_array($mod, $techFullModules) && $act !== 'delete') {
+                    \App\Models\RolePermission::create([
+                        'role_id' => $roles['Technician']->id,
+                        'permission_id' => $permId,
+                    ]);
+                } elseif (in_array($mod, ['customers', 'tickets']) && in_array($act, ['view', 'edit'])) {
+                    \App\Models\RolePermission::create([
+                        'role_id' => $roles['Technician']->id,
+                        'permission_id' => $permId,
+                    ]);
+                } elseif ($mod === 'settings' && $act === 'view') {
                     \App\Models\RolePermission::create([
                         'role_id' => $roles['Technician']->id,
                         'permission_id' => $permId,
