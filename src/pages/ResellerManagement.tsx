@@ -87,6 +87,7 @@ export default function ResellerManagement() {
         phone: form.phone,
         email: form.email,
         address: form.address,
+        user_id: form.user_id || null,
         status: form.status,
         commission_rate: parseFloat(form.commission_rate) || 0,
         updated_at: new Date().toISOString(),
