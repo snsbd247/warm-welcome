@@ -6,7 +6,7 @@ import { hashPassword } from "@/lib/passwordHash";
 const BASE = () => `${API_BASE_URL}/super-admin`;
 
 function getToken(): string {
-  return localStorage.getItem("super_admin_token") || "";
+  return sessionStore.getItem("super_admin_token") || "";
 }
 
 function headers(): Record<string, string> {
