@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +12,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LedgerSettingsTab() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
   const [saving, setSaving] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
   const { t } = useLanguage();
