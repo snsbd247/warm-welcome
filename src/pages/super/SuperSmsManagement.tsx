@@ -788,7 +788,7 @@ export default function SuperSmsManagement() {
       <Dialog open={rechargeOpen} onOpenChange={setRechargeOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>>{sa.rechargeSmsBalanceTitle}</DialogTitle>
+            <DialogTitle>{sa.rechargeSmsBalanceTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="p-3 rounded-lg bg-muted">
