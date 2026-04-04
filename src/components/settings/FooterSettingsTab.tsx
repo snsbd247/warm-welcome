@@ -69,9 +69,10 @@ export default function FooterSettingsTab() {
         { setting_key: "auto_update_year", setting_value: form.auto_update_year ? "true" : "false" },
       ];
 
+      const upsertEntries = entries.map((e: any) => ({ ...e, ...(tenantId ? { tenant_id: tenantId } : {}) }));
       const { error } = await (db as any)
         .from("system_settings")
-        .upsert(entries, { onConflict: "setting_key" });
+        .upsert(upsertEntries, { onConflict: "setting_key,tenant_id" });
       if (error) throw error;
       toast.success("Footer settings saved");
       queryClient.invalidateQueries({ queryKey: ["footer-settings"] });
