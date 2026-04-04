@@ -955,6 +955,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "customers_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "customers_router_id_fkey"
             columns: ["router_id"]
             isOneToOne: false
@@ -3676,6 +3683,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reseller_commissions_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reseller_commissions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -3726,6 +3740,13 @@ export type Database = {
             referencedRelation: "resellers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reseller_sessions_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       reseller_wallet_transactions: {
@@ -3768,6 +3789,13 @@ export type Database = {
             columns: ["reseller_id"]
             isOneToOne: false
             referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_wallet_transactions_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers_public"
             referencedColumns: ["id"]
           },
           {
@@ -5058,7 +5086,59 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      resellers_public: {
+        Row: {
+          address: string | null
+          commission_rate: number | null
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          name: string | null
+          phone: string | null
+          status: string | null
+          tenant_id: string | null
+          updated_at: string | null
+          wallet_balance: number | null
+        }
+        Insert: {
+          address?: string | null
+          commission_rate?: number | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+          phone?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          wallet_balance?: number | null
+        }
+        Update: {
+          address?: string | null
+          commission_rate?: number | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+          phone?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          wallet_balance?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resellers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never

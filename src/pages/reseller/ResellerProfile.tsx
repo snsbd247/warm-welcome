@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { db } from "@/integrations/supabase/client";
+import { db, supabase } from "@/integrations/supabase/client";
 import { useResellerAuth } from "@/contexts/ResellerAuthContext";
 import ResellerLayout from "@/components/reseller/ResellerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, User, Lock, Save, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import bcrypt from "bcryptjs";
 
 export default function ResellerProfile() {
   const { reseller, signOut } = useResellerAuth();
@@ -70,23 +69,17 @@ export default function ResellerProfile() {
       if (passwordForm.new_password.length < 6) throw new Error("Password must be at least 6 characters");
       if (passwordForm.new_password !== passwordForm.confirm_password) throw new Error("Passwords do not match");
 
-      const { data: resellerData } = await (db as any)
-        .from("resellers")
-        .select("password_hash")
-        .eq("id", reseller!.id)
-        .single();
+      // Use edge function for secure server-side password change
+      const { data, error } = await supabase.functions.invoke("reseller-change-password", {
+        body: {
+          reseller_id: reseller!.id,
+          old_password: passwordForm.old_password,
+          new_password: passwordForm.new_password,
+        },
+      });
 
-      const valid = resellerData?.password_hash
-        ? await bcrypt.compare(passwordForm.old_password, resellerData.password_hash)
-        : false;
-      if (!valid) throw new Error("Current password is incorrect");
-
-      const newHash = await bcrypt.hash(passwordForm.new_password, 10);
-      const { error } = await (db as any).from("resellers").update({
-        password_hash: newHash,
-        updated_at: new Date().toISOString(),
-      }).eq("id", reseller!.id);
-      if (error) throw error;
+      if (error) throw new Error(error.message || "Password change failed");
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       toast.success("Password changed successfully");
@@ -109,7 +102,6 @@ export default function ResellerProfile() {
           <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         ) : (
           <>
-            {/* Profile Info */}
             <Card>
               <CardHeader><CardTitle className="text-base">Profile Information</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -151,7 +143,6 @@ export default function ResellerProfile() {
               </CardContent>
             </Card>
 
-            {/* Change Password */}
             <Card>
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><Lock className="h-4 w-4" /> Change Password</CardTitle></CardHeader>
               <CardContent className="space-y-4">

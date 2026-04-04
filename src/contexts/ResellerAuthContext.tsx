@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { db } from "@/integrations/supabase/client";
-import bcrypt from "bcryptjs";
+import { db, supabase } from "@/integrations/supabase/client";
 
 interface ResellerUser {
   id: string;
@@ -57,40 +56,17 @@ export function ResellerAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string): Promise<ResellerUser> => {
-    const { data: resellerData, error } = await (db as any)
-      .from("resellers")
-      .select("*")
-      .eq("email", email)
-      .eq("status", "active")
-      .maybeSingle();
-
-    if (error || !resellerData) throw new Error("Invalid credentials or account suspended");
-
-    const valid = resellerData.password_hash
-      ? await bcrypt.compare(password, resellerData.password_hash)
-      : false;
-    if (!valid) throw new Error("Invalid credentials");
-
-    const token = crypto.randomUUID();
-    await (db as any).from("reseller_sessions").insert({
-      reseller_id: resellerData.id,
-      session_token: token,
-      ip_address: "web",
-      browser: navigator.userAgent.slice(0, 100),
-      device_name: "Web Browser",
+    // Use edge function for secure server-side password verification
+    const { data, error } = await supabase.functions.invoke("reseller-login", {
+      body: { email, password },
     });
 
-    const user: ResellerUser = {
-      id: resellerData.id,
-      name: resellerData.name,
-      email: resellerData.email || "",
-      phone: resellerData.phone || "",
-      company_name: resellerData.company_name || "",
-      tenant_id: resellerData.tenant_id,
-      wallet_balance: parseFloat(resellerData.wallet_balance) || 0,
-    };
+    if (error) throw new Error(error.message || "Login failed");
+    if (data?.error) throw new Error(data.error);
+    if (!data?.user || !data?.token) throw new Error("Invalid response from server");
 
-    sessionStorage.setItem("reseller_token", token);
+    const user: ResellerUser = data.user;
+    sessionStorage.setItem("reseller_token", data.token);
     sessionStorage.setItem("reseller_user", JSON.stringify(user));
     setReseller(user);
     return user;
