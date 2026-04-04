@@ -40,7 +40,7 @@ export default function Reports() {
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers", tenantId],
-    queryFn: async () => { const { data } = await ( db as any).from("suppliers").select("*"); return data || []; },
+    queryFn: async () => { const { data } = await scopeByTenant(( db as any).from("suppliers").select("*"), tenantId); return data || []; },
   });
 
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

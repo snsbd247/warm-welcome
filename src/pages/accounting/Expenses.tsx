@@ -37,7 +37,7 @@ export default function Expenses() {
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ["expenses", tenantId],
     queryFn: async () => {
-      const { data } = await ( db as any).from("expenses").select("*").order("date", { ascending: false });
+      const { data } = await scopeByTenant(( db as any).from("expenses").select("*").order("date", { ascending: false }), tenantId);
       return data || [];
     },
   });

@@ -54,7 +54,7 @@ export default function Purchases() {
 
   const { data: products = [] } = useQuery({
     queryKey: ["products", tenantId],
-    queryFn: async () => { const { data } = await (db as any).from("products").select("*"); return data || []; },
+    queryFn: async () => { const { data } = await scopeByTenant((db as any).from("products").select("*"), tenantId); return data || []; },
   });
 
   const create = useMutation({

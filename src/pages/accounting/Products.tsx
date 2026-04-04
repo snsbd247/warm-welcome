@@ -55,7 +55,7 @@ export default function Products() {
   const { data: categories = [] } = useQuery({
     queryKey: ["categories", tenantId],
     queryFn: async () => {
-      const { data } = await (db as any).from("categories").select("*").eq("status", "active").order("name");
+      const { data } = await scopeByTenant((db as any).from("categories").select("*").eq("status", "active").order("name"), tenantId);
       return data || [];
     },
   });
