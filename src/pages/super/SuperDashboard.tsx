@@ -32,7 +32,6 @@ export default function SuperDashboard() {
   const totalRevenue = activeSubs.reduce((s: number, sub: any) => s + Number(sub.amount || 0), 0);
   const totalSmsBalance = wallets.reduce((s: number, w: any) => s + Number(w.balance || 0), 0);
 
-  // Expiring soon (within 30 days)
   const now = new Date();
   const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   const expiringSoon = subs.filter((s: any) => {
@@ -40,28 +39,27 @@ export default function SuperDashboard() {
     return s.status === "active" && end <= in30Days && end >= now;
   });
 
-  // Tenants with incomplete setup
   const incompleteSetup = tenants.filter((t: any) => t.setup_status !== "completed");
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Super Admin Dashboard</h1>
+      <h1 className="text-2xl font-bold text-foreground">{sa.superAdminDashboard}</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/super/tenants")}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Tenants</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{sa.totalTenants}</CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{tenants.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">{activeTenants} active · {suspendedTenants} suspended</p>
+            <p className="text-xs text-muted-foreground mt-1">{activeTenants} {t.common.active.toLowerCase()} · {suspendedTenants} {t.common.suspended.toLowerCase()}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Subscriptions</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{sa.activeSubscriptions}</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -71,7 +69,7 @@ export default function SuperDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{sa.totalRevenue}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -81,7 +79,7 @@ export default function SuperDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">SMS Credits</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{sa.smsCredits}</CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -91,7 +89,7 @@ export default function SuperDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Alerts</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{sa.alerts}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
@@ -101,7 +99,6 @@ export default function SuperDashboard() {
         </Card>
       </div>
 
-      {/* Alerts */}
       {(expiringSoon.length > 0 || incompleteSetup.length > 0) && (
         <Card>
           <CardHeader>
@@ -113,8 +110,8 @@ export default function SuperDashboard() {
             {expiringSoon.map((sub: any) => (
               <div key={sub.id} className="flex items-center justify-between p-3 bg-destructive/5 rounded-lg">
                 <div>
-                  <p className="font-medium text-sm">{sub.tenant?.name || "—"} — Subscription expiring</p>
-                  <p className="text-xs text-muted-foreground">{sub.plan?.name} · Expires {sub.end_date}</p>
+                  <p className="font-medium text-sm">{sub.tenant?.name || "—"} — {sa.subscriptionExpiring}</p>
+                  <p className="text-xs text-muted-foreground">{sub.plan?.name} · {sa.expires} {sub.end_date}</p>
                 </div>
                 <Badge variant="outline" className="text-destructive border-destructive/30">{sa.expiring}</Badge>
               </div>
@@ -122,7 +119,7 @@ export default function SuperDashboard() {
             {incompleteSetup.map((t: any) => (
               <div key={t.id} className="flex items-center justify-between p-3 bg-yellow-500/5 rounded-lg cursor-pointer" onClick={() => navigate(`/super/tenants/${t.id}`)}>
                 <div>
-                  <p className="font-medium text-sm">{t.name} — Setup incomplete</p>
+                  <p className="font-medium text-sm">{t.name} — {sa.setupIncomplete}</p>
                   <p className="text-xs text-muted-foreground">{t.subdomain}.smartispapp.com</p>
                 </div>
                 <Badge variant="outline" className="text-yellow-600 border-yellow-500/30">{sa.setup}</Badge>
@@ -132,7 +129,6 @@ export default function SuperDashboard() {
         </Card>
       )}
 
-      {/* Recent Tenants */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">{sa.recentTenants}</CardTitle>
