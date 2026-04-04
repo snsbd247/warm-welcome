@@ -643,9 +643,11 @@ export default function FiberTopology() {
   };
 
   const { data: customers = [] } = useQuery({
-    queryKey: ["customers-for-onu"],
+    queryKey: ["customers-for-onu", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("customers").select("id, name, customer_id, phone").order("name");
+      let q = db.from("customers").select("id, name, customer_id, phone").order("name");
+      if (tenantId) q = (q as any).eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       return data || [];
     },

@@ -56,9 +56,11 @@ export default function Sales() {
   });
 
   const { data: customers = [] } = useQuery({
-    queryKey: ["customers-list-for-sales"],
+    queryKey: ["customers-list-for-sales", tenantId],
     queryFn: async () => {
-      const { data } = await db.from("customers").select("id, name, phone, customer_id").order("name") as any;
+      let q = db.from("customers").select("id, name, phone, customer_id").order("name");
+      if (tenantId) q = (q as any).eq("tenant_id", tenantId);
+      const { data } = await q as any;
       return data || [];
     },
   });
