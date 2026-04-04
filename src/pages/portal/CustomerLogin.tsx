@@ -76,9 +76,6 @@ export default function CustomerLogin() {
                 {t.portal.signIn}
               </Button>
             </form>
-            <div className="mt-4 text-center">
-              <a href="/admin/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t.portal.adminLogin} →</a>
-            </div>
           </CardContent>
         </Card>
 

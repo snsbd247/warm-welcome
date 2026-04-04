@@ -106,10 +106,7 @@ export default function Login() {
 
             <div className="mt-6 pt-5 border-t border-border space-y-2 text-center">
               <a href="/reseller/login" className="block text-sm text-primary hover:text-primary/80 font-medium transition-colors">
-                Reseller Login →
-              </a>
-              <a href="/login" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
-                ← Customer Portal Login
+                Reseller Portal Login →
               </a>
             </div>
           </CardContent>
