@@ -38,6 +38,46 @@ async function request(path: string, options: RequestInit = {}) {
   return res.json();
 }
 
+async function invokeSuperAdminEdge<T = any>(functionName: string, options: { method?: string; body?: any } = {}): Promise<T> {
+  const token = getToken();
+  if (!token) {
+    sessionStore.removeItem("super_admin_token");
+    sessionStore.removeItem("super_admin_user");
+    window.location.href = "/super/login";
+    throw new Error("Session expired");
+  }
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+    method: options.method || "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: publishableKey,
+      Authorization: `Bearer ${token}`,
+    },
+    body: options.body === undefined || (options.method || "POST") === "GET"
+      ? undefined
+      : JSON.stringify(options.body),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (res.status === 401) {
+    sessionStore.removeItem("super_admin_token");
+    sessionStore.removeItem("super_admin_user");
+    window.location.href = "/super/login";
+    throw new Error(data.error || "Session expired");
+  }
+
+  if (!res.ok) {
+    throw new Error(data.error || data.message || "Request failed");
+  }
+
+  return data as T;
+}
+
 // ─── Supabase Direct Access (for Lovable preview) ─────────────────
 
 async function sbSelect(table: string, options?: { select?: string; filters?: Record<string, any>; order?: string; foreignTable?: string }) {
@@ -535,14 +575,12 @@ export const superAdminApi = {
   // SMTP Settings
   getSmtpSettings: async () => {
     if (IS_LOVABLE) {
-      const data = await sbSelect("smtp_settings");
-      return data[0] || {};
+      return invokeSuperAdminEdge("super-admin-smtp", { method: "GET" });
     }
     return request("/smtp-settings");
   },
   updateSmtpSettings: async (data: any) => {
     if (IS_LOVABLE) {
-      const existing = await sbSelect("smtp_settings");
       const payload = {
         host: data.host || "",
         port: Number(data.port) || 587,
@@ -553,16 +591,13 @@ export const superAdminApi = {
         from_name: data.from_name || "Smart ISP",
         status: data.status || "active",
       };
-      if (existing.length > 0) {
-        return sbUpdate("smtp_settings", existing[0].id, payload);
-      }
-      return sbInsert("smtp_settings", payload);
+      return invokeSuperAdminEdge("super-admin-smtp", { method: "PUT", body: payload });
     }
     return request("/smtp-settings", { method: "PUT", body: JSON.stringify(data) });
   },
   testSmtp: async (to: string) => {
     if (IS_LOVABLE) {
-      return { success: true, message: "Test email simulated (preview mode)" };
+      return invokeSuperAdminEdge("super-admin-smtp", { method: "POST", body: { to } });
     }
     return request("/smtp-test", { method: "POST", body: JSON.stringify({ to }) });
   },
