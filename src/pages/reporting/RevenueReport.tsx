@@ -18,7 +18,7 @@ export default function RevenueReport() {
   const { customerIds, tenantId } = useTenantCustomerIds();
 
   const { data: payments = [] } = useQuery({
-    queryKey: ["revenue-report-payments", dateFrom, dateTo, tenantId],
+    queryKey: ["revenue-report-payments", dateFrom, dateTo, tenantId, customerIds.length],
     queryFn: async () => {
       if (customerIds.length === 0) return [];
       let q: any = db.from("payments").select("*");

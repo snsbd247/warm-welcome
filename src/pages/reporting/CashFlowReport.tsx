@@ -17,7 +17,7 @@ export default function CashFlowReport() {
   const { customerIds, tenantId } = useTenantCustomerIds();
 
   const { data: payments = [] } = useQuery({
-    queryKey: ["cf-payments", tenantId], queryFn: async () => {
+    queryKey: ["cf-payments", tenantId, customerIds.length], queryFn: async () => {
       if (customerIds.length === 0) return [];
       let q: any = db.from("payments").select("amount, status, paid_at, created_at");
       if (customerIds.length > 0) q = q.in("customer_id", customerIds);
