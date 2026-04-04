@@ -167,7 +167,7 @@ export default function SuperTenants() {
                 <TableRow key={t.id}>
                   <TableCell className="font-medium">{t.name}</TableCell>
                   <TableCell className="text-muted-foreground">{t.subdomain}</TableCell>
-                  <TableCell>{t.active_subscription?.plan?.name || t.plan || "—"}</TableCell>
+                  <TableCell>{t.active_subscription?.plan?.name || "—"}</TableCell>
                   <TableCell>{t.customer_count || 0}</TableCell>
                   <TableCell>{t.user_count || 0}</TableCell>
                   <TableCell>

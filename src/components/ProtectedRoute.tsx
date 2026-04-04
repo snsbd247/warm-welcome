@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -27,5 +28,5 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     } catch {}
   }
 
-  return <>{children}</>;
+  return <SubscriptionGuard>{children}</SubscriptionGuard>;
 }

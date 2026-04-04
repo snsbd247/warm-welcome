@@ -101,7 +101,24 @@ export const superAdminApi = {
   // Tenants
   getTenants: async (params?: Record<string, string>) => {
     if (IS_LOVABLE) {
-      let data = await sbSelect("tenants");
+      const [tenants, subscriptions, plans, profiles, customers] = await Promise.all([
+        sbSelect("tenants"),
+        sbSelect("subscriptions"),
+        sbSelect("saas_plans"),
+        sbSelect("profiles", { select: "id,tenant_id" }),
+        sbSelect("customers", { select: "id,tenant_id" }),
+      ]);
+      const now = new Date().toISOString().slice(0, 10);
+      let data = tenants.map((t: any) => {
+        const activeSub = subscriptions.find((s: any) => s.tenant_id === t.id && s.status === "active" && s.end_date >= now);
+        const plan = activeSub ? plans.find((p: any) => p.id === activeSub.plan_id) : null;
+        return {
+          ...t,
+          active_subscription: activeSub ? { ...activeSub, plan } : null,
+          customer_count: customers.filter((c: any) => c.tenant_id === t.id).length,
+          user_count: profiles.filter((p: any) => p.tenant_id === t.id).length,
+        };
+      });
       if (params?.search) {
         const s = params.search.toLowerCase();
         data = data.filter((t: any) =>
