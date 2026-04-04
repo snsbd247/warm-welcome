@@ -25,6 +25,7 @@ interface ResellerForm {
   phone: string;
   email: string;
   address: string;
+  user_id: string;
   password: string;
   status: string;
   commission_rate: string;
@@ -32,7 +33,7 @@ interface ResellerForm {
 
 const emptyForm: ResellerForm = {
   name: "", company_name: "", phone: "", email: "", address: "",
-  password: "", status: "active", commission_rate: "0",
+  user_id: "", password: "", status: "active", commission_rate: "0",
 };
 
 export default function ResellerManagement() {
