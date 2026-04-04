@@ -251,7 +251,7 @@ export default function Packages() {
         const router = routers?.[0];
         if (!router) { toast.error("কোনো রাউটার কনফিগার করা নেই"); setBulkSyncing(false); return; }
         const data = await mikrotikEdge('bulk-sync-packages', {
-          router_id: router.id, ip_address: router.ip_address, username: router.username, password: router.password, api_port: router.api_port,
+          router_id: router.id, ip_address: router.ip_address, username: router.username, password: router.password, api_port: router.api_port, tenant_id: tenantId,
         });
         if (data?.success) {
           const r = data.results || {};
