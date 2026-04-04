@@ -582,6 +582,12 @@ Route::middleware('reseller.auth')->prefix('reseller')->group(function () {
     Route::post('/collect-payment', [\App\Http\Controllers\Api\ResellerController::class, 'collectPayment']);
     Route::get('/wallet-transactions', [\App\Http\Controllers\Api\ResellerController::class, 'walletTransactions']);
     Route::get('/reports', [\App\Http\Controllers\Api\ResellerController::class, 'reports']);
+
+    // Zones CRUD
+    Route::get('/zones', [\App\Http\Controllers\Api\ResellerController::class, 'zones']);
+    Route::post('/zones', [\App\Http\Controllers\Api\ResellerController::class, 'storeZone']);
+    Route::put('/zones/{id}', [\App\Http\Controllers\Api\ResellerController::class, 'updateZone']);
+    Route::delete('/zones/{id}', [\App\Http\Controllers\Api\ResellerController::class, 'deleteZone']);
 });
 
 /*
