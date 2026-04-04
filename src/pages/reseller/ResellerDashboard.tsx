@@ -85,7 +85,7 @@ export default function ResellerDashboard() {
   const cards = [
     { title: "Total Customers", value: stats?.totalCustomers || 0, icon: Users, change: `${stats?.newThisMonth || 0} new this month` },
     { title: "Active Customers", value: stats?.activeCustomers || 0, icon: TrendingUp, change: `${stats?.totalCustomers ? Math.round(((stats?.activeCustomers || 0) / stats.totalCustomers) * 100) : 0}% active rate` },
-    { title: "Monthly Revenue", value: `৳${(stats?.totalRevenue || 0).toLocaleString()}`, icon: Receipt, change: `${stats?.commissionRate || 0}% commission` },
+    { title: "Total Profit", value: `৳${(stats?.totalProfit || 0).toLocaleString()}`, icon: Receipt, change: `Commission: ৳${stats?.defaultCommission || 0}/customer` },
     { title: "Wallet Balance", value: `৳${(stats?.walletBalance || 0).toLocaleString()}`, icon: Wallet, change: stats?.walletBalance && stats.walletBalance < 500 ? "Low balance!" : "Available" },
   ];
 
