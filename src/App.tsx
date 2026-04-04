@@ -350,6 +350,7 @@ function App() {
                 <Route path="/reseller/login" element={<ResellerLogin />} />
                 <Route path="/reseller/dashboard" element={<ResellerProtectedRoute><ResellerDashboard /></ResellerProtectedRoute>} />
                 <Route path="/reseller/customers" element={<ResellerProtectedRoute><ResellerCustomers /></ResellerProtectedRoute>} />
+                <Route path="/reseller/zones" element={<ResellerProtectedRoute><ResellerZones /></ResellerProtectedRoute>} />
                 <Route path="/reseller/billing" element={<ResellerProtectedRoute><ResellerBilling /></ResellerProtectedRoute>} />
                 <Route path="/reseller/wallet" element={<ResellerProtectedRoute><ResellerWallet /></ResellerProtectedRoute>} />
                 <Route path="/reseller/reports" element={<ResellerProtectedRoute><ResellerReports /></ResellerProtectedRoute>} />
