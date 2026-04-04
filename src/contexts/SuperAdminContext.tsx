@@ -28,8 +28,8 @@ export function SuperAdminProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("super_admin_token");
-    const savedUser = localStorage.getItem("super_admin_user");
+    const savedToken = sessionStore.getItem("super_admin_token");
+    const savedUser = sessionStore.getItem("super_admin_user");
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
