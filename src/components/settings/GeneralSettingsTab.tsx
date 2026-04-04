@@ -23,31 +23,32 @@ export default function GeneralSettingsTab() {
     logo_url: "",
   });
 
+  const tenantId = user?.tenant_id;
+
+  // Fetch tenant-scoped general_settings
   const { data: settings, isLoading } = useQuery({
-    queryKey: ["general-settings"],
+    queryKey: ["general-settings", tenantId],
     queryFn: async () => {
-      const { data, error } = await db
-        .from("general_settings")
-        .select("*")
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
+      let query = db.from("general_settings").select("*");
+      if (tenantId) query = (query as any).eq("tenant_id", tenantId);
+      const { data, error } = await query.limit(1).maybeSingle();
+      if (error && error.code !== "PGRST116") throw error;
       return data;
     },
   });
 
   // Fetch tenant info to pre-populate if general_settings is empty
   const { data: tenantInfo } = useQuery({
-    queryKey: ["tenant-info-for-settings", user?.tenant_id],
+    queryKey: ["tenant-info-for-settings", tenantId],
     queryFn: async () => {
-      if (!user?.tenant_id) return null;
-      const { data } = await (db.from as any)("tenants")
-        .select("name, email, phone, logo_url")
-        .eq("id", user.tenant_id)
+      if (!tenantId) return null;
+      const { data } = await db.from("tenants")
+        .select("name, email, phone, logo_url, address")
+        .eq("id", tenantId)
         .maybeSingle();
       return data;
     },
-    enabled: !!user?.tenant_id,
+    enabled: !!tenantId,
   });
 
   useEffect(() => {
