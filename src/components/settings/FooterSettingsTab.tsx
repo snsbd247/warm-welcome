@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { renderFooterText, type FooterSettings } from "@/hooks/useFooterSettings";
 
 export default function FooterSettingsTab() {
+  const tenantId = useTenantId();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
