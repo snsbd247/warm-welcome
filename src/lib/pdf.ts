@@ -8,11 +8,11 @@ import { db } from "@/integrations/supabase/client";
 import { formatAddress, formatPermanentAddress } from "./bangladeshGeo";
 
 // ─── Payment Receipt ───
-export async function generatePaymentReceiptPDF(payment: any, customer: any, invoiceFooter?: string) {
-  const [settings, invoiceSettings] = await Promise.all([getCompanySettings(), getInvoiceSettings()]);
-  const companyName = settings?.site_name || "Smart ISP";
+export async function generatePaymentReceiptPDF(payment: any, customer: any, invoiceFooter?: string, tenantId?: string | null) {
+  const [settings, invoiceSettings] = await Promise.all([getTenantCompanySettings(tenantId), getInvoiceSettings()]);
+  const companyName = settings?.company_name || settings?.site_name || "Smart ISP";
   const companyAddress = settings?.address || "";
-  const companyPhone = settings?.mobile || settings?.support_phone || "";
+  const companyPhone = settings?.phone || settings?.mobile || settings?.support_phone || "";
   const companyEmail = settings?.email || settings?.support_email || "";
   const techSupport = invoiceSettings.invoice_tech_support || settings?.support_phone || companyPhone || "";
 

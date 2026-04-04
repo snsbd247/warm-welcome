@@ -22,11 +22,11 @@ async function getPreviousBalance(customerId: string, billMonth: string): Promis
   } catch { return 0; }
 }
 
-export async function generateBillInvoicePDF(bill: any, customer: any) {
-  const [settings, invoiceSettings] = await Promise.all([getCompanySettings(), getInvoiceSettings()]);
-  const companyName = settings?.site_name || "Smart ISP";
+export async function generateBillInvoicePDF(bill: any, customer: any, tenantId?: string | null) {
+  const [settings, invoiceSettings] = await Promise.all([getTenantCompanySettings(tenantId), getInvoiceSettings()]);
+  const companyName = settings?.company_name || settings?.site_name || "Smart ISP";
   const companyAddress = settings?.address || "";
-  const companyPhone = settings?.mobile || settings?.support_phone || "";
+  const companyPhone = settings?.phone || settings?.mobile || settings?.support_phone || "";
   const companyEmail = settings?.email || settings?.support_email || "";
   const previousBalance = await getPreviousBalance(customer?.id || bill.customer_id, bill.month);
 
