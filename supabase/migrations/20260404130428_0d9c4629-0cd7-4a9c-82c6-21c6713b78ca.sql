@@ -1,0 +1,1 @@
+UPDATE smtp_settings SET host = 'smtp.gmail.com', port = 465, username = 'ismailsagor162@gmail.com', password = 'fiuy dxqt afso knrj', encryption = 'ssl', from_email = 'ismailsagor162@gmail.com', from_name = 'Smart ISP App', updated_at = now() WHERE id = 'aefc258b-2a25-470d-92f4-edcb301ba922';
