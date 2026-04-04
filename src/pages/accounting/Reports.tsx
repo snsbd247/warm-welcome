@@ -25,7 +25,7 @@ export default function Reports() {
 
   const { data: sales = [] } = useQuery({
     queryKey: ["sales", tenantId],
-    queryFn: async () => { const { data } = await ( db as any).from("sales").select("*"); return data || []; },
+    queryFn: async () => { const { data } = await scopeByTenant(( db as any).from("sales").select("*"), tenantId); return data || []; },
   });
 
   const { data: purchases = [] } = useQuery({
