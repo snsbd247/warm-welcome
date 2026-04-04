@@ -65,7 +65,7 @@ export default function ResellerManagement() {
   const { data: resellers = [], isLoading } = useQuery({
     queryKey: ["resellers", tenantId],
     queryFn: async () => {
-      let q = (db as any).from("resellers").select("id, tenant_id, user_id, name, company_name, phone, email, address, commission_rate, wallet_balance, status, allow_all_packages, created_at, updated_at").order("name");
+      let q = (db as any).from("resellers").select("id, tenant_id, user_id, name, company_name, phone, email, address, commission_rate, default_commission, wallet_balance, status, allow_all_packages, created_at, updated_at").order("name");
       if (tenantId) q = q.eq("tenant_id", tenantId);
       const { data, error } = await q;
       if (error) throw error;
