@@ -177,6 +177,11 @@ export default function AppSidebar() {
     { to: "/reminders", icon: Bell, label: t.sidebar.reminders, module: "sms" },
   ];
 
+  const tResellerNav: NavItem[] = [
+    { to: "/resellers", icon: Users, label: "Resellers", module: "reseller" },
+    { to: "/reseller-profit-report", icon: TrendingUp, label: "Reseller Profit", module: "reseller" },
+  ];
+
   const tReportingNav: NavItem[] = [
     { to: "/analytics", icon: PieChart, label: t.sidebar.advancedAnalytics, module: "reports" },
     { to: "/reporting/revenue", icon: TrendingUp, label: t.sidebar.revenueReport, module: "reports" },
