@@ -106,9 +106,10 @@ export default function EmailTemplatesTab() {
         updated_at: now,
       }));
 
+      const upsertEntries = entries.map((e: any) => ({ ...e, ...(tenantId ? { tenant_id: tenantId } : {}) }));
       const { error } = await (db as any)
         .from("system_settings")
-        .upsert(entries, { onConflict: "setting_key" });
+        .upsert(upsertEntries, { onConflict: "setting_key,tenant_id" });
 
       if (error) throw error;
       toast.success("Email templates saved");
