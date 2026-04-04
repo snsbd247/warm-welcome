@@ -155,7 +155,7 @@ export default function ChartOfAccounts() {
   const { data: flatAccounts = [], isLoading } = useQuery({
     queryKey: ["accounts-flat", tenantId],
     queryFn: async () => {
-      const res = await ( db as any).from("accounts").select("*").order("code", { ascending: true }).order("name", { ascending: true });
+      const res = await scopeByTenant(( db as any).from("accounts").select("*").order("code", { ascending: true }).order("name", { ascending: true }), tenantId);
       return res.data || [];
     },
   });
