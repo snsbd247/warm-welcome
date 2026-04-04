@@ -272,9 +272,25 @@ export default function ResellerManagement() {
 
   const openAdd = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
 
+  const handleImpersonate = async (r: any) => {
+    setImpersonating(true);
+    try {
+      const adminToken = sessionStorage.getItem("admin_token");
+      if (!adminToken) { toast.error("Admin session not found"); return; }
+      await signInAsImpersonation(r.id, adminToken);
+      toast.success(`Logged in as reseller: ${r.name}`);
+      navigate("/reseller/dashboard");
+    } catch (err: any) {
+      toast.error(err.message || "Impersonation failed");
+    } finally {
+      setImpersonating(false);
+    }
+  };
+
   const filtered = resellers.filter((r: any) =>
     r.name?.toLowerCase().includes(search.toLowerCase()) ||
     r.email?.toLowerCase().includes(search.toLowerCase()) ||
+    r.user_id?.toLowerCase().includes(search.toLowerCase()) ||
     r.phone?.includes(search)
   );
 
