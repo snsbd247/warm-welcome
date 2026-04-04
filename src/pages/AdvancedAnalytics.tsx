@@ -8,40 +8,52 @@ import { Users, TrendingUp, DollarSign, UserMinus, Target } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import { useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTenantCustomerIds } from "@/hooks/useTenantCustomerIds";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "#f59e0b", "#10b981", "#6366f1", "#ec4899"];
 
 export default function AdvancedAnalytics() {
   const { t } = useLanguage();
   const a = t.analytics;
+  const { customerIds, tenantId } = useTenantCustomerIds();
 
   const { data: customers = [] } = useQuery({
-    queryKey: ["analytics-customers"],
+    queryKey: ["analytics-customers", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("customers").select("id, status, monthly_bill, created_at");
+      let q: any = db.from("customers").select("id, status, monthly_bill, created_at");
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
   });
 
   const { data: payments = [] } = useQuery({
-    queryKey: ["analytics-payments"],
+    queryKey: ["analytics-payments", tenantId],
     queryFn: async () => {
+      if (customerIds.length === 0) return [];
       const sixMonthsAgo = format(subMonths(new Date(), 6), "yyyy-MM-dd");
-      const { data, error } = await db.from("payments").select("amount, paid_at, status").gte("paid_at", sixMonthsAgo);
+      let q: any = db.from("payments").select("amount, paid_at, status").gte("paid_at", sixMonthsAgo);
+      if (customerIds.length > 0) q = q.in("customer_id", customerIds);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
+    enabled: customerIds.length > 0,
   });
 
   const { data: bills = [] } = useQuery({
-    queryKey: ["analytics-bills"],
+    queryKey: ["analytics-bills", tenantId],
     queryFn: async () => {
+      if (customerIds.length === 0) return [];
       const sixMonthsAgo = format(subMonths(new Date(), 6), "yyyy-MM-01");
-      const { data, error } = await db.from("bills").select("amount, status, month, created_at").gte("month", sixMonthsAgo);
+      let q: any = db.from("bills").select("amount, status, month, created_at").gte("month", sixMonthsAgo);
+      if (customerIds.length > 0) q = q.in("customer_id", customerIds);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
+    enabled: customerIds.length > 0,
   });
 
   const customerGrowth = useMemo(() => {
