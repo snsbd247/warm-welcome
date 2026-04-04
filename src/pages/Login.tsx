@@ -26,7 +26,7 @@ export default function Login() {
     setLoading(true);
     try {
       await signIn(username, password);
-      navigate("/");
+      navigate("/dashboard");
       toast.success("Welcome back!");
     } catch (error: any) {
       toast.error(error.message || "Login failed");
