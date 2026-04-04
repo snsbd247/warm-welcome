@@ -37,8 +37,15 @@ export default function SalarySheet() {
   });
 
   const { data: settings } = useQuery({
-    queryKey: ["general-settings"],
-    queryFn: async () => { const { data } = await ( db as any).from("general_settings").select("*").limit(1).single(); return data; },
+    queryKey: ["tenant-company-info", tenantId],
+    queryFn: async () => { 
+      if (tenantId) {
+        const { data } = await (db as any).from("tenant_company_info").select("*").eq("tenant_id", tenantId).maybeSingle();
+        if (data) return data;
+      }
+      const { data } = await (db as any).from("general_settings").select("*").limit(1).maybeSingle();
+      return data;
+    },
   });
 
   const getStructure = (empId: string) => salaryStructures.find((s: any) => s.employee_id === empId);
