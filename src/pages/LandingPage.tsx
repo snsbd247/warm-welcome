@@ -468,11 +468,8 @@ function LandingFooter({ sections, branding }: { sections: any[]; branding: any 
               {branding.logo_url ? (
                 <img src={branding.logo_url} alt={companyName} className="h-8 w-auto" />
               ) : (
-                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                  <Zap className="h-4 w-4 text-primary-foreground" />
-                </div>
+                <span className="font-bold text-white text-lg">{companyName}</span>
               )}
-              <span className="font-bold text-white">{companyName}</span>
             </div>
             {about?.description && <p className="text-sm text-white/60 leading-relaxed">{about.description}</p>}
           </div>
