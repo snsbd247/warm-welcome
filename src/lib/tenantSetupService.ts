@@ -2,6 +2,9 @@
  * TenantSetupService — Production-grade tenant data seeding
  * Handles: Geo Data, Chart of Accounts, SMS/Email Templates, Ledger Mappings
  * Supports force re-import to handle "already exists" scenarios
+ * 
+ * IMPORTANT: All tenant-scoped tables require tenantId parameter.
+ * Geo tables (geo_divisions, geo_districts, geo_upazilas) and sms_templates are global.
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -38,29 +41,32 @@ async function withErrorHandling(
   }
 }
 
-// ─── Helper: safe count ─────────────────────────────────────────
-async function tableCount(table: string): Promise<number> {
-  const { count, error } = await (supabase.from as any)(table)
-    .select("id", { count: "exact", head: true });
+// ─── Helper: safe count (with optional tenant scoping) ──────────
+async function tableCount(table: string, tenantId?: string): Promise<number> {
+  let query = (supabase.from as any)(table).select("id", { count: "exact", head: true });
+  if (tenantId) query = query.eq("tenant_id", tenantId);
+  const { count, error } = await query;
   if (error) return 0;
   return count || 0;
 }
 
-async function countSystemSettings(keys: string[]): Promise<number> {
-  const { count, error } = await (supabase.from as any)("system_settings")
+async function countSystemSettings(keys: string[], tenantId?: string): Promise<number> {
+  let query = (supabase.from as any)("system_settings")
     .select("id", { count: "exact", head: true })
     .in("setting_key", keys);
+  if (tenantId) query = query.eq("tenant_id", tenantId);
+  const { count, error } = await query;
   if (error) return 0;
   return count || 0;
 }
 
-async function saveSystemSetting(settingKey: string, settingValue: string): Promise<void> {
-  const existing = unwrapApiResult(
-    await (supabase.from as any)("system_settings")
-      .select("id")
-      .eq("setting_key", settingKey)
-      .maybeSingle()
-  ) as { id?: string } | null;
+async function saveSystemSetting(settingKey: string, settingValue: string, tenantId?: string): Promise<void> {
+  let query = (supabase.from as any)("system_settings")
+    .select("id")
+    .eq("setting_key", settingKey);
+  if (tenantId) query = query.eq("tenant_id", tenantId);
+  
+  const existing = unwrapApiResult(await query.maybeSingle()) as { id?: string } | null;
 
   if (existing?.id) {
     unwrapApiResult(
@@ -71,15 +77,15 @@ async function saveSystemSetting(settingKey: string, settingValue: string): Prom
     return;
   }
 
+  const insertData: any = { setting_key: settingKey, setting_value: settingValue };
+  if (tenantId) insertData.tenant_id = tenantId;
+
   unwrapApiResult(
-    await (supabase.from as any)("system_settings").insert({
-      setting_key: settingKey,
-      setting_value: settingValue,
-    })
+    await (supabase.from as any)("system_settings").insert(insertData)
   );
 }
 
-// ─── 1. Geo Data Seeder ─────────────────────────────────────────
+// ─── 1. Geo Data Seeder (GLOBAL — no tenant_id) ────────────────
 export async function importGeoData(force = false): Promise<SetupResult> {
   return withErrorHandling("Geo Data Import", async () => {
     const existingCount = await tableCount("geo_divisions");
@@ -87,7 +93,6 @@ export async function importGeoData(force = false): Promise<SetupResult> {
       return { success: true, message: `Geo data already exists (${existingCount} divisions)`, count: existingCount, skipped: true };
     }
 
-    // If force re-import, clear existing data first
     if (force && existingCount > 0) {
       await (supabase.from as any)("geo_upazilas").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       await (supabase.from as any)("geo_districts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
@@ -96,7 +101,6 @@ export async function importGeoData(force = false): Promise<SetupResult> {
 
     let totalInserted = 0;
 
-    // Insert divisions
     const divisionRows = DIVISIONS.map((name) => ({ name, status: "active" }));
     const { data: insertedDivisions, error: divErr } = await (supabase.from as any)("geo_divisions")
       .insert(divisionRows)
@@ -104,11 +108,9 @@ export async function importGeoData(force = false): Promise<SetupResult> {
     if (divErr) throw new Error(`Divisions: ${divErr.message}`);
     totalInserted += insertedDivisions.length;
 
-    // Build division name→id map
     const divMap: Record<string, string> = {};
     for (const d of insertedDivisions) divMap[d.name] = d.id;
 
-    // Insert districts
     const districtRows: { name: string; division_id: string; status: string }[] = [];
     for (const [divName, dists] of Object.entries(DISTRICTS)) {
       const divId = divMap[divName];
@@ -127,11 +129,9 @@ export async function importGeoData(force = false): Promise<SetupResult> {
     }
     totalInserted += insertedDistricts.length;
 
-    // Build district name→id map
     const distMap: Record<string, string> = {};
     for (const d of insertedDistricts) distMap[d.name] = d.id;
 
-    // Insert upazilas
     const upazilaRows: { name: string; district_id: string; status: string }[] = [];
     for (const [distName, upas] of Object.entries(UPAZILAS)) {
       const distId = distMap[distName];
@@ -148,7 +148,6 @@ export async function importGeoData(force = false): Promise<SetupResult> {
     }
     totalInserted += upazilaRows.length;
 
-    // ── Verify data was actually inserted ──
     const verifyCount = await tableCount("geo_divisions");
     if (verifyCount === 0) {
       return { success: false, message: "Geo data insertion failed — 0 records found after import", error_code: "VERIFY_FAILED" };
@@ -162,7 +161,7 @@ export async function importGeoData(force = false): Promise<SetupResult> {
   });
 }
 
-// ─── 2. Chart of Accounts Seeder ────────────────────────────────
+// ─── 2. Chart of Accounts Seeder (TENANT-SCOPED) ───────────────
 const DEFAULT_ACCOUNTS = [
   { name: "Assets", code: "1000", type: "asset", level: 0, is_system: true, parent_code: null },
   { name: "Cash in Hand", code: "1001", type: "asset", level: 1, is_system: false, parent_code: "1000" },
@@ -218,22 +217,24 @@ const DEFAULT_ACCOUNTS = [
   { name: "Miscellaneous Expense", code: "5099", type: "expense", level: 1, is_system: false, parent_code: "5000" },
 ];
 
-export async function importChartOfAccounts(force = false): Promise<SetupResult> {
+export async function importChartOfAccounts(force = false, tenantId?: string): Promise<SetupResult> {
   return withErrorHandling("Chart of Accounts Import", async () => {
-    const existingCount = await tableCount("accounts");
+    if (!tenantId) throw new Error("tenant_id is required for Chart of Accounts import");
+
+    const existingCount = await tableCount("accounts", tenantId);
     if (existingCount > 0 && !force) {
       return { success: true, message: `Chart of Accounts already exists (${existingCount} accounts)`, count: existingCount, skipped: true };
     }
 
-    // Force: clear existing accounts
     if (force && existingCount > 0) {
-      await (supabase.from as any)("accounts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await (supabase.from as any)("accounts").delete().eq("tenant_id", tenantId);
     }
 
     // First pass: insert root accounts (no parent)
     const roots = DEFAULT_ACCOUNTS.filter((a) => !a.parent_code);
     const rootInserts = roots.map(({ parent_code, ...rest }) => ({
       ...rest,
+      tenant_id: tenantId,
       balance: 0,
       is_active: true,
       status: "active",
@@ -250,6 +251,7 @@ export async function importChartOfAccounts(force = false): Promise<SetupResult>
     const level1 = DEFAULT_ACCOUNTS.filter((a) => a.level === 1 && a.parent_code);
     const level1Inserts = level1.map(({ parent_code, ...rest }) => ({
       ...rest,
+      tenant_id: tenantId,
       parent_id: codeMap[parent_code!] || null,
       balance: 0,
       is_active: true,
@@ -268,6 +270,7 @@ export async function importChartOfAccounts(force = false): Promise<SetupResult>
     if (level2.length > 0) {
       const level2Inserts = level2.map(({ parent_code, ...rest }) => ({
         ...rest,
+        tenant_id: tenantId,
         parent_id: codeMap[parent_code!] || null,
         balance: 0,
         is_active: true,
@@ -277,8 +280,7 @@ export async function importChartOfAccounts(force = false): Promise<SetupResult>
       if (error) throw new Error(`Level 2 accounts: ${error.message}`);
     }
 
-    // Verify
-    const verifyCount = await tableCount("accounts");
+    const verifyCount = await tableCount("accounts", tenantId);
     if (verifyCount === 0) {
       return { success: false, message: "Account import verification failed", error_code: "VERIFY_FAILED" };
     }
@@ -291,7 +293,7 @@ export async function importChartOfAccounts(force = false): Promise<SetupResult>
   });
 }
 
-// ─── 3. SMS/Email Templates Seeder ──────────────────────────────
+// ─── 3. SMS/Email Templates Seeder (GLOBAL — no tenant_id) ─────
 const DEFAULT_TEMPLATES = [
   { name: "bill_generate", message: "Dear {customer_name}, your bill of ৳{amount} for {month} has been generated. Please pay before {due_date}. — {company_name}" },
   { name: "payment_confirm", message: "Dear {customer_name}, we received ৳{amount} payment for {month}. Transaction: {trx_id}. Thank you! — {company_name}" },
@@ -335,7 +337,7 @@ export async function importTemplates(force = false): Promise<SetupResult> {
   });
 }
 
-// ─── 4. Ledger Mapping Seeder ───────────────────────────────────
+// ─── 4. Ledger Mapping Seeder (TENANT-SCOPED) ──────────────────
 const DEFAULT_EXPENSE_HEADS = [
   { name: "Salary & Wages", description: "Monthly employee salaries", status: "active" },
   { name: "Office Rent", description: "Monthly office rent payment", status: "active" },
@@ -376,12 +378,14 @@ const DEFAULT_LEDGER_SETTINGS = [
   { key: "monthly_bill_account_id", target_code: "4001" },
 ];
 
-export async function importLedgerSettings(force = false): Promise<SetupResult> {
+export async function importLedgerSettings(force = false, tenantId?: string): Promise<SetupResult> {
   return withErrorHandling("Ledger Settings Import", async () => {
-    const expCount = await tableCount("expense_heads");
-    const incCount = await tableCount("income_heads");
+    if (!tenantId) throw new Error("tenant_id is required for Ledger Settings import");
+
+    const expCount = await tableCount("expense_heads", tenantId);
+    const incCount = await tableCount("income_heads", tenantId);
     const settingKeys = DEFAULT_LEDGER_SETTINGS.map((setting) => setting.key);
-    const existingSettingsCount = await countSystemSettings(settingKeys);
+    const existingSettingsCount = await countSystemSettings(settingKeys, tenantId);
 
     if ((expCount > 0 || incCount > 0 || existingSettingsCount > 0) && !force) {
       return {
@@ -394,14 +398,17 @@ export async function importLedgerSettings(force = false): Promise<SetupResult> 
 
     if (force) {
       if (expCount > 0) {
-        unwrapApiResult(await (supabase.from as any)("expense_heads").delete().neq("id", "00000000-0000-0000-0000-000000000000"));
+        unwrapApiResult(await (supabase.from as any)("expense_heads").delete().eq("tenant_id", tenantId));
       }
       if (incCount > 0) {
-        unwrapApiResult(await (supabase.from as any)("income_heads").delete().neq("id", "00000000-0000-0000-0000-000000000000"));
+        unwrapApiResult(await (supabase.from as any)("income_heads").delete().eq("tenant_id", tenantId));
       }
     }
 
-    const { data: accounts, error: accountsErr } = await (supabase.from as any)("accounts").select("id, code");
+    // Lookup accounts for this tenant
+    const { data: accounts, error: accountsErr } = await (supabase.from as any)("accounts")
+      .select("id, code")
+      .eq("tenant_id", tenantId);
     if (accountsErr) throw new Error(`Accounts lookup failed: ${accountsErr.message}`);
 
     if (!accounts || accounts.length === 0) {
@@ -422,20 +429,25 @@ export async function importLedgerSettings(force = false): Promise<SetupResult> 
       throw new Error(`Required ledger accounts are missing (codes: ${missingCodes.join(", ")}). Please import Chart of Accounts first.`);
     }
 
-    const { error: expErr } = await (supabase.from as any)("expense_heads").insert(DEFAULT_EXPENSE_HEADS);
+    // Insert expense heads with tenant_id
+    const expenseHeadsWithTenant = DEFAULT_EXPENSE_HEADS.map((h) => ({ ...h, tenant_id: tenantId }));
+    const { error: expErr } = await (supabase.from as any)("expense_heads").insert(expenseHeadsWithTenant);
     if (expErr) throw new Error(`Expense heads: ${expErr.message}`);
 
-    const { error: incErr } = await (supabase.from as any)("income_heads").insert(DEFAULT_INCOME_HEADS);
+    // Insert income heads with tenant_id
+    const incomeHeadsWithTenant = DEFAULT_INCOME_HEADS.map((h) => ({ ...h, tenant_id: tenantId }));
+    const { error: incErr } = await (supabase.from as any)("income_heads").insert(incomeHeadsWithTenant);
     if (incErr) throw new Error(`Income heads: ${incErr.message}`);
 
+    // Save ledger mapping settings with tenant_id
     await Promise.all(
-      DEFAULT_LEDGER_SETTINGS.map((setting) => saveSystemSetting(setting.key, codeToId[setting.target_code]))
+      DEFAULT_LEDGER_SETTINGS.map((setting) => saveSystemSetting(setting.key, codeToId[setting.target_code], tenantId))
     );
 
     // Verify
-    const verifyExp = await tableCount("expense_heads");
-    const verifyInc = await tableCount("income_heads");
-    const verifySettings = await countSystemSettings(settingKeys);
+    const verifyExp = await tableCount("expense_heads", tenantId);
+    const verifyInc = await tableCount("income_heads", tenantId);
+    const verifySettings = await countSystemSettings(settingKeys, tenantId);
     if (verifyExp === 0 && verifyInc === 0) {
       return { success: false, message: "Ledger heads import verification failed", error_code: "VERIFY_FAILED" };
     }
@@ -455,16 +467,18 @@ export async function importLedgerSettings(force = false): Promise<SetupResult> 
   });
 }
 
-// ─── 5. Payment Gateways Sandbox Seeder ────────────────────────
-export async function importPaymentGateways(force = false): Promise<SetupResult> {
+// ─── 5. Payment Gateways Sandbox Seeder (TENANT-SCOPED) ────────
+export async function importPaymentGateways(force = false, tenantId?: string): Promise<SetupResult> {
   return withErrorHandling("Payment Gateways Import", async () => {
-    const existingCount = await tableCount("payment_gateways");
+    if (!tenantId) throw new Error("tenant_id is required for Payment Gateways import");
+
+    const existingCount = await tableCount("payment_gateways", tenantId);
     if (existingCount > 0 && !force) {
       return { success: true, message: `Payment gateways already configured (${existingCount})`, count: existingCount, skipped: true };
     }
 
     if (force && existingCount > 0) {
-      await (supabase.from as any)("payment_gateways").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await (supabase.from as any)("payment_gateways").delete().eq("tenant_id", tenantId);
     }
 
     const gateways = [
@@ -472,6 +486,7 @@ export async function importPaymentGateways(force = false): Promise<SetupResult>
         gateway_name: "bkash",
         environment: "sandbox",
         status: "active",
+        tenant_id: tenantId,
         app_key: "4f6o0cjiki2rfm34kfdadl1eqq",
         app_secret: "2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3fhc4b",
         username: "sandboxTokenizedUser02",
@@ -483,6 +498,7 @@ export async function importPaymentGateways(force = false): Promise<SetupResult>
         gateway_name: "nagad",
         environment: "sandbox",
         status: "active",
+        tenant_id: tenantId,
         app_key: "683002007104225",
         app_secret: "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCJakyLqojWTDAVUdN...",
         username: "",
@@ -513,12 +529,12 @@ export interface FullSetupResult {
   overall: boolean;
 }
 
-export async function setupAll(force = false): Promise<FullSetupResult> {
+export async function setupAll(force = false, tenantId?: string): Promise<FullSetupResult> {
   const geo = await importGeoData(force);
-  const accounts = await importChartOfAccounts(force);
+  const accounts = await importChartOfAccounts(force, tenantId);
   const templates = await importTemplates(force);
-  const ledger = await importLedgerSettings(force);
-  const paymentGateways = await importPaymentGateways(force);
+  const ledger = await importLedgerSettings(force, tenantId);
+  const paymentGateways = await importPaymentGateways(force, tenantId);
 
   return {
     geo,
@@ -531,13 +547,13 @@ export async function setupAll(force = false): Promise<FullSetupResult> {
 }
 
 // ─── Step runner (for individual steps) ─────────────────────────
-export async function runSetupStep(step: string, force = false): Promise<SetupResult> {
+export async function runSetupStep(step: string, force = false, tenantId?: string): Promise<SetupResult> {
   switch (step) {
     case "geo": return importGeoData(force);
-    case "accounts": return importChartOfAccounts(force);
+    case "accounts": return importChartOfAccounts(force, tenantId);
     case "templates": return importTemplates(force);
-    case "ledger": return importLedgerSettings(force);
-    case "payment_gateways": return importPaymentGateways(force);
+    case "ledger": return importLedgerSettings(force, tenantId);
+    case "payment_gateways": return importPaymentGateways(force, tenantId);
     default: return { success: false, message: `Unknown setup step: ${step}`, error_code: "INVALID_STEP" };
   }
 }
@@ -551,7 +567,6 @@ export interface ResetResult {
 }
 
 const BUSINESS_DATA_TABLES = [
-  // Order matters: children first to avoid FK constraints
   "customer_ledger",
   "customer_sessions",
   "ticket_replies",
@@ -603,9 +618,7 @@ export async function resetTenantBusinessData(): Promise<ResetResult> {
 }
 
 // ─── 7. Full System Reset (Keep ONLY super_admins) ─────────────
-// Delete order: deepest FK children first, then parents
 const FULL_RESET_TABLES = [
-  // Deep children / logs
   "admin_login_logs",
   "admin_sessions",
   "audit_logs",
@@ -615,8 +628,6 @@ const FULL_RESET_TABLES = [
   "sms_logs",
   "daily_reports",
   "login_histories",
-
-  // Customer children
   "customer_ledger",
   "customer_sessions",
   "ticket_replies",
@@ -625,15 +636,11 @@ const FULL_RESET_TABLES = [
   "payments",
   "bills",
   "onus",
-
-  // Sales & Purchases
   "sale_items",
   "sales",
   "purchase_items",
   "supplier_payments",
   "purchases",
-
-  // HR children
   "employee_education",
   "employee_emergency_contacts",
   "employee_experience",
@@ -643,8 +650,6 @@ const FULL_RESET_TABLES = [
   "salary_sheets",
   "loans",
   "attendance",
-
-  // Master tables
   "customers",
   "employees",
   "designations",
@@ -653,37 +658,24 @@ const FULL_RESET_TABLES = [
   "expense_heads",
   "income_heads",
   "other_heads",
-  
   "suppliers",
   "packages",
   "mikrotik_routers",
   "payment_gateways",
   "olts",
   "zones",
-
-  // Accounting
   "transactions",
   "accounts",
-
-  // Geo
   "geo_upazilas",
   "geo_districts",
   "geo_divisions",
-
-  // Templates
   "sms_templates",
-
-  // SMS system
   "sms_transactions",
   "sms_wallets",
   "sms_settings",
   "smtp_settings",
-
-  // Settings (general/system)
   "general_settings",
   "system_settings",
-
-  // Tenant system (profiles → user_roles → roles → impersonations → subscriptions → domains → tenants)
   "impersonations",
   "role_permissions",
   "user_roles",
@@ -711,7 +703,6 @@ export async function fullSystemReset(): Promise<FullResetResult> {
   const skipped: string[] = [];
   const errors: string[] = [];
 
-  // These tables are NEVER touched
   const PROTECTED = ["super_admins", "super_admin_sessions"];
 
   for (const table of FULL_RESET_TABLES) {
@@ -750,14 +741,12 @@ export interface FullResetAndImportResult {
 }
 
 export async function fullSystemResetAndImport(): Promise<FullResetAndImportResult> {
-  // Step 1: Full reset
   const reset = await fullSystemReset();
   
   if (!reset.success) {
     return { reset, setup: null, overall: false };
   }
 
-  // Step 2: Re-import demo/default data (force = true since we just wiped)
   const setup = await setupAll(true);
 
   return {
