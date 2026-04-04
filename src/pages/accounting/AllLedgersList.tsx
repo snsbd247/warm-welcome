@@ -48,7 +48,7 @@ export default function AllLedgersList() {
   const { data: employees = [] } = useQuery({
     queryKey: ["employees-ledger", tenantId],
     queryFn: async () => {
-      const { data } = await ( db as any).from("employees").select("id, employee_id, name, phone, salary, status");
+      const { data } = await scopeByTenant(( db as any).from("employees").select("id, employee_id, name, phone, salary, status"), tenantId);
       return data || [];
     },
   });
