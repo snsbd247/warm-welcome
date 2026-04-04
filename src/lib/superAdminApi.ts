@@ -889,7 +889,7 @@ export const superAdminApi = {
     if (IS_LOVABLE) {
       const yr = year || new Date().getFullYear();
       const [payments, expenses] = await Promise.all([
-        sbSelect("payments"),
+        sbSelectByTenantCustomers("payments", tenantId),
         sbSelect("expenses"),
       ]);
       const completed = payments.filter((p: any) => p.status === "completed");
