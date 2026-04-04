@@ -77,12 +77,14 @@ export default function EmailTemplatesTab() {
   const [form, setForm] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useQuery({
-    queryKey: ["email-templates-settings"],
+    queryKey: ["email-templates-settings", tenantId],
     queryFn: async () => {
-      const { data, error } = await (db as any)
+      let q = (db as any)
         .from("system_settings")
         .select("setting_key, setting_value")
         .in("setting_key", EMAIL_TEMPLATES.map((t) => t.key));
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       const map: Record<string, string> = {};
       (data as any[])?.forEach((row: any) => { map[row.setting_key] = row.setting_value || ""; });
