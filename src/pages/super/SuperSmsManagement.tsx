@@ -335,7 +335,7 @@ export default function SuperSmsManagement() {
                   <div className="text-lg font-semibold text-muted-foreground">N/A</div>
                 )}
                 {apiBalance?.expire_date && (
-                  <div className="text-xs text-muted-foreground mt-0.5">Expires: {apiBalance.expire_date}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{sa.expiresLabel}: {apiBalance.expire_date}</div>
                 )}
               </div>
               <Button size="icon" variant="ghost" onClick={() => refetchBalance()} className="h-8 w-8">
@@ -759,11 +759,11 @@ export default function SuperSmsManagement() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     {[
-                      { key: "sms_on_bill_generate", label: "Bill Generation SMS" },
-                      { key: "sms_on_payment", label: "Payment Confirmation SMS" },
-                      { key: "sms_on_registration", label: "New Registration SMS" },
-                      { key: "sms_on_suspension", label: "Account Suspension SMS" },
-                      { key: "sms_on_new_customer_bill", label: "New Customer Bill SMS" },
+                      { key: "sms_on_bill_generate", label: sa.billGenerationSms },
+                      { key: "sms_on_payment", label: sa.paymentConfirmationSms },
+                      { key: "sms_on_registration", label: sa.newRegistrationSms },
+                      { key: "sms_on_suspension", label: sa.accountSuspensionSms },
+                      { key: "sms_on_new_customer_bill", label: sa.newCustomerBillSms },
                     ].map((item) => (
                       <div key={item.key} className="flex items-center justify-between p-2 rounded border border-border">
                         <span className="text-sm">{item.label}</span>
@@ -775,7 +775,7 @@ export default function SuperSmsManagement() {
 
                   <Button onClick={handleSaveSettings} disabled={saving}>
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    Save Gateway Settings
+                    {sa.saveGatewaySettings}
                   </Button>
                 </>
               )}
@@ -788,7 +788,7 @@ export default function SuperSmsManagement() {
       <Dialog open={rechargeOpen} onOpenChange={setRechargeOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Recharge SMS Balance</DialogTitle>
+            <DialogTitle>>{sa.rechargeSmsBalanceTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="p-3 rounded-lg bg-muted">
@@ -801,13 +801,13 @@ export default function SuperSmsManagement() {
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Recharge Amount (৳)</Label>
+              <Label>{sa.rechargeAmountLabel}</Label>
               <Input type="number" value={rechargeAmount}
                 onChange={(e) => setRechargeAmount(e.target.value)}
                 placeholder="e.g., 500" min="1" step="0.01" />
             </div>
             <div className="space-y-2">
-              <Label>SMS Rate (৳ per SMS unit)</Label>
+              <Label>>{sa.smsRateLabel}</Label>
               <Input type="number" value={smsRateInput}
                 onChange={(e) => setSmsRateInput(e.target.value)}
                 placeholder={`Current: ৳${Number(selectedTenant?.sms_rate ?? 0.50).toFixed(2)}`}
@@ -815,7 +815,7 @@ export default function SuperSmsManagement() {
               <p className="text-xs text-muted-foreground">Leave empty to keep current rate</p>
             </div>
             <div className="space-y-2">
-              <Label>Description (Optional)</Label>
+              <Label>>{sa.descriptionOptional}</Label>
               <Input value={rechargeDesc}
                 onChange={(e) => setRechargeDesc(e.target.value)}
                 placeholder="e.g., Monthly recharge" />
