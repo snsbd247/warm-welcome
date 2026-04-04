@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -13,14 +14,17 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "#f59e0b", "#1
 
 export default function ExpenseReport() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
   const r = t.reportingPages;
   const [dateFrom, setDateFrom] = useState(() => format(subDays(new Date(), 90), "yyyy-MM-dd"));
   const [dateTo, setDateTo] = useState(() => format(new Date(), "yyyy-MM-dd"));
 
   const { data: expenses = [] } = useQuery({
-    queryKey: ["expense-report", dateFrom, dateTo],
+    queryKey: ["expense-report", dateFrom, dateTo, tenantId],
     queryFn: async () => {
-      let q = db.from("expenses").select("*");
+      let q: any = db.from("expenses").select("*");
+      if (tenantId) q = q.eq("tenant_id", tenantId);
       if (dateFrom) q = q.gte("date", dateFrom);
       if (dateTo) q = q.lte("date", dateTo);
       const { data } = await q;

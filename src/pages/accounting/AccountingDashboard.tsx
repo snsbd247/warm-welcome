@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,24 +13,27 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "hsl(var(--acc
 
 export default function AccountingDashboard() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
+
   const { data: products = [] } = useQuery({
-    queryKey: ["products"],
-    queryFn: async () => { const { data } = await db.from("products").select("*"); return data || []; },
+    queryKey: ["products", tenantId],
+    queryFn: async () => { let q: any = db.from("products").select("*"); if (tenantId) q = q.eq("tenant_id", tenantId); const { data } = await q; return data || []; },
   });
 
   const { data: purchases = [] } = useQuery({
-    queryKey: ["purchases"],
-    queryFn: async () => { const { data } = await db.from("purchases").select("*"); return data || []; },
+    queryKey: ["purchases", tenantId],
+    queryFn: async () => { let q: any = db.from("purchases").select("*"); if (tenantId) q = q.eq("tenant_id", tenantId); const { data } = await q; return data || []; },
   });
 
   const { data: sales = [] } = useQuery({
-    queryKey: ["sales"],
-    queryFn: async () => { const { data } = await db.from("sales").select("*"); return data || []; },
+    queryKey: ["sales", tenantId],
+    queryFn: async () => { let q: any = db.from("sales").select("*"); if (tenantId) q = q.eq("tenant_id", tenantId); const { data } = await q; return data || []; },
   });
 
   const { data: expenses = [] } = useQuery({
-    queryKey: ["expenses"],
-    queryFn: async () => { const { data } = await db.from("expenses").select("*"); return data || []; },
+    queryKey: ["expenses", tenantId],
+    queryFn: async () => { let q: any = db.from("expenses").select("*"); if (tenantId) q = q.eq("tenant_id", tenantId); const { data } = await q; return data || []; },
   });
 
   const totalSales = sales.reduce((s: number, sale: any) => s + Number(sale.total || 0), 0);

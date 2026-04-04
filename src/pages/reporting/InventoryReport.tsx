@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,11 +10,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function InventoryReport() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
   const r = t.reportingPages;
 
   const { data: products = [] } = useQuery({
-    queryKey: ["inventory-report-products"],
-    queryFn: async () => { const { data } = await db.from("products").select("*"); return data || []; },
+    queryKey: ["inventory-report-products", tenantId],
+    queryFn: async () => { let q: any = db.from("products").select("*"); if (tenantId) q = q.eq("tenant_id", tenantId); const { data } = await q; return data || []; },
   });
 
   const totalValue = products.reduce((s: number, p: any) => s + (Number(p.stock_quantity || 0) * Number(p.cost_price || 0)), 0);

@@ -70,9 +70,11 @@ export default function MerchantPayments() {
   const [matchBillId, setMatchBillId] = useState("");
 
   const { data: payments, isLoading } = useQuery({
-    queryKey: ["merchant-payments"],
+    queryKey: ["merchant-payments", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("merchant_payments").select("*, customers:matched_customer_id(customer_id, name), bills:matched_bill_id(month, amount)").order("created_at", { ascending: false });
+      let q: any = db.from("merchant_payments").select("*, customers:matched_customer_id(customer_id, name), bills:matched_bill_id(month, amount)").order("created_at", { ascending: false });
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
