@@ -56,7 +56,11 @@ export default function AdminUsers() {
     queryKey: ["custom-roles"],
     queryFn: async () => {
       if (IS_LOVABLE) {
-        const { data } = await db.from("custom_roles").select("*").order("name");
+        const currentUser = JSON.parse(sessionStore.getItem("admin_user") || "{}");
+        const { data: cp } = await db.from("profiles").select("tenant_id").eq("id", currentUser.id).maybeSingle();
+        let q: any = db.from("custom_roles").select("*").order("name");
+        if (cp?.tenant_id) q = q.eq("tenant_id", cp.tenant_id);
+        const { data } = await q;
         return data || [];
       }
       const { data } = await api.get("/custom-roles");
@@ -78,7 +82,13 @@ export default function AdminUsers() {
           profileQuery = profileQuery.eq("tenant_id", tenantId);
         }
         const { data: profiles } = await profileQuery;
-        const { data: roles } = await db.from("user_roles").select("*");
+        let rolesQuery: any = db.from("user_roles").select("*");
+        // Filter roles to only those belonging to profiles in this tenant
+        const profileIds = (profiles || []).map((p: any) => p.id);
+        if (profileIds.length > 0) {
+          rolesQuery = rolesQuery.in("user_id", profileIds);
+        }
+        const { data: roles } = await rolesQuery;
 
         return (profiles || []).map((p: any) => {
           const userRoles = roles?.filter((r: any) => r.user_id === p.id).map((r: any) => r.role) || [];

@@ -19,13 +19,19 @@ export default function SessionManagement() {
   const qc = useQueryClient();
   const [confirmDialog, setConfirmDialog] = useState<string | null>(null);
 
+  const currentUser = JSON.parse(sessionStore.getItem("admin_user") || "{}");
+  const currentAdminId = currentUser?.id;
+
   const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ["my-sessions"],
+    queryKey: ["my-sessions", currentAdminId],
     queryFn: async () => {
-      const { data, error } = await db.from("admin_sessions").select("*").order("updated_at", { ascending: false });
+      let q: any = db.from("admin_sessions").select("*").order("updated_at", { ascending: false });
+      if (currentAdminId) q = q.eq("admin_id", currentAdminId);
+      const { data, error } = await q;
       if (error) throw error;
       return data || [];
     },
+    enabled: !!currentAdminId,
   });
 
   const currentToken = sessionStore.getItem("admin_token");

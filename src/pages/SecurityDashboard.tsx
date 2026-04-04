@@ -24,7 +24,9 @@ export default function SecurityDashboard() {
   const { data: logins = [], isLoading: loadingLogins } = useQuery({
     queryKey: ["login-histories-security", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("login_histories").select("*").order("created_at", { ascending: false }).limit(500);
+      let q: any = db.from("login_histories").select("*").order("created_at", { ascending: false }).limit(500);
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       return data || [];
     },

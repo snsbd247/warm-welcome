@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId } from "@/hooks/useTenantId";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function FooterSettings() {
   const { t } = useLanguage();
+  const tenantId = useTenantId();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -27,15 +29,17 @@ export default function FooterSettings() {
   });
 
   const { data: settings, isLoading } = useQuery({
-    queryKey: ["footer-settings-admin"],
+    queryKey: ["footer-settings-admin", tenantId],
     queryFn: async () => {
-      const { data, error } = await db
-        .from("system_settings" as any)
+      let q = (db as any)
+        .from("system_settings")
         .select("setting_key, setting_value")
         .in("setting_key", [
           "footer_text", "company_name", "footer_link",
           "footer_developer", "system_version", "auto_update_year",
         ]);
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       const map: Record<string, string> = {};
       (data as any[])?.forEach((row: any) => {
@@ -71,10 +75,12 @@ export default function FooterSettings() {
       ];
 
       for (const entry of entries) {
-        const { error } = await (db as any)
+        let q = (db as any)
           .from("system_settings")
           .update({ setting_value: entry.value, updated_at: new Date().toISOString() })
           .eq("setting_key", entry.key);
+        if (tenantId) q = q.eq("tenant_id", tenantId);
+        const { error } = await q;
         if (error) throw error;
       }
 

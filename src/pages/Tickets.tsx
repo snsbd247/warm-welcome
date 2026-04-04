@@ -80,9 +80,11 @@ export default function Tickets() {
   });
 
   const { data: profiles = [] } = useQuery({
-    queryKey: ["profiles"],
+    queryKey: ["profiles", tenantId],
     queryFn: async () => {
-      const { data } = await db.from("profiles").select("id, full_name");
+      let q: any = db.from("profiles").select("id, full_name");
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data } = await q;
       return data || [];
     },
   });
