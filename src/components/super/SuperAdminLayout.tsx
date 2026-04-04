@@ -51,7 +51,7 @@ const NAV_GROUPS = [
     items: [
       { label: "Users", icon: Users, path: "/super/users" },
       { label: "Roles & Permissions", icon: ShieldCheck, path: "/super/roles" },
-      { label: "Backup & Recovery", icon: Activity, path: "/super/backup-recovery" },
+      { label: "Backup & Recovery", icon: DatabaseBackup, path: "/super/backup-recovery" },
       { label: "Analytics", icon: BarChart3, path: "/super/analytics" },
       { label: "Activity Logs", icon: Activity, path: "/super/activity-logs" },
     ],
