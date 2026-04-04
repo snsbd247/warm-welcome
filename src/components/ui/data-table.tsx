@@ -161,8 +161,8 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <Table>
+      <div className="rounded-xl border border-border bg-card overflow-hidden overflow-x-auto">
+        <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               {columns.map(col => (

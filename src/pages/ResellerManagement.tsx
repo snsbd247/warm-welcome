@@ -475,12 +475,12 @@ export default function ResellerManagement() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editId ? "Edit Reseller" : "Add Reseller"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-2">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Name *</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -490,7 +490,7 @@ export default function ResellerManagement() {
                 <Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>User ID *</Label>
                 <Input value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })} placeholder="Unique login ID" />
@@ -500,7 +500,7 @@ export default function ResellerManagement() {
                 <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Phone</Label>
                 <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
@@ -510,7 +510,7 @@ export default function ResellerManagement() {
                 <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>{editId ? "New Password (leave empty to keep)" : "Password *"}</Label>
                 <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
@@ -520,7 +520,7 @@ export default function ResellerManagement() {
                 <Input type="number" value={form.commission_rate} onChange={(e) => setForm({ ...form, commission_rate: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Default Commission (৳)</Label>
                 <Input type="number" value={form.default_commission} onChange={(e) => setForm({ ...form, default_commission: e.target.value })} placeholder="Fixed amount per customer" />

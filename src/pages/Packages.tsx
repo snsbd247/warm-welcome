@@ -392,7 +392,7 @@ export default function Packages() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editPkg ? `${t.common.edit} ${t.customers.package}` : `${t.common.add} ${t.customers.package}`}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Package Name *</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
