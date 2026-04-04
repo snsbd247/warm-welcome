@@ -72,23 +72,30 @@ function usePaymentStats(method: string) {
 
 export default function Dashboard() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [runningBillControl, setRunningBillControl] = useState(false);
   const [refreshingMikrotik, setRefreshingMikrotik] = useState(false);
 
-  // ── Core data queries ──
+  const tenantId = user?.tenant_id;
+
+  // ── Core data queries (scoped by tenant_id) ──
   const { data: customers, isLoading: loadingCustomers } = useQuery({
-    queryKey: ["customers-stats"],
+    queryKey: ["customers-stats", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("customers").select("id, status, monthly_bill, connection_status");
+      let query = db.from("customers").select("id, status, monthly_bill, connection_status");
+      if (tenantId) query = query.eq("tenant_id", tenantId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
 
   const { data: bills, isLoading: loadingBills } = useQuery({
-    queryKey: ["bills-stats"],
+    queryKey: ["bills-stats", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("bills").select("id, amount, status, month, created_at").gte("created_at", format(subMonths(new Date(), 5), "yyyy-MM-01"));
+      let query = db.from("bills").select("id, amount, status, month, created_at").gte("created_at", format(subMonths(new Date(), 5), "yyyy-MM-01"));
+      if (tenantId) query = query.eq("tenant_id", tenantId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
