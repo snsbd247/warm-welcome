@@ -9,6 +9,7 @@ import DynamicFooter from "@/components/DynamicFooter";
 const navItems = [
   { to: "/reseller/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/reseller/customers", icon: Users, label: "Customers" },
+  { to: "/reseller/zones", icon: MapPin, label: "Zones" },
   { to: "/reseller/billing", icon: Receipt, label: "Billing" },
   { to: "/reseller/wallet", icon: Wallet, label: "Wallet" },
   { to: "/reseller/reports", icon: FileText, label: "Reports" },
