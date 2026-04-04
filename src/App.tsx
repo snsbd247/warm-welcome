@@ -309,6 +309,7 @@ function App() {
                 <Route path="/faq" element={<PermissionGuard module="settings"><FaqManagement /></PermissionGuard>} />
                 <Route path="/analytics" element={<PermissionGuard module="reports"><AdvancedAnalytics /></PermissionGuard>} />
                 <Route path="/resellers" element={<PermissionGuard module="reseller"><ResellerManagement /></PermissionGuard>} />
+                <Route path="/reseller-profit-report" element={<PermissionGuard module="reseller"><ResellerProfitReport /></PermissionGuard>} />
                 <Route path="/bandwidth-analytics" element={<PermissionGuard module="reports"><BandwidthAnalytics /></PermissionGuard>} />
                 <Route path="/live-bandwidth" element={<PermissionGuard module="reports"><LiveBandwidth /></PermissionGuard>} />
 
