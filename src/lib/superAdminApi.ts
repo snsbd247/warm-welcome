@@ -653,7 +653,8 @@ export const superAdminApi = {
       const totalBilled = currentBills.reduce((s: number, b: any) => s + Number(b.amount || 0), 0);
       const paidBills = currentBills.filter((b: any) => b.status === "paid");
       const totalCollected = paidBills.reduce((s: number, b: any) => s + Number(b.paid_amount || b.amount || 0), 0);
-      const totalDue = bills.filter((b: any) => b.status === "unpaid").reduce((s: number, b: any) => s + Number(b.amount || 0) - Number(b.paid_amount || 0), 0);
+      const totalDue = currentBills.filter((b: any) => b.status === "unpaid").reduce((s: number, b: any) => s + Number(b.amount || 0) - Number(b.paid_amount || 0), 0);
+      const alltimeDue = bills.filter((b: any) => b.status === "unpaid").reduce((s: number, b: any) => s + Number(b.amount || 0) - Number(b.paid_amount || 0), 0);
 
       const allPaidPayments = payments.filter((p: any) => p.status === "completed");
       const totalRevenue = allPaidPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
@@ -666,38 +667,20 @@ export const superAdminApi = {
       const finalTotalRevenue = totalRevenue || billBasedRevenue;
       const finalMonthlyRevenue = monthlyRevenue || billMonthlyRevenue;
 
-      const totalExpense = 0; // Expenses don't have customer_id linkage in Supabase preview
-      const monthlyExpense = 0;
-
-      const inventoryValue = allProducts.reduce((s: number, p: any) => s + (Number(p.stock_quantity || 0) * Number(p.cost_price || 0)), 0);
-      const arpu = activeCustomers.length > 0 ? Math.round(finalMonthlyRevenue / activeCustomers.length) : 0;
-      const collectionRate = totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100 * 10) / 10 : 0;
-      const churnCount = inactiveCustomers.length;
-      const churnRate = customers.length > 0 ? Math.round((churnCount / customers.length) * 100 * 10) / 10 : 0;
-
       const monthlySms = smsLogs.filter((s: any) => s.created_at?.startsWith(currentMonth)).length;
       const walletBalance = smsWallet?.[0]?.balance || 0;
 
       return {
-        total_revenue: finalTotalRevenue,
-        monthly_revenue: finalMonthlyRevenue,
-        total_expense: totalExpense,
-        monthly_expense: monthlyExpense,
-        net_profit: finalTotalRevenue - totalExpense,
-        monthly_profit: finalMonthlyRevenue - monthlyExpense,
-        total_billed: totalBilled,
-        total_collected: totalCollected,
-        total_due: totalDue,
-        collection_rate: collectionRate,
         total_customers: customers.length,
         active_customers: activeCustomers.length,
-        inactive_customers: inactiveCustomers.length,
-        arpu,
-        churn_rate: churnRate,
-        churn_count: churnCount,
-        inventory_value: inventoryValue,
-        monthly_sms: monthlySms,
-        total_sms: smsLogs.length,
+        suspended_customers: suspendedCustomers.length,
+        online_customers: onlineCustomers.length,
+        offline_customers: offlineCustomers.length,
+        support_tickets: 0,
+        monthly_revenue: finalMonthlyRevenue,
+        total_due: totalDue,
+        alltime_due: alltimeDue,
+        total_revenue: finalTotalRevenue,
         sms_balance: walletBalance,
       };
     }
