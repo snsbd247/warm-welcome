@@ -194,6 +194,7 @@ export default function AppSidebar() {
     { to: "/reporting/btrc", icon: Globe, label: t.sidebar.btrcReport, module: "reports" },
     { to: "/reporting/traffic", icon: Activity, label: t.sidebar.trafficMonitor, module: "reports" },
     { to: "/bandwidth-analytics", icon: Activity, label: "Bandwidth Analytics", module: "reports" },
+    { to: "/live-bandwidth", icon: Wifi, label: "Live Bandwidth", module: "reports" },
   ];
 
   const tAdminNav: NavItem[] = [
