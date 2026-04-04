@@ -101,7 +101,13 @@ class ResellerController extends Controller
             'area' => 'required|string|max:255',
             'monthly_bill' => 'required|numeric|min:0',
             'package_id' => 'nullable|uuid|exists:packages,id',
+            'zone_id' => 'nullable|uuid|exists:reseller_zones,id',
         ]);
+
+        // SECURITY: Strip MikroTik fields — reseller cannot set these
+        $request->request->remove('router_id');
+        $request->request->remove('pppoe_username');
+        $request->request->remove('pppoe_password');
 
         // Auto-generate customer_id
         $lastCustomer = Customer::withoutGlobalScopes()
@@ -109,6 +115,20 @@ class ResellerController extends Controller
             ->orderByRaw('CAST(customer_id AS INTEGER) DESC')
             ->first();
         $nextId = str_pad(($lastCustomer ? (int)$lastCustomer->customer_id + 1 : 100001), 6, '0', STR_PAD_LEFT);
+
+        // Auto-generate PPPoE credentials
+        $pppoeUsername = 'CUST-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+        $pppoePassword = bin2hex(random_bytes(6));
+
+        // Validate zone belongs to this reseller (if provided)
+        if ($request->zone_id) {
+            $zone = \App\Models\ResellerZone::where('id', $request->zone_id)
+                ->where('reseller_id', $reseller->id)
+                ->first();
+            if (!$zone) {
+                return response()->json(['error' => 'Invalid zone'], 422);
+            }
+        }
 
         $customer = Customer::withoutGlobalScopes()->create([
             'tenant_id' => $reseller->tenant_id,
@@ -121,6 +141,9 @@ class ResellerController extends Controller
             'package_id' => $request->package_id,
             'connection_status' => 'online',
             'status' => 'active',
+            'zone_id' => $request->zone_id,
+            'pppoe_username' => $pppoeUsername,
+            'pppoe_password' => $pppoePassword,
         ]);
 
         return response()->json($customer, 201);
