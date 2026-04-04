@@ -278,8 +278,33 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
           }
         }
       } else {
-        const result = await customersApi.create(payload);
-        const data = result.customer;
+        // Auto-generate 6-digit customer_id
+        const { data: lastCustomer } = await db
+          .from("customers")
+          .select("customer_id")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        let nextNum = 1;
+        if (lastCustomer?.customer_id) {
+          const numPart = lastCustomer.customer_id.replace(/\D/g, "");
+          if (numPart) nextNum = parseInt(numPart) + 1;
+        }
+        const generatedCustomerId = String(nextNum).padStart(6, "0");
+
+        const insertPayload: any = {
+          ...payload,
+          customer_id: generatedCustomerId,
+        };
+        if (tenantId) insertPayload.tenant_id = tenantId;
+
+        const { data, error: insertError } = await db
+          .from("customers")
+          .insert(insertPayload)
+          .select()
+          .single();
+        if (insertError) throw insertError;
 
         if (data && photoFile) {
           const photoUrl = await uploadPhoto(data.id);
