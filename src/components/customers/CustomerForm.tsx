@@ -259,12 +259,38 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
       if (isEdit) {
         const photoUrl = await uploadPhoto(customer.id);
         if (photoUrl) payload.photo_url = photoUrl;
+
+        // Handle reseller migration
+        const newResellerId = form.reseller_id || null;
+        const oldResellerId = customer.reseller_id || null;
+        if (newResellerId !== oldResellerId) {
+          payload.reseller_id = newResellerId;
+          // Reset zone when reseller changes
+          if (newResellerId !== oldResellerId) {
+            payload.zone_id = null;
+          }
+        }
+
         const { error } = await db
           .from("customers")
           .update(payload)
           .eq("id", customer.id);
         if (error) throw error;
-        toast.success("Customer updated successfully");
+
+        // Log reseller migration
+        if (newResellerId !== oldResellerId) {
+          await (db as any).from("customer_reseller_migrations").insert({
+            tenant_id: tenantId,
+            customer_id: customer.id,
+            old_reseller_id: oldResellerId,
+            new_reseller_id: newResellerId,
+            changed_by: user?.id || null,
+            reason: `Reseller changed via customer edit`,
+          });
+          toast.success("Customer reseller updated & migration logged");
+        } else {
+          toast.success("Customer updated successfully");
+        }
 
         const needsSync = form.router_id && form.pppoe_username && (
           customer.pppoe_username !== form.pppoe_username ||
