@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,6 +75,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
+    // GET - Fetch SMTP settings
     if (req.method === "GET") {
       const { data, error } = await supabase
         .from("smtp_settings")
@@ -86,6 +88,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse(data || {});
     }
 
+    // PUT - Save SMTP settings
     if (req.method === "PUT") {
       const body = await req.json();
       const payload = normalizePayload(body);
@@ -142,6 +145,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse(data);
     }
 
+    // POST - Send test email via real SMTP
     if (req.method === "POST") {
       const body = await req.json();
       const to = String(body.to ?? "").trim();
@@ -150,9 +154,10 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({ error: "Recipient email is required" }, 400);
       }
 
+      // Fetch full SMTP settings including password
       const { data: smtp, error } = await supabase
         .from("smtp_settings")
-        .select("host, username, from_email, from_name, status")
+        .select("*")
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
@@ -163,11 +168,71 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({ error: "SMTP settings are not configured yet" }, 400);
       }
 
-      return jsonResponse({
-        success: true,
-        simulated: true,
-        message: "SMTP settings saved successfully in preview. Live SMTP send test is available in backend environments.",
-      });
+      const smtpPassword = smtp.password || "";
+      if (!smtpPassword) {
+        return jsonResponse({ error: "SMTP password is missing" }, 400);
+      }
+
+      const port = Number(smtp.port) || 587;
+      const encryption = String(smtp.encryption || "tls").toLowerCase();
+
+      console.log(`[smtp-test] Sending to ${to} via ${smtp.host}:${port} (${encryption})`);
+
+      try {
+        // Determine TLS configuration based on encryption and port
+        const useTLS = encryption === "tls" || encryption === "ssl" || port === 465;
+
+        const client = new SMTPClient({
+          connection: {
+            hostname: smtp.host,
+            port: port,
+            tls: useTLS,
+            auth: {
+              username: smtp.username,
+              password: smtpPassword,
+            },
+          },
+        });
+
+        const fromEmail = smtp.from_email || smtp.username;
+        const fromName = smtp.from_name || "Smart ISP";
+
+        await client.send({
+          from: `${fromName} <${fromEmail}>`,
+          to: to,
+          subject: "Smart ISP - SMTP Test Email",
+          html: `
+            <div style="font-family:Arial,sans-serif;padding:20px;max-width:600px;margin:0 auto;">
+              <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:10px 10px 0 0;text-align:center;">
+                <h1 style="color:#fff;margin:0;font-size:24px;">✅ SMTP Test Successful</h1>
+              </div>
+              <div style="background:#f9fafb;padding:30px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;">
+                <p style="color:#374151;font-size:16px;">This is a test email from your <strong>Smart ISP</strong> super admin panel.</p>
+                <p style="color:#374151;font-size:16px;">If you received this email, your SMTP configuration is working correctly.</p>
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
+                <p style="color:#9ca3af;font-size:12px;">
+                  SMTP Host: ${smtp.host}<br>
+                  Port: ${port} | Encryption: ${encryption.toUpperCase()}<br>
+                  Sent at: ${new Date().toLocaleString()}
+                </p>
+              </div>
+            </div>
+          `,
+        });
+
+        await client.close();
+
+        console.log(`[smtp-test] Email sent successfully to ${to}`);
+        return jsonResponse({ success: true, message: "Test email sent successfully!" });
+
+      } catch (smtpErr: unknown) {
+        const errMsg = smtpErr instanceof Error ? smtpErr.message : String(smtpErr);
+        console.error(`[smtp-test] SMTP error:`, errMsg);
+        return jsonResponse({ 
+          success: false, 
+          error: `SMTP send failed: ${errMsg}` 
+        }, 500);
+      }
     }
 
     return jsonResponse({ error: "Method not allowed" }, 405);

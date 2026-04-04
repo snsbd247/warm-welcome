@@ -42,14 +42,14 @@ export default function SuperSmtpSettings() {
   });
 
   const testMut = useMutation({
-    mutationFn: () => superAdminApi.testSmtp(testEmail),
-    onSuccess: (result: any) => {
-      if (result.success) {
-        toast.success("Test email sent successfully!");
-      } else {
-        toast.error(result.error || "Failed to send test email");
+    mutationFn: async () => {
+      const result = await superAdminApi.testSmtp(testEmail);
+      if (result && result.success === false) {
+        throw new Error(result.error || "Failed to send test email");
       }
+      return result;
     },
+    onSuccess: () => toast.success("Test email sent successfully!"),
     onError: (e: any) => toast.error(e.message),
   });
 
