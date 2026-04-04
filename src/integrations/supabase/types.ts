@@ -1827,6 +1827,7 @@ export type Database = {
           site_name: string
           support_email: string | null
           support_phone: string | null
+          tenant_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1842,6 +1843,7 @@ export type Database = {
           site_name?: string
           support_email?: string | null
           support_phone?: string | null
+          tenant_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1857,9 +1859,18 @@ export type Database = {
           site_name?: string
           support_email?: string | null
           support_phone?: string | null
+          tenant_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "general_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       geo_districts: {
         Row: {
@@ -4123,6 +4134,7 @@ export type Database = {
           id: string
           setting_key: string
           setting_value: string | null
+          tenant_id: string | null
           updated_at: string
         }
         Insert: {
@@ -4130,6 +4142,7 @@ export type Database = {
           id?: string
           setting_key: string
           setting_value?: string | null
+          tenant_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -4137,9 +4150,18 @@ export type Database = {
           id?: string
           setting_key?: string
           setting_value?: string | null
+          tenant_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "system_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenants: {
         Row: {
