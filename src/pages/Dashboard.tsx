@@ -151,8 +151,8 @@ export default function Dashboard() {
   const { data: accExpenses = [] } = useQuery({ queryKey: ["acc-expenses-dash", tenantId], queryFn: async () => { let q = db.from("expenses").select("*"); if (tenantId) q = (q as any).eq("tenant_id", tenantId); const { data } = await q; return data || []; } });
   const { data: accProducts = [] } = useQuery({ queryKey: ["acc-products-dash", tenantId], queryFn: async () => { let q = db.from("products").select("*"); if (tenantId) q = (q as any).eq("tenant_id", tenantId); const { data } = await q; return data || []; } });
 
-  const bkash = usePaymentStats("bkash");
-  const nagad = usePaymentStats("nagad");
+  const bkash = usePaymentStats("bkash", tenantCustomerIds.length > 0 ? tenantCustomerIds : undefined);
+  const nagad = usePaymentStats("nagad", tenantCustomerIds.length > 0 ? tenantCustomerIds : undefined);
 
   // SMS Balance — from tenant wallet (assigned by Super Admin), NOT global API
   const { data: walletSmsData } = useQuery({
