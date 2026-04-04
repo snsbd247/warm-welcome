@@ -341,6 +341,13 @@ function App() {
                 <Route path="/portal/tickets" element={<CustomerProtectedRoute><CustomerTickets /></CustomerProtectedRoute>} />
                 <Route path="/portal/payment/callback" element={<CustomerProtectedRoute><PaymentCallback /></CustomerProtectedRoute>} />
 
+                {/* Reseller Portal */}
+                <Route path="/reseller/login" element={<ResellerLogin />} />
+                <Route path="/reseller/dashboard" element={<ResellerProtectedRoute><ResellerDashboard /></ResellerProtectedRoute>} />
+                <Route path="/reseller/customers" element={<ResellerProtectedRoute><ResellerCustomers /></ResellerProtectedRoute>} />
+                <Route path="/reseller/billing" element={<ResellerProtectedRoute><ResellerBilling /></ResellerProtectedRoute>} />
+                <Route path="/reseller/wallet" element={<ResellerProtectedRoute><ResellerWallet /></ResellerProtectedRoute>} />
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>
