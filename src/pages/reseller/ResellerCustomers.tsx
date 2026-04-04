@@ -688,28 +688,11 @@ export default function ResellerCustomers() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <Label className="text-xs">Monthly Bill (৳) *</Label>
-                      <Input type="number" value={form.monthly_bill} onChange={(e) => update("monthly_bill", e.target.value)} className="h-9" disabled={form.is_free} placeholder="Auto from package" />
-                    </div>
-                    <div className="flex items-end pb-1">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="is_free_reseller"
-                          checked={form.is_free}
-                          onCheckedChange={(checked) => {
-                            const isFree = !!checked;
-                            setForm(prev => ({
-                              ...prev,
-                              is_free: isFree,
-                              monthly_bill: isFree ? "0" : prev.monthly_bill === "0" ? "" : prev.monthly_bill,
-                            }));
-                          }}
-                        />
-                        <Label htmlFor="is_free_reseller" className="text-xs cursor-pointer">Free Line (বিল জেনারেট হবে না)</Label>
-                      </div>
+                      <Input type="number" value={form.monthly_bill} onChange={(e) => update("monthly_bill", e.target.value)} className="h-9" placeholder="Auto from package" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Discount (৳)</Label>
-                      <Input type="number" value={form.discount} onChange={(e) => update("discount", e.target.value)} className="h-9" />
+                      <Input type="number" value="0" className="h-9 bg-muted" disabled title="রিসেলার ডিসকাউন্ট দিতে পারবেন না" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Due Date (Day)</Label>
