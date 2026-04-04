@@ -581,94 +581,48 @@ export const superAdminApi = {
     if (IS_LOVABLE) {
       const currentMonth = new Date().toISOString().substring(0, 7);
 
-      // 1. Get tenant info to derive customer prefix
-      const [tenantArr, allCustomers, allBills, allPayments, allExpenses, allProducts, smsWallet, smsLogs] = await Promise.all([
-        sbSelect("tenants", { filters: { id: tenantId } }),
-        sbSelect("customers"),
-        sbSelect("bills"),
-        sbSelect("payments").catch(() => []),
-        sbSelect("expenses").catch(() => []),
-        sbSelect("products").catch(() => []),
+      // Filter directly by tenant_id — reliable and consistent with Dashboard
+      const [customers, bills, payments, smsWallet] = await Promise.all([
+        sbSelect("customers", { filters: { tenant_id: tenantId } }),
+        sbSelect("bills", { filters: { tenant_id: tenantId } }),
+        sbSelect("payments", { filters: { tenant_id: tenantId } }).catch(() => []),
         sbSelect("sms_wallets", { filters: { tenant_id: tenantId } }).catch(() => []),
-        sbSelect("sms_logs", { filters: { tenant_id: tenantId } }).catch(() => []),
       ]);
-
-      const tenant = tenantArr?.[0];
-      if (!tenant) return {};
-
-      // 2. Derive prefix from subdomain (speednet→SN, netzone→NZ, fiberlink→FL)
-      const subdomain = (tenant.subdomain || "").toLowerCase();
-      // Find customers whose customer_id prefix maps to this tenant
-      // Strategy: get all unique prefixes, match by checking which customers belong to this tenant
-      // We use a prefix map derived from subdomain initials or known patterns
-      const prefixMap: Record<string, string> = {};
-      allCustomers.forEach((c: any) => {
-        const prefix = c.customer_id?.split("-")[0];
-        if (prefix && !prefixMap[prefix]) prefixMap[prefix] = prefix;
-      });
-
-      // Find prefix for this tenant by matching subdomain pattern
-      let tenantPrefix = "";
-      const subLower = subdomain;
-      for (const prefix of Object.keys(prefixMap)) {
-        // Match: prefix initials align with subdomain (SN↔speednet, NZ↔netzone, FL↔fiberlink)
-        const pLower = prefix.toLowerCase();
-        if (subLower.startsWith(pLower) || 
-            (pLower.length >= 2 && subLower[0] === pLower[0] && subLower.includes(pLower[1])) ||
-            // Check if prefix chars are initials of subdomain words or first letters
-            (subLower.length >= 2 && pLower === subLower.substring(0, pLower.length))) {
-          tenantPrefix = prefix;
-          break;
-        }
-      }
-
-      // Fallback: try first-letter matching (s+n from "speednet" → SN)
-      if (!tenantPrefix) {
-        // Try to match by taking consonant pairs or first+middle chars
-        for (const prefix of Object.keys(prefixMap)) {
-          const pl = prefix.toLowerCase();
-          if (pl.length === 2 && subLower.includes(pl[0]) && subLower.includes(pl[1])) {
-            tenantPrefix = prefix;
-            break;
-          }
-        }
-      }
-
-      // 3. Filter data by tenant's customers
-      const customers = tenantPrefix 
-        ? allCustomers.filter((c: any) => c.customer_id?.startsWith(tenantPrefix + "-"))
-        : [];
-      const customerIds = new Set(customers.map((c: any) => c.id));
-
-      const bills = allBills.filter((b: any) => customerIds.has(b.customer_id));
-      const payments = allPayments.filter((p: any) => customerIds.has(p.customer_id));
-      const expenses = allExpenses; // expenses are global per-tenant via backend, show proportionally or empty for preview
 
       const activeCustomers = customers.filter((c: any) => c.status === "active");
       const suspendedCustomers = customers.filter((c: any) => c.status === "suspended");
-      const inactiveCustomers = customers.filter((c: any) => c.status === "inactive");
       const onlineCustomers = customers.filter((c: any) => c.connection_status === "online");
       const offlineCustomers = customers.filter((c: any) => c.connection_status === "offline");
+
       const currentBills = bills.filter((b: any) => b.month === currentMonth);
-      const totalBilled = currentBills.reduce((s: number, b: any) => s + Number(b.amount || 0), 0);
-      const paidBills = currentBills.filter((b: any) => b.status === "paid");
-      const totalCollected = paidBills.reduce((s: number, b: any) => s + Number(b.paid_amount || b.amount || 0), 0);
+      const paidCurrentBills = currentBills.filter((b: any) => b.status === "paid");
+      const monthlyRevenue = paidCurrentBills.reduce((s: number, b: any) => s + Number(b.paid_amount || b.amount || 0), 0);
       const totalDue = currentBills.filter((b: any) => b.status === "unpaid").reduce((s: number, b: any) => s + Number(b.amount || 0) - Number(b.paid_amount || 0), 0);
       const alltimeDue = bills.filter((b: any) => b.status === "unpaid").reduce((s: number, b: any) => s + Number(b.amount || 0) - Number(b.paid_amount || 0), 0);
 
-      const allPaidPayments = payments.filter((p: any) => p.status === "completed");
-      const totalRevenue = allPaidPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
-      const monthPayments = allPaidPayments.filter((p: any) => p.paid_at?.startsWith(currentMonth));
-      const monthlyRevenue = monthPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+      // Total collection: all paid bills ever
+      const totalRevenue = bills.filter((b: any) => b.status === "paid").reduce((s: number, b: any) => s + Number(b.paid_amount || b.amount || 0), 0);
 
-      // For revenue fallback: use bill payments if no payments table data
-      const billBasedRevenue = bills.filter((b: any) => b.status === "paid").reduce((s: number, b: any) => s + Number(b.paid_amount || b.amount || 0), 0);
-      const billMonthlyRevenue = bills.filter((b: any) => b.status === "paid" && b.paid_date?.startsWith(currentMonth)).reduce((s: number, b: any) => s + Number(b.paid_amount || b.amount || 0), 0);
-      const finalTotalRevenue = totalRevenue || billBasedRevenue;
-      const finalMonthlyRevenue = monthlyRevenue || billMonthlyRevenue;
-
-      const monthlySms = smsLogs.filter((s: any) => s.created_at?.startsWith(currentMonth)).length;
-      const walletBalance = smsWallet?.[0]?.balance || 0;
+      // Fallback to payments table if bills don't have paid data
+      if (totalRevenue === 0 && payments.length > 0) {
+        const paidPayments = payments.filter((p: any) => p.status === "completed");
+        const paymentRevenue = paidPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+        const monthPaymentRevenue = paidPayments.filter((p: any) => p.paid_at?.startsWith(currentMonth)).reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+        
+        return {
+          total_customers: customers.length,
+          active_customers: activeCustomers.length,
+          suspended_customers: suspendedCustomers.length,
+          online_customers: onlineCustomers.length,
+          offline_customers: offlineCustomers.length,
+          support_tickets: 0,
+          monthly_revenue: monthPaymentRevenue,
+          total_due: totalDue,
+          alltime_due: alltimeDue,
+          total_revenue: paymentRevenue,
+          sms_balance: smsWallet?.[0]?.balance || 0,
+        };
+      }
 
       return {
         total_customers: customers.length,
@@ -677,11 +631,11 @@ export const superAdminApi = {
         online_customers: onlineCustomers.length,
         offline_customers: offlineCustomers.length,
         support_tickets: 0,
-        monthly_revenue: finalMonthlyRevenue,
+        monthly_revenue: monthlyRevenue,
         total_due: totalDue,
         alltime_due: alltimeDue,
-        total_revenue: finalTotalRevenue,
-        sms_balance: walletBalance,
+        total_revenue: totalRevenue,
+        sms_balance: smsWallet?.[0]?.balance || 0,
       };
     }
     return request(`/tenants/${tenantId}/reports/overview`);
