@@ -319,6 +319,7 @@ function App() {
                   <Route path="roles" element={<SuperRoles />} />
                   <Route path="activity-logs" element={<SuperActivityLogs />} />
                   <Route path="landing-cms" element={<SuperLandingCMS />} />
+                  <Route path="demo-requests" element={<SuperDemoRequests />} />
                 </Route>
 
                 {/* Customer Portal */}

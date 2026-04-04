@@ -25,6 +25,7 @@ const NAV_GROUPS = [
       { label: "Domains", icon: Globe, path: "/super/domains" },
       { label: "Branding", icon: Palette, path: "/super/branding" },
       { label: "Landing Page", icon: FileText, path: "/super/landing-cms" },
+      { label: "Demo Requests", icon: Rocket, path: "/super/demo-requests" },
     ],
   },
   {

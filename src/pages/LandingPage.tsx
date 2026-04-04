@@ -484,7 +484,7 @@ export default function LandingPage() {
       <PricingSection onCta={scrollToSignup} />
       <TestimonialsSection sections={sections} />
       <FaqSection sections={sections} />
-      <SignupSection />
+      <DemoRequestSection />
       <LandingFooter sections={sections} />
     </div>
   );
