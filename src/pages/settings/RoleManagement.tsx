@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAllowedModules } from "@/hooks/usePlanModules";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId } from "@/hooks/useTenantId";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,13 +24,12 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Loader2, Shield } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Shield, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const DB_ROLES = [
-  { value: "super_admin", label: "Super Admin" },
   { value: "admin", label: "Admin" },
   { value: "manager", label: "Manager" },
   { value: "operator", label: "Operator" },
@@ -66,6 +66,7 @@ export default function RoleManagement() {
   const { t } = useLanguage();
   const { isSuperAdmin } = usePermissions();
   const { allowedModules, isModuleAllowed } = useAllowedModules();
+  const tenantId = useTenantId();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editRole, setEditRole] = useState<any>(null);
@@ -74,11 +75,13 @@ export default function RoleManagement() {
   const [form, setForm] = useState({ name: "", description: "", db_role: "staff" });
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
 
-  // Fetch roles
+  // Fetch roles scoped by tenant
   const { data: roles, isLoading: rolesLoading } = useQuery({
-    queryKey: ["custom-roles"],
+    queryKey: ["custom-roles", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("custom_roles").select("*").order("created_at");
+      let q = (db as any).from("custom_roles").select("*").order("created_at");
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -94,21 +97,23 @@ export default function RoleManagement() {
     },
   });
 
-  // Fetch role_permissions for editing
+  // Fetch role_permissions
   const { data: rolePermissions } = useQuery({
-    queryKey: ["role-permissions"],
+    queryKey: ["role-permissions", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("role_permissions").select("*");
+      const roleIds = (roles || []).map((r: any) => r.id);
+      if (roleIds.length === 0) return [];
+      const { data, error } = await db.from("role_permissions").select("*").in("role_id", roleIds);
       if (error) throw error;
       return data;
     },
+    enabled: !!roles && roles.length > 0,
   });
 
   // Group permissions by module, filtered by plan-allowed modules
   const groupedPermissions = useMemo(() => {
     if (!permissions) return {};
     return permissions.reduce((acc: Record<string, any[]>, perm: any) => {
-      // Only show permissions for modules allowed by the current plan
       if (!isSuperAdmin && !isModuleAllowed(perm.module)) return acc;
       if (!acc[perm.module]) acc[perm.module] = [];
       acc[perm.module].push(perm);
@@ -126,7 +131,6 @@ export default function RoleManagement() {
   const openEdit = (role: any) => {
     setEditRole(role);
     setForm({ name: role.name, description: role.description || "", db_role: role.db_role });
-    // Load existing permissions for this role
     const perms = rolePermissions?.filter((rp: any) => rp.role_id === role.id).map((rp: any) => rp.permission_id) || [];
     setSelectedPermissions(new Set(perms));
     setFormOpen(true);
@@ -154,6 +158,12 @@ export default function RoleManagement() {
     });
   };
 
+  // Check if role is the protected "Owner" role
+  const isOwnerRole = (role: any) => {
+    const name = (role.name || "").toLowerCase();
+    return name === "owner" && role.is_system;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) { toast.error("Role name is required"); return; }
@@ -162,25 +172,26 @@ export default function RoleManagement() {
       let roleId: string;
 
       if (editRole) {
-        const { error } = await db.from("custom_roles").update({
-          name: form.name,
-          description: form.description || null,
-          db_role: form.db_role as any,
-          updated_at: new Date().toISOString(),
-        }).eq("id", editRole.id);
+        // Owner role: only allow permission changes, not name/db_role
+        const updatePayload = isOwnerRole(editRole) 
+          ? { description: form.description || null, updated_at: new Date().toISOString() }
+          : { name: form.name, description: form.description || null, db_role: form.db_role as any, updated_at: new Date().toISOString() };
+        
+        const { error } = await (db as any).from("custom_roles").update(updatePayload).eq("id", editRole.id);
         if (error) throw error;
         roleId = editRole.id;
       } else {
-        const { data, error } = await db.from("custom_roles").insert({
+        const { data, error } = await (db as any).from("custom_roles").insert({
           name: form.name,
           description: form.description || null,
           db_role: form.db_role as any,
+          ...(tenantId ? { tenant_id: tenantId } : {}),
         }).select("id").single();
         if (error) throw error;
         roleId = data.id;
       }
 
-      // Sync permissions: delete all then insert selected
+      // Sync permissions
       await db.from("role_permissions").delete().eq("role_id", roleId);
       if (selectedPermissions.size > 0) {
         const inserts = Array.from(selectedPermissions).map((pid) => ({
@@ -204,8 +215,14 @@ export default function RoleManagement() {
 
   const handleDelete = async () => {
     if (!deleteRole) return;
+    if (isOwnerRole(deleteRole)) {
+      toast.error("Owner role cannot be deleted. It is managed by Super Admin.");
+      setDeleteRole(null);
+      return;
+    }
     try {
-      const { error } = await db.from("custom_roles").delete().eq("id", deleteRole.id);
+      await db.from("role_permissions").delete().eq("role_id", deleteRole.id);
+      const { error } = await (db as any).from("custom_roles").delete().eq("id", deleteRole.id);
       if (error) throw error;
       toast.success("Role deleted");
       queryClient.invalidateQueries({ queryKey: ["custom-roles"] });
@@ -243,25 +260,38 @@ export default function RoleManagement() {
                 <TableHead>{t.common.description}</TableHead>
                 <TableHead>{t.roles.dbRole}</TableHead>
                 <TableHead>{t.roles.permissions}</TableHead>
-                <TableHead>{t.roles.system}</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {roles?.filter((role: any) => isSuperAdmin || role.db_role !== "super_admin").map((role: any, i: number) => (
+              {roles?.map((role: any, i: number) => (
                 <TableRow key={role.id}>
                   <TableCell>{i + 1}</TableCell>
-                  <TableCell className="font-medium">{role.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {role.name}
+                      {isOwnerRole(role) && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground text-sm">{role.description || "—"}</TableCell>
                   <TableCell><Badge variant="outline">{role.db_role}</Badge></TableCell>
                   <TableCell><Badge variant="secondary">{getPermCount(role.id)} permissions</Badge></TableCell>
-                  <TableCell>{role.is_system ? <Badge>System</Badge> : "—"}</TableCell>
+                  <TableCell>
+                    {isOwnerRole(role) ? (
+                      <Badge className="bg-primary/10 text-primary">System (Owner)</Badge>
+                    ) : role.is_system ? (
+                      <Badge>System</Badge>
+                    ) : (
+                      <Badge variant="outline">Custom</Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(role)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      {!role.is_system && (
+                      {!isOwnerRole(role) && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteRole(role)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -284,21 +314,34 @@ export default function RoleManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              {editRole ? t.roles.editRole : t.roles.createRole}
+              {editRole ? (isOwnerRole(editRole) ? "Edit Owner Permissions" : t.roles.editRole) : t.roles.createRole}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>{t.roles.roleName} *</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="e.g., Operator" />
+                <Input 
+                  value={form.name} 
+                  onChange={(e) => setForm({ ...form, name: e.target.value })} 
+                  required 
+                  placeholder="e.g., Operator"
+                  disabled={editRole && isOwnerRole(editRole)}
+                />
+                {editRole && isOwnerRole(editRole) && (
+                  <p className="text-xs text-muted-foreground">Owner role name is managed by Super Admin</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>{t.roles.databaseRole} *</Label>
-                <Select value={form.db_role} onValueChange={(v) => setForm({ ...form, db_role: v })}>
+                <Select 
+                  value={form.db_role} 
+                  onValueChange={(v) => setForm({ ...form, db_role: v })}
+                  disabled={editRole && isOwnerRole(editRole)}
+                >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {DB_ROLES.filter(r => isSuperAdmin || r.value !== "super_admin").map((r) => (
+                    {DB_ROLES.map((r) => (
                       <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                     ))}
                   </SelectContent>
