@@ -195,11 +195,11 @@ class QueryBuilder<T = any> {
   }
 }
 
-// ─── Auth compatibility (localStorage-based) ─────────────────────
+// ─── Auth compatibility (sessionStorage-based) ─────────────────────
 const authCompat = {
   getSession: async () => {
-    const token = localStorage.getItem('admin_token');
-    const user = localStorage.getItem('admin_user');
+    const token = sessionStore.getItem('admin_token');
+    const user = sessionStore.getItem('admin_user');
     if (token && user) {
       return {
         data: {
@@ -215,13 +215,13 @@ const authCompat = {
     return { data: { session: null }, error: null };
   },
   getUser: async () => {
-    const user = localStorage.getItem('admin_user');
+    const user = sessionStore.getItem('admin_user');
     return { data: { user: user ? JSON.parse(user) : null }, error: null };
   },
   signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
     const { data } = await api.post('/admin/login', { email, password });
-    localStorage.setItem('admin_token', data.token);
-    localStorage.setItem('admin_user', JSON.stringify(data.user));
+    sessionStore.setItem('admin_token', data.token);
+    sessionStore.setItem('admin_user', JSON.stringify(data.user));
     return {
       data: { user: data.user, session: { access_token: data.token, user: data.user } },
       error: null,
@@ -229,8 +229,8 @@ const authCompat = {
   },
   signOut: async () => {
     try { await api.post('/admin/logout'); } catch {}
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
+    sessionStore.removeItem('admin_token');
+    sessionStore.removeItem('admin_user');
     return { error: null };
   },
   resetPasswordForEmail: async (email: string, _options?: any) => {
@@ -247,8 +247,8 @@ const authCompat = {
     return { data: { user: data }, error: null };
   },
   refreshSession: async () => {
-    const token = localStorage.getItem('admin_token');
-    const user = localStorage.getItem('admin_user');
+    const token = sessionStore.getItem('admin_token');
+    const user = sessionStore.getItem('admin_user');
     return {
       data: {
         session: token ? { access_token: token, user: user ? JSON.parse(user) : null } : null,
@@ -257,23 +257,13 @@ const authCompat = {
     };
   },
   onAuthStateChange: (callback: (event: string, session: any) => void) => {
-    const token = localStorage.getItem('admin_token');
-    const user = localStorage.getItem('admin_user');
+    const token = sessionStore.getItem('admin_token');
+    const user = sessionStore.getItem('admin_user');
     if (token && user) {
       setTimeout(() => callback('SIGNED_IN', { access_token: token, user: JSON.parse(user) }), 0);
     }
-    const handler = (e: StorageEvent) => {
-      if (e.key === 'admin_token') {
-        if (e.newValue) {
-          const u = localStorage.getItem('admin_user');
-          callback('SIGNED_IN', { access_token: e.newValue, user: u ? JSON.parse(u) : null });
-        } else {
-          callback('SIGNED_OUT', null);
-        }
-      }
-    };
-    window.addEventListener('storage', handler);
-    return { data: { subscription: { unsubscribe: () => window.removeEventListener('storage', handler) } } };
+    // sessionStorage doesn't fire storage events across tabs, but keep for compatibility
+    return { data: { subscription: { unsubscribe: () => {} } } };
   },
 };
 
