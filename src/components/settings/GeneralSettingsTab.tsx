@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 
 export default function GeneralSettingsTab() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -34,6 +36,20 @@ export default function GeneralSettingsTab() {
     },
   });
 
+  // Fetch tenant info to pre-populate if general_settings is empty
+  const { data: tenantInfo } = useQuery({
+    queryKey: ["tenant-info-for-settings", user?.tenant_id],
+    queryFn: async () => {
+      if (!user?.tenant_id) return null;
+      const { data } = await (db.from as any)("tenants")
+        .select("name, email, phone, logo_url")
+        .eq("id", user.tenant_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.tenant_id,
+  });
+
   useEffect(() => {
     if (settings) {
       setForm({
@@ -44,8 +60,18 @@ export default function GeneralSettingsTab() {
         logo_url: settings.logo_url || "",
       });
       if (settings.logo_url) setLogoPreview(settings.logo_url);
+    } else if (tenantInfo) {
+      // Pre-populate from tenant profile if no general_settings row exists
+      setForm({
+        site_name: tenantInfo.name || "",
+        address: "",
+        email: tenantInfo.email || "",
+        mobile: tenantInfo.phone || "",
+        logo_url: tenantInfo.logo_url || "",
+      });
+      if (tenantInfo.logo_url) setLogoPreview(tenantInfo.logo_url);
     }
-  }, [settings]);
+  }, [settings, tenantInfo]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
