@@ -569,6 +569,23 @@ Route::middleware(['super.admin.auth'])->prefix('super-admin')->group(function (
 
 /*
 |--------------------------------------------------------------------------
+| Reseller Protected Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware('reseller.auth')->prefix('reseller')->group(function () {
+    Route::post('/logout', [\App\Http\Controllers\Api\ResellerAuthController::class, 'logout']);
+    Route::get('/me', [\App\Http\Controllers\Api\ResellerAuthController::class, 'me']);
+    Route::get('/dashboard', [\App\Http\Controllers\Api\ResellerController::class, 'dashboard']);
+    Route::get('/customers', [\App\Http\Controllers\Api\ResellerController::class, 'customers']);
+    Route::post('/customers', [\App\Http\Controllers\Api\ResellerController::class, 'storeCustomer']);
+    Route::get('/bills', [\App\Http\Controllers\Api\ResellerController::class, 'bills']);
+    Route::post('/collect-payment', [\App\Http\Controllers\Api\ResellerController::class, 'collectPayment']);
+    Route::get('/wallet-transactions', [\App\Http\Controllers\Api\ResellerController::class, 'walletTransactions']);
+    Route::get('/reports', [\App\Http\Controllers\Api\ResellerController::class, 'reports']);
+});
+
+/*
+|--------------------------------------------------------------------------
 | Customer Portal Protected Routes
 |--------------------------------------------------------------------------
 */
