@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import {
   PDF_COLORS, PDF_FONT, PDF_SPACING,
-  getCompanySettings, getInvoiceSettings,
+  getTenantCompanySettings, getInvoiceSettings,
   drawFooter, getPaymentMethodLines,
 } from "./pdfTheme";
 import { db } from "@/integrations/supabase/client";
