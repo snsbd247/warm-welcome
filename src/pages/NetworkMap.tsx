@@ -2,6 +2,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/apiDb";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -153,6 +154,7 @@ function DraggableMarker({
 
 // ── Main Component ──
 export default function NetworkMap() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -171,18 +173,18 @@ export default function NetworkMap() {
 
   // ── Queries ──
   const { data: nodes = [], isLoading: nodesLoading } = useQuery({
-    queryKey: ["network-nodes"],
+    queryKey: ["network-nodes", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("network_nodes").select("*").order("created_at", { ascending: false });
+      const { data, error } = await scopeByTenant(db.from("network_nodes").select("*").order("created_at", { ascending: false }), tenantId);
       if (error) throw error;
       return (data || []) as NetworkNode[];
     },
   });
 
   const { data: links = [] } = useQuery({
-    queryKey: ["network-links"],
+    queryKey: ["network-links", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("network_links").select("*");
+      const { data, error } = await scopeByTenant(db.from("network_links").select("*"), tenantId);
       if (error) throw error;
       return (data || []) as NetworkLink[];
     },
@@ -196,7 +198,7 @@ export default function NetworkMap() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["network-nodes"] });
+      queryClient.invalidateQueries({ queryKey: ["network-nodes", tenantId] });
       toast.success("Node created");
     },
     onError: (e: any) => toast.error(e.message || "Failed to create node"),
@@ -208,7 +210,7 @@ export default function NetworkMap() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["network-nodes"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["network-nodes", tenantId] }),
   });
 
   const deleteNode = useMutation({
@@ -217,8 +219,8 @@ export default function NetworkMap() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["network-nodes"] });
-      queryClient.invalidateQueries({ queryKey: ["network-links"] });
+      queryClient.invalidateQueries({ queryKey: ["network-nodes", tenantId] });
+      queryClient.invalidateQueries({ queryKey: ["network-links", tenantId] });
       toast.success("Node deleted");
       setSelectedNode(null);
     },
@@ -231,7 +233,7 @@ export default function NetworkMap() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["network-links"] });
+      queryClient.invalidateQueries({ queryKey: ["network-links", tenantId] });
       toast.success("Link created");
     },
     onError: (e: any) => toast.error(e.message || "Failed to create link"),
@@ -243,7 +245,7 @@ export default function NetworkMap() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["network-links"] });
+      queryClient.invalidateQueries({ queryKey: ["network-links", tenantId] });
       toast.success("Link removed");
     },
   });

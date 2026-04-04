@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, BookOpen, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { unwrapApiResult } from "@/lib/apiResult";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -23,6 +24,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function OthersHead() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -31,9 +33,9 @@ export default function OthersHead() {
   const [form, setForm] = useState({ name: "", type: "asset", code: "", description: "", parent_id: "" });
 
   const { data: allAccounts = [] } = useQuery({
-    queryKey: ["accounts-flat"],
+    queryKey: ["accounts-flat", tenantId],
     queryFn: async () => {
-      const { data } = await ( db as any).from("accounts").select("*").order("code").order("name");
+      const { data } = await scopeByTenant(( db as any).from("accounts").select("*").order("code").order("name"), tenantId);
       return data || [];
     },
   });
@@ -60,7 +62,7 @@ export default function OthersHead() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["accounts-flat"] });
+      qc.invalidateQueries({ queryKey: ["accounts-flat", tenantId] });
       toast.success("Saved");
       setOpen(false);
       setEditId(null);
@@ -73,7 +75,7 @@ export default function OthersHead() {
     mutationFn: async (id: string) => {
       unwrapApiResult(await ( db as any).from("accounts").delete().eq("id", id));
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["accounts-flat"] }); toast.success("Deleted"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["accounts-flat", tenantId] }); toast.success("Deleted"); },
     onError: (e: any) => toast.error(e?.message || "Failed"),
   });
 

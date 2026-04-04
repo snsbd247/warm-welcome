@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { postPurchaseToLedger, postPurchasePaymentToLedger } from "@/lib/ledger";
 import { generatePurchaseInvoicePDF } from "@/lib/accountingPdf";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface PurchaseItem { product_id: string; quantity: number; unit_price: number; description?: string; }
 
 export default function Purchases() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -38,21 +40,21 @@ export default function Purchases() {
   const [items, setItems] = useState<PurchaseItem[]>([{ product_id: "", quantity: 1, unit_price: 0 }]);
 
   const { data: purchases = [], isLoading } = useQuery({
-    queryKey: ["purchases"],
+    queryKey: ["purchases", tenantId],
     queryFn: async () => {
-      const { data } = await (db as any).from("purchases").select("*").order("date", { ascending: false });
+      const { data } = await scopeByTenant((db as any).from("purchases").select("*").order("date", { ascending: false }), tenantId);
       return data || [];
     },
   });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
-    queryFn: async () => { const { data } = await (db as any).from("suppliers").select("*"); return data || []; },
+    queryKey: ["suppliers", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant((db as any).from("suppliers").select("*"), tenantId); return data || []; },
   });
 
   const { data: products = [] } = useQuery({
-    queryKey: ["products"],
-    queryFn: async () => { const { data } = await (db as any).from("products").select("*"); return data || []; },
+    queryKey: ["products", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant((db as any).from("products").select("*"), tenantId); return data || []; },
   });
 
   const create = useMutation({
@@ -101,10 +103,10 @@ export default function Purchases() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["purchases"] });
-      qc.invalidateQueries({ queryKey: ["products"] });
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["suppliers"] });
+      qc.invalidateQueries({ queryKey: ["purchases", tenantId] });
+      qc.invalidateQueries({ queryKey: ["products", tenantId] });
+      qc.invalidateQueries({ queryKey: ["transactions", tenantId] });
+      qc.invalidateQueries({ queryKey: ["suppliers", tenantId] });
       toast.success("Purchase created & posted to ledger");
       closeDialog();
     },
@@ -135,8 +137,8 @@ export default function Purchases() {
       await (db as any).from("purchase_items").insert(itemsToInsert);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["purchases"] });
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["purchases", tenantId] });
+      qc.invalidateQueries({ queryKey: ["products", tenantId] });
       toast.success("Purchase updated");
       closeDialog();
     },
@@ -173,9 +175,9 @@ export default function Purchases() {
       await postPurchasePaymentToLedger(purchase.purchase_no, amount, method, new Date().toISOString().split("T")[0]);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["purchases"] });
-      qc.invalidateQueries({ queryKey: ["suppliers"] });
-      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["purchases", tenantId] });
+      qc.invalidateQueries({ queryKey: ["suppliers", tenantId] });
+      qc.invalidateQueries({ queryKey: ["transactions", tenantId] });
       toast.success("Payment adjusted successfully");
       setPayOpen(false);
       setPayTarget(null);

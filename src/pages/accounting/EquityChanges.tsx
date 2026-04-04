@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const fmt = (v: number) => `৳${Math.abs(v).toLocaleString("en-BD", { minimumFractionDigits: 2 })}`;
 
 export default function EquityChanges() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date(); d.setMonth(0); d.setDate(1);
@@ -19,12 +21,12 @@ export default function EquityChanges() {
   const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
 
   const { data: equityAccounts = [] } = useQuery({
-    queryKey: ["equity-accounts"],
-    queryFn: async () => { const { data } = await ( db as any).from("accounts").select("*").eq("type", "equity").eq("is_active", true).order("code"); return data || []; },
+    queryKey: ["equity-accounts", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant(( db as any).from("accounts").select("*").eq("type", "equity").eq("is_active", true).order("code"), tenantId); return data || []; },
   });
 
   const { data: transactions = [] } = useQuery({
-    queryKey: ["equity-txns", dateFrom, dateTo],
+    queryKey: ["equity-txns", dateFrom, dateTo, tenantId],
     queryFn: async () => {
       const equityIds = equityAccounts.map((a: any) => a.id);
       if (equityIds.length === 0) return [];
@@ -39,12 +41,12 @@ export default function EquityChanges() {
 
   // Also get income & expense for retained earnings calc
   const { data: incExpAccounts = [] } = useQuery({
-    queryKey: ["inc-exp-accounts"],
-    queryFn: async () => { const { data } = await ( db as any).from("accounts").select("id, type").in("type", ["income", "expense"]).eq("is_active", true); return data || []; },
+    queryKey: ["inc-exp-accounts", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant(( db as any).from("accounts").select("id, type").in("type", ["income", "expense"]).eq("is_active", true), tenantId); return data || []; },
   });
 
   const { data: incExpTxns = [] } = useQuery({
-    queryKey: ["inc-exp-txns", dateFrom, dateTo],
+    queryKey: ["inc-exp-txns", dateFrom, dateTo, tenantId],
     queryFn: async () => {
       const ids = incExpAccounts.map((a: any) => a.id);
       if (ids.length === 0) return [];

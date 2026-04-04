@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { unwrapApiResult } from "@/lib/apiResult";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -136,6 +137,7 @@ function AccountRow({ account, expanded, onToggle, onEdit, onDelete, onAddChild,
 }
 
 export default function ChartOfAccounts() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -151,18 +153,18 @@ export default function ChartOfAccounts() {
 
   // Fetch accounts
   const { data: flatAccounts = [], isLoading } = useQuery({
-    queryKey: ["accounts-flat"],
+    queryKey: ["accounts-flat", tenantId],
     queryFn: async () => {
-      const res = await ( db as any).from("accounts").select("*").order("code", { ascending: true }).order("name", { ascending: true });
+      const res = await scopeByTenant(( db as any).from("accounts").select("*").order("code", { ascending: true }).order("name", { ascending: true }), tenantId);
       return res.data || [];
     },
   });
 
   // Fetch all transactions to compute debit/credit per account
   const { data: transactions = [] } = useQuery({
-    queryKey: ["all-transactions-summary"],
+    queryKey: ["all-transactions-summary", tenantId],
     queryFn: async () => {
-      const { data } = await ( db as any).from("transactions").select("account_id, debit, credit");
+      const { data } = await scopeByTenant(( db as any).from("transactions").select("account_id, debit, credit"), tenantId);
       return data || [];
     },
   });
@@ -250,7 +252,7 @@ export default function ChartOfAccounts() {
       return unwrapApiResult(await ( db as any).from("accounts").insert(payload));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["accounts-flat"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts-flat", tenantId] });
       toast.success(editAccount ? "Account updated" : "Account created");
       resetForm();
     },
@@ -260,7 +262,7 @@ export default function ChartOfAccounts() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => unwrapApiResult(await ( db as any).from("accounts").delete().eq("id", id)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["accounts-flat"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts-flat", tenantId] });
       toast.success("Account deleted");
     },
     onError: (e: any) => toast.error(e.message || "Failed"),
@@ -338,8 +340,8 @@ export default function ChartOfAccounts() {
                       updated++;
                     }
                   }
-                  queryClient.invalidateQueries({ queryKey: ["accounts-flat"] });
-                  queryClient.invalidateQueries({ queryKey: ["all-transactions-summary"] });
+                  queryClient.invalidateQueries({ queryKey: ["accounts-flat", tenantId] });
+                  queryClient.invalidateQueries({ queryKey: ["all-transactions-summary", tenantId] });
                   toast.success(`Balances recalculated! ${updated} account(s) updated.`);
                 } catch (err: any) {
                   toast.error("Failed to recalculate: " + (err.message || "Unknown error"));

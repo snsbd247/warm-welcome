@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LedgerStatement() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -31,7 +33,7 @@ export default function LedgerStatement() {
 
   // Get account info
   const { data: account } = useQuery({
-    queryKey: ["account-detail", accountId],
+    queryKey: ["account-detail", accountId, tenantId],
     queryFn: async () => {
       if (!accountId) return null;
       const { data } = await ( db as any).from("accounts").select("*").eq("id", accountId).maybeSingle();
@@ -42,7 +44,7 @@ export default function LedgerStatement() {
 
   // Get opening balance from transactions before dateFrom
   const { data: openingData } = useQuery({
-    queryKey: ["ledger-opening", accountId, dateFrom],
+    queryKey: ["ledger-opening", accountId, dateFrom, tenantId],
     queryFn: async () => {
       if (!accountId || !dateFrom) return { debit: 0, credit: 0 };
       const { data } = await (db as any).from("transactions").select("debit, credit").eq("account_id", accountId).lt("date", dateFrom);
@@ -55,7 +57,7 @@ export default function LedgerStatement() {
 
   // Get all transactions for this account in the period
   const { data: transactions = [], isLoading } = useQuery({
-    queryKey: ["ledger-statement", accountId, dateFrom, dateTo],
+    queryKey: ["ledger-statement", accountId, dateFrom, dateTo, tenantId],
     queryFn: async () => {
       if (!accountId) return [];
       let query = (db as any).from("transactions").select("*").eq("account_id", accountId);

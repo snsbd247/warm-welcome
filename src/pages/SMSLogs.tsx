@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,7 @@ import { safeFormat } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SMSLogs() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const [sendOpen, setSendOpen] = useState(false);
   const [groupSmsOpen, setGroupSmsOpen] = useState(false);
@@ -24,7 +26,7 @@ export default function SMSLogs() {
   const [smsForm, setSmsForm] = useState({ phone: "", message: "" });
 
   const { data: logs = [], isLoading, refetch } = useQuery({
-    queryKey: ["sms-logs"],
+    queryKey: ["sms-logs", tenantId],
     queryFn: async () => {
       const { data, error } = await db
         .from("sms_logs")

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { postExpenseToLedger } from "@/lib/ledger";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const emptyExpense = { category: "utility", amount: 0, date: new Date().toISOStr
 const categories = ["salary", "utility", "rent", "maintenance", "transport", "internet", "office", "purchase", "other"];
 
 export default function Expenses() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -33,9 +35,9 @@ export default function Expenses() {
   const [search, setSearch] = useState("");
 
   const { data: expenses = [], isLoading } = useQuery({
-    queryKey: ["expenses"],
+    queryKey: ["expenses", tenantId],
     queryFn: async () => {
-      const { data } = await ( db as any).from("expenses").select("*").order("date", { ascending: false });
+      const { data } = await scopeByTenant(( db as any).from("expenses").select("*").order("date", { ascending: false }), tenantId);
       return data || [];
     },
   });
@@ -53,9 +55,9 @@ export default function Expenses() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["expenses"] });
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["all-transactions-summary"] });
+      qc.invalidateQueries({ queryKey: ["expenses", tenantId] });
+      qc.invalidateQueries({ queryKey: ["transactions", tenantId] });
+      qc.invalidateQueries({ queryKey: ["all-transactions-summary", tenantId] });
       toast.success(editing ? "Expense updated" : "Expense recorded & posted to ledger");
       closeDialog();
     },
@@ -98,9 +100,9 @@ export default function Expenses() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["expenses"] });
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["all-transactions-summary"] });
+      qc.invalidateQueries({ queryKey: ["expenses", tenantId] });
+      qc.invalidateQueries({ queryKey: ["transactions", tenantId] });
+      qc.invalidateQueries({ queryKey: ["all-transactions-summary", tenantId] });
       toast.success("Expense deleted & ledger reversed");
     },
   });

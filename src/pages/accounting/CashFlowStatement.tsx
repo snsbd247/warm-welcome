@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const fmt = (v: number) => `৳${Math.abs(v).toLocaleString("en-BD", { minimumFractionDigits: 2 })}`;
 
 export default function CashFlowStatement() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date(); d.setMonth(0); d.setDate(1);
@@ -20,9 +22,9 @@ export default function CashFlowStatement() {
   const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
 
   const { data: transactions = [] } = useQuery({
-    queryKey: ["cashflow-txns", dateFrom, dateTo],
+    queryKey: ["cashflow-txns", dateFrom, dateTo, tenantId],
     queryFn: async () => {
-      let q = ( db as any).from("transactions").select("*, account:accounts(name, code, type)");
+      let q = scopeByTenant(( db as any).from("transactions").select("*, account:accounts(name, code, type)"), tenantId);
       if (dateFrom) q = q.gte("date", dateFrom);
       if (dateTo) q = q.lte("date", dateTo + "T23:59:59");
       const { data } = await q.order("date", { ascending: true });

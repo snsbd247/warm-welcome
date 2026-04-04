@@ -3,6 +3,7 @@ import { safeFormat } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ChequeRegister() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -30,9 +32,9 @@ export default function ChequeRegister() {
 
   // Use transactions table with reference prefix "CHQ-" to track cheques
   const { data: cheques = [], isLoading } = useQuery({
-    queryKey: ["cheques"],
+    queryKey: ["cheques", tenantId],
     queryFn: async () => {
-      const { data } = await ( db as any).from("transactions").select("*").like("reference", "CHQ-%").order("date", { ascending: false });
+      const { data } = await scopeByTenant(( db as any).from("transactions").select("*").like("reference", "CHQ-%").order("date", { ascending: false }), tenantId);
       return data || [];
     },
   });
@@ -51,7 +53,7 @@ export default function ChequeRegister() {
     },
     onSuccess: () => {
       toast.success("Cheque entry added");
-      qc.invalidateQueries({ queryKey: ["cheques"] });
+      qc.invalidateQueries({ queryKey: ["cheques", tenantId] });
       setOpen(false);
       setForm({ cheque_no: "", bank_name: "", amount: 0, date: new Date().toISOString().split("T")[0], party_name: "", type: "received", status: "pending", description: "" });
     },

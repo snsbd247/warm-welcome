@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const PIE_COLORS = ["#22c55e", "#f59e0b", "#94a3b8", "#ef4444"];
 type Period = "7days" | "30days" | "this_week" | "this_month" | "custom";
 
 export default function MerchantPaymentReports() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const [period, setPeriod] = useState<Period>("30days");
   const [customFrom, setCustomFrom] = useState<Date>();
@@ -43,7 +45,7 @@ export default function MerchantPaymentReports() {
   }, [period, customFrom, customTo]);
 
   const { data: payments, isLoading } = useQuery({
-    queryKey: ["merchant-report", period, dateRange.from.toISOString(), dateRange.to.toISOString()],
+    queryKey: ["merchant-report", period, dateRange.from.toISOString(), dateRange.to.toISOString(), tenantId],
     queryFn: async () => {
       const { data, error } = await db
         .from("merchant_payments")

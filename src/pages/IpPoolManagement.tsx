@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { supabase as supabaseDirect } from "@/integrations/supabase/client";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -19,6 +20,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const IS_LOVABLE = window.location.hostname.includes("lovable.app") || window.location.hostname.includes("lovableproject.com");
 
 export default function IpPoolManagement() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -31,18 +33,18 @@ export default function IpPoolManagement() {
   const [form, setForm] = useState(emptyForm);
 
   const { data: pools = [] } = useQuery({
-    queryKey: ["ip-pools"],
+    queryKey: ["ip-pools", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("ip_pools").select("*, mikrotik_routers(name)").order("created_at", { ascending: false });
+      const { data, error } = await scopeByTenant(db.from("ip_pools").select("*, mikrotik_routers(name)").order("created_at", { ascending: false }), tenantId);
       if (error) throw error;
       return data;
     },
   });
 
   const { data: routers = [] } = useQuery({
-    queryKey: ["mikrotik-routers-list"],
+    queryKey: ["mikrotik-routers-list", tenantId],
     queryFn: async () => {
-      const { data, error } = await db.from("mikrotik_routers").select("id, name, ip_address, status").order("name");
+      const { data, error } = await scopeByTenant(db.from("mikrotik_routers").select("id, name, ip_address, status").order("name"), tenantId);
       if (error) throw error;
       return data;
     },
@@ -61,7 +63,7 @@ export default function IpPoolManagement() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ip-pools"] });
+      queryClient.invalidateQueries({ queryKey: ["ip-pools", tenantId] });
       toast.success(t.ipPool.poolCreated);
       setOpen(false);
       setEditingPool(null);
@@ -84,7 +86,7 @@ export default function IpPoolManagement() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ip-pools"] });
+      queryClient.invalidateQueries({ queryKey: ["ip-pools", tenantId] });
       toast.success(t.ipPool.poolUpdated || "Pool updated");
       setOpen(false);
       setEditingPool(null);
@@ -98,7 +100,7 @@ export default function IpPoolManagement() {
       const { error } = await db.from("ip_pools").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["ip-pools"] }); toast.success(t.ipPool.deleted); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["ip-pools", tenantId] }); toast.success(t.ipPool.deleted); },
   });
 
   const handleSyncFromRouter = async (routerId: string) => {
@@ -124,7 +126,7 @@ export default function IpPoolManagement() {
           toast.error(data?.error || t.ipPool.syncFailed);
         }
       }
-      queryClient.invalidateQueries({ queryKey: ["ip-pools"] });
+      queryClient.invalidateQueries({ queryKey: ["ip-pools", tenantId] });
     } catch (e: any) {
       toast.error(e.message || t.ipPool.syncFailed);
     } finally {

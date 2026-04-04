@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -17,18 +18,19 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const fmt = (v: number) => `৳${Math.abs(v).toLocaleString("en-BD", { minimumFractionDigits: 2 })}`;
 
 export default function Daybook() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
   const { data: transactions = [], isLoading } = useQuery({
-    queryKey: ["daybook", date],
+    queryKey: ["daybook", date, tenantId],
     queryFn: async () => {
-      const { data } = await ( db as any).from("transactions")
+      const { data } = await scopeByTenant(( db as any).from("transactions")
         .select("*, account:accounts(id, name, code, type)")
         .gte("date", date)
         .lte("date", date + "T23:59:59")
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true }), tenantId);
       return data || [];
     },
   });

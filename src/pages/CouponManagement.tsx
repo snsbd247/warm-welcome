@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,13 +17,14 @@ import { safeFormat } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function CouponManagement() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ code: "", description: "", discount_type: "fixed", discount_value: 0, max_uses: 0, valid_from: "", valid_until: "" });
 
   const { data: coupons = [], isLoading } = useQuery({
-    queryKey: ["coupons"],
+    queryKey: ["coupons", tenantId],
     queryFn: async () => {
       const { data, error } = await db.from("coupons").select("*").order("created_at", { ascending: false });
       if (error) throw error;
@@ -43,7 +45,7 @@ export default function CouponManagement() {
       });
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["coupons"] }); toast.success(t.couponPage.couponCreated); setOpen(false); setForm({ code: "", description: "", discount_type: "fixed", discount_value: 0, max_uses: 0, valid_from: "", valid_until: "" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["coupons", tenantId] }); toast.success(t.couponPage.couponCreated); setOpen(false); setForm({ code: "", description: "", discount_type: "fixed", discount_value: 0, max_uses: 0, valid_from: "", valid_until: "" }); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -52,7 +54,7 @@ export default function CouponManagement() {
       const { error } = await db.from("coupons").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["coupons"] }); toast.success(t.couponPage.couponDeleted); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["coupons", tenantId] }); toast.success(t.couponPage.couponDeleted); },
   });
 
   const toggleMutation = useMutation({
@@ -60,7 +62,7 @@ export default function CouponManagement() {
       const { error } = await db.from("coupons").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons", tenantId] }),
   });
 
   return (

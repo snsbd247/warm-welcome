@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -8,12 +9,13 @@ import ReportToolbar from "@/components/reports/ReportToolbar";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function BalanceSheetReport() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const r = t.reportingPages;
 
   const { data: accounts = [] } = useQuery({
-    queryKey: ["balance-sheet-accounts"],
-    queryFn: async () => { const { data } = await (db as any).from("accounts").select("*").eq("is_active", true).order("code"); return data || []; },
+    queryKey: ["balance-sheet-accounts", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant((db as any).from("accounts").select("*").eq("is_active", true).order("code"), tenantId); return data || []; },
   });
 
   const assets = accounts.filter((a: any) => a.type === "asset");

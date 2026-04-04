@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ const emptyProduct = {
 };
 
 export default function Products() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -43,17 +45,17 @@ export default function Products() {
   const [search, setSearch] = useState("");
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", tenantId],
     queryFn: async () => {
-      const { data } = await ( db as any).from("products").select("*,categoryRef:categories(name)").order("name");
+      const { data } = await scopeByTenant(( db as any).from("products").select("*,categoryRef:categories(name)").order("name"), tenantId);
       return data || [];
     },
   });
 
   const { data: categories = [] } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories", tenantId],
     queryFn: async () => {
-      const { data } = await (db as any).from("categories").select("*").eq("status", "active").order("name");
+      const { data } = await scopeByTenant((db as any).from("categories").select("*").eq("status", "active").order("name"), tenantId);
       return data || [];
     },
   });
@@ -69,7 +71,7 @@ export default function Products() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["products", tenantId] });
       toast.success(editing ? "Product updated" : "Product created");
       closeDialog();
     },
@@ -82,7 +84,7 @@ export default function Products() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["products", tenantId] });
       toast.success("Product deleted");
     },
   });

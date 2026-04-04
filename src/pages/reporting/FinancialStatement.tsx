@@ -3,14 +3,16 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ReportToolbar from "@/components/reports/ReportToolbar";
 
 export default function FinancialStatement() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const { data: accounts = [] } = useQuery({
-    queryKey: ["accounts"],
-    queryFn: async () => { const { data } = await (db as any).from("accounts").select("*").order("code"); return data || []; },
+    queryKey: ["accounts", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant((db as any).from("accounts").select("*").order("code"), tenantId); return data || []; },
   });
 
   const byType = (tp: string) => accounts.filter((a: any) => a.type === tp);

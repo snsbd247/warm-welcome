@@ -3,6 +3,7 @@ import { safeFormat } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const fmt = (v: number) => `৳${Math.abs(v).toLocaleString("en-BD", { minimumFractionDigits: 2 })}`;
 
 export default function SalesPurchaseReport() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date(); d.setMonth(d.getMonth() - 1);
@@ -23,9 +25,9 @@ export default function SalesPurchaseReport() {
   const [dateTo, setDateTo] = useState(new Date().toISOString().split("T")[0]);
 
   const { data: sales = [] } = useQuery({
-    queryKey: ["sales-report", dateFrom, dateTo],
+    queryKey: ["sales-report", dateFrom, dateTo, tenantId],
     queryFn: async () => {
-      let q = ( db as any).from("sales").select("*");
+      let q = scopeByTenant(( db as any).from("sales").select("*"), tenantId);
       if (dateFrom) q = q.gte("sale_date", dateFrom);
       if (dateTo) q = q.lte("sale_date", dateTo);
       const { data } = await q.order("sale_date", { ascending: false });
@@ -34,9 +36,9 @@ export default function SalesPurchaseReport() {
   });
 
   const { data: purchases = [] } = useQuery({
-    queryKey: ["purchases-report", dateFrom, dateTo],
+    queryKey: ["purchases-report", dateFrom, dateTo, tenantId],
     queryFn: async () => {
-      let q = ( db as any).from("purchases").select("*, supplier:suppliers(name)");
+      let q = scopeByTenant(( db as any).from("purchases").select("*, supplier:suppliers(name)"), tenantId);
       if (dateFrom) q = q.gte("date", dateFrom);
       if (dateTo) q = q.lte("date", dateTo + "T23:59:59");
       const { data } = await q.order("date", { ascending: false });

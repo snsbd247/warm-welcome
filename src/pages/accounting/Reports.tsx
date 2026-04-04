@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,28 +18,29 @@ import { generateProfitLossPDF } from "@/lib/accountingPdf";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Reports() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(String(currentYear));
 
   const { data: sales = [] } = useQuery({
-    queryKey: ["sales"],
-    queryFn: async () => { const { data } = await ( db as any).from("sales").select("*"); return data || []; },
+    queryKey: ["sales", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant(( db as any).from("sales").select("*"), tenantId); return data || []; },
   });
 
   const { data: purchases = [] } = useQuery({
-    queryKey: ["purchases"],
-    queryFn: async () => { const { data } = await ( db as any).from("purchases").select("*"); return data || []; },
+    queryKey: ["purchases", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant(( db as any).from("purchases").select("*"), tenantId); return data || []; },
   });
 
   const { data: expenses = [] } = useQuery({
-    queryKey: ["expenses"],
-    queryFn: async () => { const { data } = await ( db as any).from("expenses").select("*"); return data || []; },
+    queryKey: ["expenses", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant(( db as any).from("expenses").select("*"), tenantId); return data || []; },
   });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
-    queryFn: async () => { const { data } = await ( db as any).from("suppliers").select("*"); return data || []; },
+    queryKey: ["suppliers", tenantId],
+    queryFn: async () => { const { data } = await scopeByTenant(( db as any).from("suppliers").select("*"), tenantId); return data || []; },
   });
 
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

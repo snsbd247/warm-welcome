@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId, scopeByTenant } from "@/hooks/useTenantId";
 import { IS_LOVABLE } from "@/lib/environment";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -24,12 +25,13 @@ const actionColors: Record<string, string> = {
 };
 
 export default function ActivityLogs() {
+  const tenantId = useTenantId();
   const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [moduleFilter, setModuleFilter] = useState("all");
 
   const { data: logs = [], isLoading } = useQuery({
-    queryKey: ["activity-logs"],
+    queryKey: ["activity-logs", tenantId],
     queryFn: async () => {
       if (IS_LOVABLE) {
         const { data, error } = await db
