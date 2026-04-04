@@ -54,6 +54,16 @@ async function sbSelect(table: string, options?: { select?: string; filters?: Re
   return data || [];
 }
 
+/** Get customer IDs for a tenant, then fetch related records from a child table */
+async function sbSelectByTenantCustomers(table: string, tenantId: string, select = "*") {
+  const customers = await sbSelect("customers", { filters: { tenant_id: tenantId } });
+  const customerIds = customers.map((c: any) => c.id);
+  if (customerIds.length === 0) return [];
+  const { data, error } = await (supabase.from as any)(table).select(select).in("customer_id", customerIds);
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
 async function sbInsert(table: string, data: any) {
   const { data: result, error } = await (supabase.from as any)(table).insert(data).select();
   if (error) throw new Error(error.message);
