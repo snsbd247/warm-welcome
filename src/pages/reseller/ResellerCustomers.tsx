@@ -128,12 +128,24 @@ export default function ResellerCustomers() {
   const update = (key: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  // Fetch reseller's allow_all_packages flag
+  // Fetch reseller's allow_all_packages flag and default_commission
   const { data: resellerInfo } = useQuery({
     queryKey: ["reseller-info", reseller?.id],
     queryFn: async () => {
-      const { data } = await (db as any).from("resellers").select("allow_all_packages").eq("id", reseller!.id).single();
+      const { data } = await (db as any).from("resellers").select("allow_all_packages, default_commission").eq("id", reseller!.id).single();
       return data;
+    },
+    enabled: !!reseller?.id,
+  });
+
+  // Fetch per-package commissions for this reseller
+  const { data: packageCommissions = [] } = useQuery({
+    queryKey: ["reseller-pkg-commissions", reseller?.id],
+    queryFn: async () => {
+      const { data } = await (db as any).from("reseller_package_commissions")
+        .select("package_id, commission_amount")
+        .eq("reseller_id", reseller!.id);
+      return data || [];
     },
     enabled: !!reseller?.id,
   });
@@ -263,9 +275,17 @@ export default function ResellerCustomers() {
         }).eq("id", editId);
         if (error) throw error;
       } else {
+        // Commission calculation
+        const pkgCommission = packageCommissions.find((pc: any) => pc.package_id === form.package_id);
+        const commission = pkgCommission
+          ? parseFloat(pkgCommission.commission_amount) || 0
+          : parseFloat(resellerInfo?.default_commission) || 0;
+        const tenantAmount = Math.max(monthlyBill - commission, 0);
+        const resellerProfit = monthlyBill - tenantAmount;
+
         const walletBalance = parseFloat(walletData?.wallet_balance) || 0;
-        if (monthlyBill > 0 && walletBalance < monthlyBill) {
-          throw new Error(`Insufficient wallet balance. Required: ৳${monthlyBill}, Available: ৳${walletBalance}`);
+        if (tenantAmount > 0 && walletBalance < tenantAmount) {
+          throw new Error(`ওয়ালেট ব্যালেন্স অপর্যাপ্ত। প্রয়োজন: ৳${tenantAmount}, আছে: ৳${walletBalance}`);
         }
 
         const pppoeUsername = generatePPPoEUsername();
@@ -285,22 +305,39 @@ export default function ResellerCustomers() {
 
         setGeneratedPPPoE({ username: pppoeUsername, password: pppoePassword });
 
-        if (monthlyBill > 0) {
-          const newBalance = walletBalance - monthlyBill;
+        // Deduct tenant_amount from wallet (reseller keeps commission as profit)
+        if (tenantAmount > 0) {
+          const newBalance = walletBalance - tenantAmount;
           await (db as any).from("reseller_wallet_transactions").insert({
             reseller_id: reseller!.id,
             tenant_id: reseller!.tenant_id,
             type: "debit",
-            amount: monthlyBill,
+            amount: tenantAmount,
             balance_after: newBalance,
-            description: `Customer activation: ${form.name} (${customerId})`,
+            description: `Customer activation: ${form.name} (${customerId}) | Commission: ৳${commission}`,
           });
           await (db as any).from("resellers").update({ wallet_balance: newBalance, updated_at: new Date().toISOString() }).eq("id", reseller!.id);
         }
+
+        // Create initial bill with commission breakdown
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        await (db as any).from("bills").insert({
+          customer_id: (await (db as any).from("customers").select("id").eq("customer_id", customerId).eq("tenant_id", reseller!.tenant_id).single()).data?.id,
+          month: currentMonth,
+          amount: monthlyBill,
+          base_amount: monthlyBill,
+          commission_amount: commission,
+          reseller_profit: resellerProfit,
+          tenant_amount: tenantAmount,
+          reseller_id: reseller!.id,
+          status: "paid",
+          paid_amount: monthlyBill,
+          paid_date: new Date().toISOString().slice(0, 10),
+        });
       }
     },
     onSuccess: () => {
-      toast.success(editId ? "Customer updated" : "Customer created & wallet deducted");
+      toast.success(editId ? "Customer updated" : "Customer created & wallet deducted (commission applied)");
       queryClient.invalidateQueries({ queryKey: ["reseller-customers"] });
       queryClient.invalidateQueries({ queryKey: ["reseller-wallet-quick"] });
       queryClient.invalidateQueries({ queryKey: ["reseller-dashboard"] });

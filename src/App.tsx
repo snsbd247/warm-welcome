@@ -111,6 +111,7 @@ const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const ForcePasswordChange = lazy(() => import("@/pages/ForcePasswordChange"));
 const CouponManagement = lazy(() => import("@/pages/CouponManagement"));
 const ResellerManagement = lazy(() => import("@/pages/ResellerManagement"));
+const ResellerProfitReport = lazy(() => import("@/pages/ResellerProfitReport"));
 const IpPoolManagement = lazy(() => import("@/pages/IpPoolManagement"));
 const FaqManagement = lazy(() => import("@/pages/FaqManagement"));
 const AdvancedAnalytics = lazy(() => import("@/pages/AdvancedAnalytics"));
@@ -308,6 +309,7 @@ function App() {
                 <Route path="/faq" element={<PermissionGuard module="settings"><FaqManagement /></PermissionGuard>} />
                 <Route path="/analytics" element={<PermissionGuard module="reports"><AdvancedAnalytics /></PermissionGuard>} />
                 <Route path="/resellers" element={<PermissionGuard module="reseller"><ResellerManagement /></PermissionGuard>} />
+                <Route path="/reseller-profit-report" element={<PermissionGuard module="reseller"><ResellerProfitReport /></PermissionGuard>} />
                 <Route path="/bandwidth-analytics" element={<PermissionGuard module="reports"><BandwidthAnalytics /></PermissionGuard>} />
                 <Route path="/live-bandwidth" element={<PermissionGuard module="reports"><LiveBandwidth /></PermissionGuard>} />
 

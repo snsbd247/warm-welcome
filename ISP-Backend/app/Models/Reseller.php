@@ -14,7 +14,7 @@ class Reseller extends Model
 
     protected $fillable = [
         'id', 'tenant_id', 'name', 'company_name', 'phone', 'email', 'address',
-        'user_id', 'password_hash', 'wallet_balance', 'commission_rate', 'status',
+        'user_id', 'password_hash', 'wallet_balance', 'commission_rate', 'default_commission', 'status',
         'allow_all_packages',
     ];
 
@@ -23,6 +23,7 @@ class Reseller extends Model
     protected $casts = [
         'wallet_balance' => 'decimal:2',
         'commission_rate' => 'decimal:2',
+        'default_commission' => 'decimal:2',
         'allow_all_packages' => 'boolean',
     ];
 
@@ -54,5 +55,10 @@ class Reseller extends Model
     public function zones()
     {
         return $this->hasMany(ResellerZone::class, 'reseller_id');
+    }
+
+    public function packageCommissions()
+    {
+        return $this->hasMany(ResellerPackageCommission::class, 'reseller_id');
     }
 }

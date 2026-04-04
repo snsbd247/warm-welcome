@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import bcrypt from "bcryptjs";
 
 import ResellerPackageAssign from "@/components/reseller/ResellerPackageAssign";
+import ResellerPackageCommissions from "@/components/reseller/ResellerPackageCommissions";
 
 interface ResellerForm {
   name: string;
@@ -31,12 +32,14 @@ interface ResellerForm {
   password: string;
   status: string;
   commission_rate: string;
+  default_commission: string;
   allow_all_packages: boolean;
 }
 
 const emptyForm: ResellerForm = {
   name: "", company_name: "", phone: "", email: "", address: "",
   user_id: "", password: "", status: "active", commission_rate: "0",
+  default_commission: "0",
   allow_all_packages: false,
 };
 
@@ -62,7 +65,7 @@ export default function ResellerManagement() {
   const { data: resellers = [], isLoading } = useQuery({
     queryKey: ["resellers", tenantId],
     queryFn: async () => {
-      let q = (db as any).from("resellers").select("id, tenant_id, user_id, name, company_name, phone, email, address, commission_rate, wallet_balance, status, allow_all_packages, created_at, updated_at").order("name");
+      let q = (db as any).from("resellers").select("id, tenant_id, user_id, name, company_name, phone, email, address, commission_rate, default_commission, wallet_balance, status, allow_all_packages, created_at, updated_at").order("name");
       if (tenantId) q = q.eq("tenant_id", tenantId);
       const { data, error } = await q;
       if (error) throw error;
@@ -94,6 +97,7 @@ export default function ResellerManagement() {
         user_id: form.user_id || null,
         status: form.status,
         commission_rate: parseFloat(form.commission_rate) || 0,
+        default_commission: parseFloat(form.default_commission) || 0,
         allow_all_packages: form.allow_all_packages,
         updated_at: new Date().toISOString(),
       };
@@ -271,6 +275,7 @@ export default function ResellerManagement() {
       name: r.name, company_name: r.company_name || "", phone: r.phone || "",
       email: r.email || "", address: r.address || "", user_id: r.user_id || "", password: "",
       status: r.status, commission_rate: r.commission_rate?.toString() || "0",
+      default_commission: r.default_commission?.toString() || "0",
       allow_all_packages: r.allow_all_packages || false,
     });
     setDialogOpen(true);
@@ -341,7 +346,8 @@ export default function ResellerManagement() {
                           <TableHead>Company</TableHead>
                           <TableHead>Phone</TableHead>
                           <TableHead>Wallet</TableHead>
-                          <TableHead>Commission</TableHead>
+                          <TableHead>Commission (%)</TableHead>
+                          <TableHead>Default Commission (৳)</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -355,6 +361,7 @@ export default function ResellerManagement() {
                             <TableCell>{r.phone || "—"}</TableCell>
                             <TableCell className="font-medium">৳{parseFloat(r.wallet_balance).toLocaleString()}</TableCell>
                             <TableCell>{r.commission_rate}%</TableCell>
+                            <TableCell>৳{parseFloat(r.default_commission || 0).toLocaleString()}</TableCell>
                             <TableCell>
                               <Badge variant={r.status === "active" ? "default" : "destructive"}>{r.status}</Badge>
                             </TableCell>
@@ -513,6 +520,13 @@ export default function ResellerManagement() {
                 <Input type="number" value={form.commission_rate} onChange={(e) => setForm({ ...form, commission_rate: e.target.value })} />
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Default Commission (৳)</Label>
+                <Input type="number" value={form.default_commission} onChange={(e) => setForm({ ...form, default_commission: e.target.value })} placeholder="Fixed amount per customer" />
+                <p className="text-xs text-muted-foreground">Reseller keeps this amount as profit per customer activation</p>
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label>Status</Label>
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
@@ -531,6 +545,14 @@ export default function ResellerManagement() {
                 tenantId={tenantId}
                 allowAllPackages={form.allow_all_packages}
                 onAllowAllChange={(v) => setForm({ ...form, allow_all_packages: v })}
+              />
+            )}
+            {/* Package-wise Commission Settings */}
+            {editId && tenantId && (
+              <ResellerPackageCommissions
+                resellerId={editId}
+                tenantId={tenantId}
+                defaultCommission={parseFloat(form.default_commission) || 0}
               />
             )}
           </div>
