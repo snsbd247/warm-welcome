@@ -549,6 +549,20 @@ Route::middleware(['super.admin.auth'])->prefix('super-admin')->group(function (
     Route::put('/smtp-settings', [SuperAdminController::class, 'updateSmtpSettings']);
     Route::post('/smtp-test', [SuperAdminController::class, 'testSmtp']);
 
+    // ── Backup & Recovery ──────────────────────────────
+    Route::get('/backups/logs', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'logs']);
+    Route::post('/backups/full', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'createFull']);
+    Route::post('/backups/tenant', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'createTenant']);
+    Route::post('/backups/download', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'download']);
+    Route::post('/backups/restore-full', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'restoreFull']);
+    Route::post('/backups/restore-tenant', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'restoreTenant']);
+    Route::post('/backups/verify', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'verify']);
+    Route::post('/backups/rollback', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'rollback']);
+    Route::post('/backups/delete', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'delete']);
+    Route::post('/backups/cleanup', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'cleanup']);
+    Route::get('/backups/auto-settings', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'autoBackupSettings']);
+    Route::put('/backups/auto-settings', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'updateAutoBackupSettings']);
+
     // ── Tenant Financial Reports ────────────────────────
     Route::get('/tenants/{id}/reports/overview', [\App\Http\Controllers\Api\TenantReportController::class, 'overview']);
     Route::get('/tenants/{id}/reports/revenue', [\App\Http\Controllers\Api\TenantReportController::class, 'revenue']);
