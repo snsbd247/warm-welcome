@@ -71,6 +71,7 @@ const DEMO_TEMPLATES: Record<string, string> = {
 };
 
 export default function EmailTemplatesTab() {
+  const tenantId = useTenantId();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
