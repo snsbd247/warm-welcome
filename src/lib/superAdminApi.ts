@@ -23,8 +23,8 @@ async function request(path: string, options: RequestInit = {}) {
   });
 
   if (res.status === 401) {
-    localStorage.removeItem("super_admin_token");
-    localStorage.removeItem("super_admin_user");
+    sessionStore.removeItem("super_admin_token");
+    sessionStore.removeItem("super_admin_user");
     window.location.href = "/super/login";
     throw new Error("Session expired");
   }

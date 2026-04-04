@@ -85,8 +85,8 @@ export function SuperAdminProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setToken(null);
-    localStorage.removeItem("super_admin_token");
-    localStorage.removeItem("super_admin_user");
+    sessionStore.removeItem("super_admin_token");
+    sessionStore.removeItem("super_admin_user");
   };
 
   return (

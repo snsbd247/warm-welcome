@@ -59,8 +59,8 @@ api.interceptors.response.use(
     }
 
     if (status === 401) {
-      localStorage.removeItem('admin_token');
-      localStorage.removeItem('admin_user');
+      sessionStore.removeItem('admin_token');
+      sessionStore.removeItem('admin_user');
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/portal')) {
         window.location.href = '/admin/login';
       }
