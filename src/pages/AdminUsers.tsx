@@ -1,3 +1,4 @@
+import { sessionStore } from "@/lib/sessionStore";
 import { useState } from "react";
 import { safeFormat } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -68,7 +69,7 @@ export default function AdminUsers() {
     queryFn: async () => {
       if (IS_LOVABLE) {
         // Get current user's tenant_id
-        const currentUser = JSON.parse(localStorage.getItem("admin_user") || "{}");
+        const currentUser = JSON.parse(sessionStore.getItem("admin_user") || "{}");
         const { data: currentProfile } = await db.from("profiles").select("tenant_id").eq("id", currentUser.id).maybeSingle();
         const tenantId = currentProfile?.tenant_id;
 
@@ -186,7 +187,7 @@ export default function AdminUsers() {
           const { data: existing } = await db.from("profiles").select("id").eq("username", form.username).maybeSingle();
           if (existing) { toast.error("Username already taken"); setLoading(false); return; }
           const newId = crypto.randomUUID();
-          const currentUser = JSON.parse(localStorage.getItem("admin_user") || "{}");
+          const currentUser = JSON.parse(sessionStore.getItem("admin_user") || "{}");
           const { data: currentProfile } = await db.from("profiles").select("tenant_id").eq("id", currentUser.id).maybeSingle();
           const { error: insertError } = await db.from("profiles").insert({
             id: newId,

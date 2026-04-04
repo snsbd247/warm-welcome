@@ -1,3 +1,4 @@
+import { sessionStore } from "@/lib/sessionStore";
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +19,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   if (!user) return <Navigate to="/admin/login" replace />;
 
   // Force password change redirect
-  const savedUser = localStorage.getItem("admin_user");
+  const savedUser = sessionStore.getItem("admin_user");
   if (savedUser) {
     try {
       const parsed = JSON.parse(savedUser);

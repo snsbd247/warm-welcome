@@ -1,3 +1,4 @@
+import { sessionStore } from "@/lib/sessionStore";
 import { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,7 +75,7 @@ const DomainManagement = () => {
     try {
       if (IS_LOVABLE) {
         // Get current tenant's domains
-        const currentUser = JSON.parse(localStorage.getItem("admin_user") || "{}");
+        const currentUser = JSON.parse(sessionStore.getItem("admin_user") || "{}");
         const { data: profile } = await db.from("profiles").select("tenant_id").eq("id", currentUser.id).maybeSingle();
         const tenantId = profile?.tenant_id;
 
@@ -109,7 +110,7 @@ const DomainManagement = () => {
     setAdding(true);
     try {
       if (IS_LOVABLE) {
-        const currentUser = JSON.parse(localStorage.getItem("admin_user") || "{}");
+        const currentUser = JSON.parse(sessionStore.getItem("admin_user") || "{}");
         const { data: profile } = await db.from("profiles").select("tenant_id").eq("id", currentUser.id).maybeSingle();
         const tenantId = profile?.tenant_id;
         if (!tenantId) { toast.error("No tenant context found"); setAdding(false); return; }
@@ -159,7 +160,7 @@ const DomainManagement = () => {
     try {
       if (IS_LOVABLE) {
         // Unset all primary first
-        const currentUser = JSON.parse(localStorage.getItem("admin_user") || "{}");
+        const currentUser = JSON.parse(sessionStore.getItem("admin_user") || "{}");
         const { data: profile } = await db.from("profiles").select("tenant_id").eq("id", currentUser.id).maybeSingle();
         if (profile?.tenant_id) {
           // Set all domains of this tenant to not primary

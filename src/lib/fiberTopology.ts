@@ -1,3 +1,4 @@
+import { sessionStore } from "@/lib/sessionStore";
 import { db } from "@/integrations/supabase/client";
 
 export interface FiberCustomer {
@@ -162,7 +163,7 @@ export function unwrapApiObject<T>(payload: unknown, fallback: T): T {
 
 export async function resolveFiberTenantId(): Promise<string | null> {
   try {
-    const currentUser = JSON.parse(localStorage.getItem("admin_user") || "{}");
+    const currentUser = JSON.parse(sessionStore.getItem("admin_user") || "{}");
     if (currentUser?.tenant_id) return currentUser.tenant_id;
     if (!currentUser?.id) return null;
 

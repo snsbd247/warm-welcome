@@ -1,3 +1,4 @@
+import { sessionStore } from "@/lib/sessionStore";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,8 +21,8 @@ export default function ForcePasswordChange() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("admin_token");
-  const user = JSON.parse(localStorage.getItem("admin_user") || "{}");
+  const token = sessionStore.getItem("admin_token");
+  const user = JSON.parse(sessionStore.getItem("admin_user") || "{}");
 
   useEffect(() => {
     if (!user?.must_change_password) navigate("/dashboard");
@@ -48,7 +49,7 @@ export default function ForcePasswordChange() {
         if (!res.ok) throw new Error(data.error || data.message || "Failed");
       }
       const updatedUser = { ...user, must_change_password: false };
-      localStorage.setItem("admin_user", JSON.stringify(updatedUser));
+      sessionStore.setItem("admin_user", JSON.stringify(updatedUser));
       toast.success(fp.passwordChanged);
       setTimeout(() => navigate("/dashboard"), 1000);
     } catch (err: any) {

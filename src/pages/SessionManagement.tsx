@@ -1,3 +1,4 @@
+import { sessionStore } from "@/lib/sessionStore";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
@@ -27,7 +28,7 @@ export default function SessionManagement() {
     },
   });
 
-  const currentToken = localStorage.getItem("admin_token");
+  const currentToken = sessionStore.getItem("admin_token");
 
   const terminateMut = useMutation({
     mutationFn: async (sessionId: string) => {

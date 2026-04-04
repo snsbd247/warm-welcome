@@ -1,3 +1,4 @@
+import { sessionStore } from "@/lib/sessionStore";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
@@ -57,7 +58,7 @@ export default function SubscriptionInvoices() {
   const { data: tenantInfo } = useQuery({
     queryKey: ["my-tenant-info"],
     queryFn: async () => {
-      const currentUser = JSON.parse(localStorage.getItem("admin_user") || "{}");
+      const currentUser = JSON.parse(sessionStore.getItem("admin_user") || "{}");
       if (!currentUser?.id) return null;
       const { data: profile } = await db.from("profiles").select("tenant_id").eq("id", currentUser.id).maybeSingle();
       if (!profile?.tenant_id) return null;
