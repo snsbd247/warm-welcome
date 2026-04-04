@@ -3698,6 +3698,62 @@ export type Database = {
           },
         ]
       }
+      reseller_packages: {
+        Row: {
+          created_at: string
+          id: string
+          package_id: string
+          reseller_id: string
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          package_id: string
+          reseller_id: string
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          package_id?: string
+          reseller_id?: string
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_packages_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_packages_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_packages_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_packages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reseller_sessions: {
         Row: {
           browser: string | null
@@ -3810,6 +3866,7 @@ export type Database = {
       resellers: {
         Row: {
           address: string | null
+          allow_all_packages: boolean
           commission_rate: number | null
           company_name: string | null
           created_at: string
@@ -3826,6 +3883,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          allow_all_packages?: boolean
           commission_rate?: number | null
           company_name?: string | null
           created_at?: string
@@ -3842,6 +3900,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          allow_all_packages?: boolean
           commission_rate?: number | null
           company_name?: string | null
           created_at?: string
