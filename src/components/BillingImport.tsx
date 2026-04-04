@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, useCallback } from "react";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId } from "@/hooks/useTenantId";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -72,6 +73,7 @@ function downloadTemplate() {
 type Step = "upload" | "preview" | "result";
 
 export default function BillingImport({ open, onOpenChange, onComplete }: Props) {
+  const tenantId = useTenantId();
   const [step, setStep] = useState<Step>("upload");
   const [importing, setImporting] = useState(false);
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
@@ -160,10 +162,12 @@ export default function BillingImport({ open, onOpenChange, onComplete }: Props)
   const handleImport = async () => {
     setImporting(true);
     try {
-      const { data: customers } = await db
+      let custQuery: any = db
         .from("customers")
         .select("id, customer_id, monthly_bill, due_date_day")
         .eq("status", "active");
+      if (tenantId) custQuery = custQuery.eq("tenant_id", tenantId);
+      const { data: customers } = await custQuery;
       const custMap = new Map((customers as { id: string; customer_id: string; monthly_bill: number; due_date_day: number | null }[])?.map((c) => [c.customer_id.toUpperCase(), c]) || []);
 
       const errors: ImportError[] = [];

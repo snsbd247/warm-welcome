@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId } from "@/hooks/useTenantId";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import { renderFooterText, type FooterSettings } from "@/hooks/useFooterSettings";
 
 export default function FooterSettingsTab() {
+  const tenantId = useTenantId();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -24,15 +26,17 @@ export default function FooterSettingsTab() {
   });
 
   const { data: settings, isLoading } = useQuery({
-    queryKey: ["footer-settings-admin"],
+    queryKey: ["footer-settings-admin", tenantId],
     queryFn: async () => {
-      const { data, error } = await (db as any)
+      let q = (db as any)
         .from("system_settings")
         .select("setting_key, setting_value")
         .in("setting_key", [
           "footer_text", "company_name", "footer_link",
           "footer_developer", "system_version", "auto_update_year",
         ]);
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       const map: Record<string, string> = {};
       (data as any[])?.forEach((row: any) => { map[row.setting_key] = row.setting_value || ""; });
@@ -65,9 +69,10 @@ export default function FooterSettingsTab() {
         { setting_key: "auto_update_year", setting_value: form.auto_update_year ? "true" : "false" },
       ];
 
+      const upsertEntries = entries.map((e: any) => ({ ...e, ...(tenantId ? { tenant_id: tenantId } : {}) }));
       const { error } = await (db as any)
         .from("system_settings")
-        .upsert(entries, { onConflict: "setting_key" });
+        .upsert(upsertEntries, { onConflict: "setting_key,tenant_id" });
       if (error) throw error;
       toast.success("Footer settings saved");
       queryClient.invalidateQueries({ queryKey: ["footer-settings"] });

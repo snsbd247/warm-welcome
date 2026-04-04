@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId } from "@/hooks/useTenantId";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,17 +35,20 @@ const DEFAULT_SETTINGS: InvoiceSettings = {
 };
 
 export default function InvoiceSettingsTab() {
+  const tenantId = useTenantId();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<InvoiceSettings>(DEFAULT_SETTINGS);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["invoice-settings-all"],
+    queryKey: ["invoice-settings-all", tenantId],
     queryFn: async () => {
-      const { data, error } = await (db as any)
+      let q = (db as any)
         .from("system_settings")
         .select("setting_key, setting_value")
         .like("setting_key", "invoice_%");
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       const map: Record<string, string> = {};
       (data || []).forEach((r: any) => { map[r.setting_key] = r.setting_value; });
@@ -83,9 +87,10 @@ export default function InvoiceSettingsTab() {
         { setting_key: "invoice_tech_support", setting_value: settings.technical_support_phone },
       ].map(e => ({ ...e, updated_at: new Date().toISOString() }));
 
+      const upsertEntries = entries.map((e: any) => ({ ...e, ...(tenantId ? { tenant_id: tenantId } : {}) }));
       const { error } = await (db as any)
         .from("system_settings")
-        .upsert(entries, { onConflict: "setting_key" });
+        .upsert(upsertEntries, { onConflict: "setting_key,tenant_id" });
       if (error) throw error;
       toast.success("Invoice settings saved");
       queryClient.invalidateQueries({ queryKey: ["invoice-settings-all"] });

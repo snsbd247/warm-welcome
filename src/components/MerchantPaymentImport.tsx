@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, useCallback } from "react";
 import { db } from "@/integrations/supabase/client";
+import { useTenantId } from "@/hooks/useTenantId";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -69,6 +70,7 @@ function downloadTemplate() {
 type Step = "upload" | "preview" | "result";
 
 export default function MerchantPaymentImport({ open, onOpenChange, onComplete }: Props) {
+  const tenantId = useTenantId();
   const [step, setStep] = useState<Step>("upload");
   const [importing, setImporting] = useState(false);
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
@@ -166,6 +168,7 @@ export default function MerchantPaymentImport({ open, onOpenChange, onComplete }
           amount: parseFloat(row.amount),
           reference: row.reference || null,
           payment_date: row.date ? new Date(row.date).toISOString() : new Date().toISOString(),
+          ...(tenantId ? { tenant_id: tenantId } : {}),
         });
 
         if (error) {
