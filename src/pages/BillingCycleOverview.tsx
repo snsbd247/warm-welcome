@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { db } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,8 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function BillingCycleOverview() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentMonth = format(new Date(), "yyyy-MM");
@@ -86,14 +89,21 @@ export default function BillingCycleOverview() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["billing-cycle-overview", currentMonth],
+    queryKey: ["billing-cycle-overview", currentMonth, tenantId],
     queryFn: async () => {
-      const { data: customers, error: custErr } = await db.from("customers").select("id, customer_id, name, phone, monthly_bill, due_date_day, connection_status, status").eq("status", "active").order("due_date_day", { ascending: true });
+      let custQuery: any = db.from("customers").select("id, customer_id, name, phone, monthly_bill, due_date_day, connection_status, status").eq("status", "active").order("due_date_day", { ascending: true });
+      if (tenantId) custQuery = custQuery.eq("tenant_id", tenantId);
+      const { data: customers, error: custErr } = await custQuery;
       if (custErr) throw custErr;
-      const { data: bills, error: billErr } = await db.from("bills").select("id, customer_id, month, amount, status, due_date").eq("month", currentMonth);
-      if (billErr) throw billErr;
-      const billMap = new Map<string, typeof bills[0]>();
-      bills?.forEach(b => billMap.set(b.customer_id, b));
+      const customerIds = (customers || []).map((c: any) => c.id);
+      let bills: any[] = [];
+      if (customerIds.length > 0) {
+        const { data: billsData, error: billErr } = await (db.from("bills").select("id, customer_id, month, amount, status, due_date").eq("month", currentMonth) as any).in("customer_id", customerIds);
+        if (billErr) throw billErr;
+        bills = billsData || [];
+      }
+      const billMap = new Map<string, any>();
+      bills.forEach(b => billMap.set(b.customer_id, b));
       return (customers || []).map(c => ({ ...c, latestBill: billMap.get(c.id) })) as CustomerWithBill[];
     },
   });

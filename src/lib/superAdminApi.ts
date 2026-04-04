@@ -54,6 +54,16 @@ async function sbSelect(table: string, options?: { select?: string; filters?: Re
   return data || [];
 }
 
+/** Get customer IDs for a tenant, then fetch related records from a child table */
+async function sbSelectByTenantCustomers(table: string, tenantId: string, select = "*") {
+  const customers = await sbSelect("customers", { filters: { tenant_id: tenantId } });
+  const customerIds = customers.map((c: any) => c.id);
+  if (customerIds.length === 0) return [];
+  const { data, error } = await (supabase.from as any)(table).select(select).in("customer_id", customerIds);
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
 async function sbInsert(table: string, data: any) {
   const { data: result, error } = await (supabase.from as any)(table).insert(data).select();
   if (error) throw new Error(error.message);
@@ -581,14 +591,20 @@ export const superAdminApi = {
     if (IS_LOVABLE) {
       const currentMonth = new Date().toISOString().substring(0, 7);
 
-      // customers/bills tables don't have tenant_id in Supabase schema
-      // In preview mode, show all data; in production, backend handles tenant scoping
-      const [customers, bills, payments, smsWallet] = await Promise.all([
-        sbSelect("customers"),
-        sbSelect("bills"),
-        sbSelect("payments").catch(() => []),
-        sbSelect("sms_wallets", { filters: { tenant_id: tenantId } }).catch(() => []),
-      ]);
+      // Get tenant-scoped customers first
+      const customers = await sbSelect("customers", { filters: { tenant_id: tenantId } });
+      const customerIds = customers.map((c: any) => c.id);
+
+      // Get bills and payments scoped to tenant customers
+      let bills: any[] = [];
+      let payments: any[] = [];
+      if (customerIds.length > 0) {
+        const { data: billsData } = await (supabase.from as any)("bills").select("*").in("customer_id", customerIds);
+        bills = billsData || [];
+        const { data: paymentsData } = await (supabase.from as any)("payments").select("*").in("customer_id", customerIds);
+        payments = paymentsData || [];
+      }
+      const smsWallet = await sbSelect("sms_wallets", { filters: { tenant_id: tenantId } }).catch(() => []);
 
       const activeCustomers = customers.filter((c: any) => c.status === "active");
       const suspendedCustomers = customers.filter((c: any) => c.status === "suspended");
@@ -600,11 +616,8 @@ export const superAdminApi = {
       const monthlyRevenue = paidCurrentBills.reduce((s: number, b: any) => s + Number(b.paid_amount || b.amount || 0), 0);
       const totalDue = currentBills.filter((b: any) => b.status === "unpaid").reduce((s: number, b: any) => s + Number(b.amount || 0) - Number(b.paid_amount || 0), 0);
       const alltimeDue = bills.filter((b: any) => b.status === "unpaid").reduce((s: number, b: any) => s + Number(b.amount || 0) - Number(b.paid_amount || 0), 0);
-
-      // Total collection: all paid bills ever
       const totalRevenue = bills.filter((b: any) => b.status === "paid").reduce((s: number, b: any) => s + Number(b.paid_amount || b.amount || 0), 0);
 
-      // Fallback to payments table if bills don't have paid data
       if (totalRevenue === 0 && payments.length > 0) {
         const paidPayments = payments.filter((p: any) => p.status === "completed");
         const paymentRevenue = paidPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
@@ -644,7 +657,7 @@ export const superAdminApi = {
 
   getTenantReportRevenue: async (tenantId: string, from?: string, to?: string) => {
     if (IS_LOVABLE) {
-      const payments = await sbSelect("payments");
+      const payments = await sbSelectByTenantCustomers("payments", tenantId);
       const completed = payments.filter((p: any) => p.status === "completed");
       const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const recent = completed.filter((p: any) => new Date(p.paid_at || p.created_at) >= thirtyDaysAgo);
@@ -675,7 +688,7 @@ export const superAdminApi = {
 
   getTenantReportExpense: async (tenantId: string, from?: string, to?: string) => {
     if (IS_LOVABLE) {
-      const expenses = await sbSelect("expenses");
+      const expenses = await sbSelect("expenses"); // expenses don't have tenant_id yet, show all for now
       const catMap: Record<string, number> = {};
       expenses.forEach((e: any) => {
         const cat = e.category || "other";
@@ -704,7 +717,7 @@ export const superAdminApi = {
     if (IS_LOVABLE) {
       const yr = year || new Date().getFullYear();
       const [payments, expenses] = await Promise.all([
-        sbSelect("payments"),
+        sbSelectByTenantCustomers("payments", tenantId),
         sbSelect("expenses"),
       ]);
       const completed = payments.filter((p: any) => p.status === "completed");
@@ -732,7 +745,7 @@ export const superAdminApi = {
   getTenantReportInvoices: async (tenantId: string, month?: string) => {
     if (IS_LOVABLE) {
       const m = month || new Date().toISOString().substring(0, 7);
-      const bills = await sbSelect("bills");
+      const bills = await sbSelectByTenantCustomers("bills", tenantId);
       const filtered = bills.filter((b: any) => b.month === m);
       return { month: m, bills: filtered };
     }
@@ -742,7 +755,7 @@ export const superAdminApi = {
 
   getTenantReportPayments: async (tenantId: string) => {
     if (IS_LOVABLE) {
-      const payments = await sbSelect("payments");
+      const payments = await sbSelectByTenantCustomers("payments", tenantId);
       const recent = payments.sort((a: any, b: any) => (b.paid_at || b.created_at || "").localeCompare(a.paid_at || a.created_at || "")).slice(0, 50);
       return { payments: recent, total: payments.length };
     }
@@ -751,7 +764,7 @@ export const superAdminApi = {
 
   getTenantReportCustomers: async (tenantId: string) => {
     if (IS_LOVABLE) {
-      const customers = await sbSelect("customers");
+      const customers = await sbSelect("customers", { filters: { tenant_id: tenantId } });
       const byArea: Record<string, number> = {};
       const byStatus: Record<string, number> = {};
       customers.forEach((c: any) => {
@@ -842,10 +855,13 @@ export const superAdminApi = {
 
   getTenantReportReceivablePayable: async (tenantId: string) => {
     if (IS_LOVABLE) {
-      const [customers, bills] = await Promise.all([
-        sbSelect("customers"),
-        sbSelect("bills"),
-      ]);
+      const customers = await sbSelect("customers", { filters: { tenant_id: tenantId } });
+      const customerIds = customers.map((c: any) => c.id);
+      let bills: any[] = [];
+      if (customerIds.length > 0) {
+        const { data } = await (supabase.from as any)("bills").select("*").in("customer_id", customerIds);
+        bills = data || [];
+      }
       const unpaidBills = bills.filter((b: any) => b.status !== "paid");
       const receivableMap: Record<string, { name: string; due: number }> = {};
       unpaidBills.forEach((b: any) => {
@@ -873,7 +889,7 @@ export const superAdminApi = {
     if (IS_LOVABLE) {
       const yr = year || new Date().getFullYear();
       const [payments, expenses] = await Promise.all([
-        sbSelect("payments"),
+        sbSelectByTenantCustomers("payments", tenantId),
         sbSelect("expenses"),
       ]);
       const completed = payments.filter((p: any) => p.status === "completed");

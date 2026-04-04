@@ -62,7 +62,7 @@ export default function LoginLogs() {
   const { data: customers } = useQuery({
     queryKey: ["customers-map-login"],
     queryFn: async () => {
-      const { data } = await db.from("customers").select("id, name, customer_id");
+      const { data } = await db.from("customers").select("id, name, customer_id") as any;
       return (data || []) as { id: string; name: string; customer_id: string }[];
     },
   });

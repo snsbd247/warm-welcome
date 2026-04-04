@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { safeFormat } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { postPaymentToLedger, postCustomerLedgerCredit } from "@/lib/ledger";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Billing() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [generateOpen, setGenerateOpen] = useState(false);
@@ -55,16 +58,31 @@ export default function Billing() {
   const canEditBill = isSuperAdmin || hasPermission("billing", "edit");
   const canDeleteBill = isSuperAdmin || hasPermission("billing", "delete");
 
-  const { data: bills, isLoading } = useQuery({
-    queryKey: ["bills"],
+  // First get tenant customer IDs
+  const { data: tenantCustomers } = useQuery({
+    queryKey: ["tenant-customer-ids", tenantId],
     queryFn: async () => {
-      const { data, error } = await db
+      let q = db.from("customers").select("id");
+      if (tenantId) q = (q as any).eq("tenant_id", tenantId);
+      const { data } = await q;
+      return (data || []).map((c: any) => c.id) as string[];
+    },
+  });
+
+  const { data: bills, isLoading } = useQuery({
+    queryKey: ["bills", tenantId],
+    queryFn: async () => {
+      if (tenantCustomers && tenantCustomers.length === 0) return [];
+      let query: any = db
         .from("bills")
         .select("*, customers(customer_id, name, phone, area, monthly_bill, package_id)")
         .order("created_at", { ascending: false });
+      if (tenantCustomers) query = query.in("customer_id", tenantCustomers);
+      const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as any[];
     },
+    enabled: !!tenantCustomers,
   });
 
   // Group bills by month

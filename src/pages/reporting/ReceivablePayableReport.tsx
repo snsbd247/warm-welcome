@@ -6,16 +6,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertTriangle } from "lucide-react";
 import ReportToolbar from "@/components/reports/ReportToolbar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTenantCustomerIds } from "@/hooks/useTenantCustomerIds";
 
 export default function ReceivablePayableReport() {
   const { t } = useLanguage();
   const r = t.reportingPages;
+  const { customerIds, tenantId } = useTenantCustomerIds();
 
   const { data: customers = [] } = useQuery({
-    queryKey: ["rp-customers"], queryFn: async () => { const { data } = await db.from("customers").select("id, name, customer_id, area"); return data || []; },
+    queryKey: ["rp-customers", tenantId], queryFn: async () => {
+      let q: any = db.from("customers").select("id, name, customer_id, area");
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data } = await q; return data || [];
+    },
   });
   const { data: bills = [] } = useQuery({
-    queryKey: ["rp-bills"], queryFn: async () => { const { data } = await db.from("bills").select("customer_id, amount, paid_amount, status, month"); return data || []; },
+    queryKey: ["rp-bills", tenantId], queryFn: async () => {
+      if (customerIds.length === 0) return [];
+      let q: any = db.from("bills").select("customer_id, amount, paid_amount, status, month");
+      if (customerIds.length > 0) q = q.in("customer_id", customerIds);
+      const { data } = await q; return data || [];
+    }, enabled: customerIds.length > 0,
   });
 
   const unpaid = bills.filter((b: any) => b.status !== "paid");

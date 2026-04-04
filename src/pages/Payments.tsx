@@ -2,6 +2,7 @@ import { useState } from "react";
 import { safeFormat } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { postPaymentToLedger } from "@/lib/ledger";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Payments() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -51,16 +54,31 @@ export default function Payments() {
   const canEditPayment = isSuperAdmin || hasPermission("payments", "edit");
   const canDeletePayment = isSuperAdmin || hasPermission("payments", "delete");
 
-  const { data: payments, isLoading } = useQuery({
-    queryKey: ["admin-payments"],
+  // First get tenant customer IDs
+  const { data: tenantCustomerIds } = useQuery({
+    queryKey: ["tenant-customer-ids", tenantId],
     queryFn: async () => {
-      const { data, error } = await db
+      let q = db.from("customers").select("id");
+      if (tenantId) q = (q as any).eq("tenant_id", tenantId);
+      const { data } = await q;
+      return (data || []).map((c: any) => c.id) as string[];
+    },
+  });
+
+  const { data: payments, isLoading } = useQuery({
+    queryKey: ["admin-payments", tenantId],
+    queryFn: async () => {
+      if (tenantCustomerIds && tenantCustomerIds.length === 0) return [];
+      let query: any = db
         .from("payments")
         .select("*, customers(customer_id, name)")
         .order("created_at", { ascending: false });
+      if (tenantCustomerIds) query = query.in("customer_id", tenantCustomerIds);
+      const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as any[];
     },
+    enabled: !!tenantCustomerIds,
   });
 
   const filtered = payments?.filter((p) => {

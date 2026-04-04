@@ -58,7 +58,7 @@ export default function Sales() {
   const { data: customers = [] } = useQuery({
     queryKey: ["customers-list-for-sales"],
     queryFn: async () => {
-      const { data } = await db.from("customers").select("id, name, phone, customer_id").order("name");
+      const { data } = await db.from("customers").select("id, name, phone, customer_id").order("name") as any;
       return data || [];
     },
   });
