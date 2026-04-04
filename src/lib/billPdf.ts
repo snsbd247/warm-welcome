@@ -3,7 +3,7 @@ import { formatAddress } from "./bangladeshGeo";
 import { format } from "date-fns";
 import {
   PDF_COLORS, PDF_FONT, PDF_SPACING,
-  getCompanySettings, getInvoiceSettings,
+  getTenantCompanySettings, getInvoiceSettings,
   drawFooter, getPaymentMethodLines, fmtAmount,
 } from "./pdfTheme";
 import { db } from "@/integrations/supabase/client";
