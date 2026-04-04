@@ -105,10 +105,12 @@ class ResellerController extends Controller
             'zone_id' => 'nullable|uuid|exists:reseller_zones,id',
         ]);
 
-        // SECURITY: Strip MikroTik fields — reseller cannot set these
+        // SECURITY: Strip fields reseller cannot control
         $request->request->remove('router_id');
         $request->request->remove('pppoe_username');
         $request->request->remove('pppoe_password');
+        $request->request->remove('discount');      // Reseller cannot set discount
+        $request->request->remove('is_free');        // Reseller cannot create free lines
 
         // Auto-generate customer_id
         $lastCustomer = Customer::withoutGlobalScopes()
