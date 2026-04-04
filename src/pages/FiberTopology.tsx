@@ -406,6 +406,8 @@ function CableHNode({ cable, t, isLast, onEdit }: { cable: FiberCableData; t: an
 export default function FiberTopology() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [dialogType, setDialogType] = useState<string | null>(null);
