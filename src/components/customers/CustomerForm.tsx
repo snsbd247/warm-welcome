@@ -94,6 +94,7 @@ export default function CustomerForm({ customer, onSuccess }: CustomerFormProps)
     connection_charge_amount: "",
     first_month_bill_amount: "",
     is_free: customer ? Number(customer.monthly_bill) === 0 : false,
+    reseller_id: customer?.reseller_id ?? "",
   });
 
   const { data: packages } = useQuery({
