@@ -102,8 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data } = await api.post("/admin/login", { email: username, password });
         if (!data?.user || !data?.token) throw new Error(data?.error || "Invalid username or password");
         const adminUser: AdminUser = data.user;
-        localStorage.setItem("admin_token", data.token);
-        localStorage.setItem("admin_user", JSON.stringify(adminUser));
+        sessionStore.setItem("admin_token", data.token);
+        sessionStore.setItem("admin_user", JSON.stringify(adminUser));
         setUser(adminUser);
         return { user: adminUser, token: data.token };
       } catch (err: any) {
