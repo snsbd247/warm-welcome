@@ -29,15 +29,17 @@ export default function FooterSettings() {
   });
 
   const { data: settings, isLoading } = useQuery({
-    queryKey: ["footer-settings-admin"],
+    queryKey: ["footer-settings-admin", tenantId],
     queryFn: async () => {
-      const { data, error } = await db
-        .from("system_settings" as any)
+      let q = (db as any)
+        .from("system_settings")
         .select("setting_key, setting_value")
         .in("setting_key", [
           "footer_text", "company_name", "footer_link",
           "footer_developer", "system_version", "auto_update_year",
         ]);
+      if (tenantId) q = q.eq("tenant_id", tenantId);
+      const { data, error } = await q;
       if (error) throw error;
       const map: Record<string, string> = {};
       (data as any[])?.forEach((row: any) => {
