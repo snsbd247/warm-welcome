@@ -543,10 +543,20 @@ export const superAdminApi = {
   updateSmtpSettings: async (data: any) => {
     if (IS_LOVABLE) {
       const existing = await sbSelect("smtp_settings");
+      const payload = {
+        host: data.host || "",
+        port: Number(data.port) || 587,
+        username: data.username || "",
+        password: data.password || "",
+        encryption: data.encryption || "tls",
+        from_email: data.from_email || "",
+        from_name: data.from_name || "Smart ISP",
+        status: data.status || "active",
+      };
       if (existing.length > 0) {
-        return sbUpdate("smtp_settings", existing[0].id, data);
+        return sbUpdate("smtp_settings", existing[0].id, payload);
       }
-      return sbInsert("smtp_settings", data);
+      return sbInsert("smtp_settings", payload);
     }
     return request("/smtp-settings", { method: "PUT", body: JSON.stringify(data) });
   },
