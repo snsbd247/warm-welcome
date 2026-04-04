@@ -4,13 +4,13 @@ import { PDF_COLORS, PDF_FONT, PDF_SPACING, drawCompanyHeader, drawSectionHeader
 // ═══════════════════════════════════════════════════════════════
 // Payment Advice
 // ═══════════════════════════════════════════════════════════════
-export function generatePaymentAdvicePDF(supplier: any, payment: any, remainingDue: number) {
+export function generatePaymentAdvicePDF(supplier: any, payment: any, remainingDue: number, companyName = "Smart ISP") {
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.getWidth();
   const m = PDF_SPACING.margin;
 
   let y = drawCompanyHeader(doc, {
-    companyName: "Smart ISP",
+    companyName,
     subtitle: "Internet Service Provider",
     docTitle: "PAYMENT ADVICE",
     docMeta: [`Date: ${new Date(payment.paid_date || payment.date || new Date()).toLocaleDateString("en-GB")}`],
