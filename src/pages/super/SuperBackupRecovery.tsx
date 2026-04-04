@@ -213,7 +213,7 @@ export default function SuperBackupRecovery() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-accent/10"><HardDrive className="h-5 w-5 text-accent-foreground" /></div>
+              <div className="p-2 rounded-lg bg-secondary/50"><HardDrive className="h-5 w-5 text-secondary-foreground" /></div>
               <div>
                 <p className="text-2xl font-bold">{tenantLogs.filter(l => l.backup_type === "tenant").length}</p>
                 <p className="text-xs text-muted-foreground">Tenant Backups</p>
@@ -224,7 +224,7 @@ export default function SuperBackupRecovery() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10"><CheckCircle className="h-5 w-5 text-green-600" /></div>
+              <div className="p-2 rounded-lg bg-accent"><CheckCircle className="h-5 w-5 text-accent-foreground" /></div>
               <div>
                 <p className="text-2xl font-bold">{logs.filter(l => l.status === "completed").length}</p>
                 <p className="text-xs text-muted-foreground">Successful</p>
@@ -235,7 +235,7 @@ export default function SuperBackupRecovery() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10"><Clock className="h-5 w-5 text-blue-600" /></div>
+              <div className="p-2 rounded-lg bg-muted"><Clock className="h-5 w-5 text-muted-foreground" /></div>
               <div>
                 <p className="text-2xl font-bold">{formatSize(logs.reduce((s, l) => s + (l.file_size || 0), 0))}</p>
                 <p className="text-xs text-muted-foreground">Total Size</p>
