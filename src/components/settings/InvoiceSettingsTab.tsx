@@ -87,9 +87,10 @@ export default function InvoiceSettingsTab() {
         { setting_key: "invoice_tech_support", setting_value: settings.technical_support_phone },
       ].map(e => ({ ...e, updated_at: new Date().toISOString() }));
 
+      const upsertEntries = entries.map((e: any) => ({ ...e, ...(tenantId ? { tenant_id: tenantId } : {}) }));
       const { error } = await (db as any)
         .from("system_settings")
-        .upsert(entries, { onConflict: "setting_key" });
+        .upsert(upsertEntries, { onConflict: "setting_key,tenant_id" });
       if (error) throw error;
       toast.success("Invoice settings saved");
       queryClient.invalidateQueries({ queryKey: ["invoice-settings-all"] });
