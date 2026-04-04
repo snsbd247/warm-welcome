@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\Reseller;
 use App\Models\ResellerWalletTransaction;
+use App\Models\ResellerZone;
 use Illuminate\Http\Request;
 
 class ResellerController extends Controller
