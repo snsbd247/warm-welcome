@@ -100,15 +100,17 @@ class ResellerController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'area' => 'required|string|max:255',
-            'monthly_bill' => 'required|numeric|min:0',
+            'monthly_bill' => 'required|numeric|min:1', // Reseller cannot create free (0) bills
             'package_id' => 'nullable|uuid|exists:packages,id',
             'zone_id' => 'nullable|uuid|exists:reseller_zones,id',
         ]);
 
-        // SECURITY: Strip MikroTik fields — reseller cannot set these
+        // SECURITY: Strip fields reseller cannot control
         $request->request->remove('router_id');
         $request->request->remove('pppoe_username');
         $request->request->remove('pppoe_password');
+        $request->request->remove('discount');      // Reseller cannot set discount
+        $request->request->remove('is_free');        // Reseller cannot create free lines
 
         // Auto-generate customer_id
         $lastCustomer = Customer::withoutGlobalScopes()
@@ -145,6 +147,7 @@ class ResellerController extends Controller
             'zone_id' => $request->zone_id,
             'pppoe_username' => $pppoeUsername,
             'pppoe_password' => $pppoePassword,
+            'discount' => 0, // Forced: reseller cannot set discount
         ]);
 
         return response()->json($customer, 201);

@@ -213,7 +213,8 @@ export default function ResellerCustomers() {
       if (!form.name || !form.phone || !form.area) throw new Error("Name, phone and area are required");
 
       const selectedPkg = packages.find((p: any) => p.id === form.package_id);
-      const monthlyBill = form.is_free ? 0 : (parseFloat(form.monthly_bill) || (selectedPkg ? parseFloat(selectedPkg.price) : 0));
+      // Reseller cannot set free line or discount
+      const monthlyBill = parseFloat(form.monthly_bill) || (selectedPkg ? parseFloat(selectedPkg.price) : 0);
 
       const basePayload: any = {
         name: form.name,
@@ -242,7 +243,7 @@ export default function ResellerCustomers() {
         perm_post_office: form.perm_post_office || null,
         package_id: form.package_id || null,
         monthly_bill: monthlyBill,
-        discount: parseFloat(form.discount) || 0,
+        discount: 0, // Reseller cannot set discount
         due_date_day: form.due_date_day ? parseInt(form.due_date_day) : null,
         connection_status: form.connection_status,
         zone_id: form.zone_id || null,
@@ -680,9 +681,6 @@ export default function ResellerCustomers() {
                       </Select>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    ⚠️ MikroTik Router, PPPoE, IP Address ইত্যাদি টেন্যান্ট অ্যাডমিন সেট করবেন।
-                  </p>
                 </FormSection>
 
                 {/* ─── Billing Information ─── */}
@@ -690,28 +688,11 @@ export default function ResellerCustomers() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <Label className="text-xs">Monthly Bill (৳) *</Label>
-                      <Input type="number" value={form.monthly_bill} onChange={(e) => update("monthly_bill", e.target.value)} className="h-9" disabled={form.is_free} placeholder="Auto from package" />
-                    </div>
-                    <div className="flex items-end pb-1">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="is_free_reseller"
-                          checked={form.is_free}
-                          onCheckedChange={(checked) => {
-                            const isFree = !!checked;
-                            setForm(prev => ({
-                              ...prev,
-                              is_free: isFree,
-                              monthly_bill: isFree ? "0" : prev.monthly_bill === "0" ? "" : prev.monthly_bill,
-                            }));
-                          }}
-                        />
-                        <Label htmlFor="is_free_reseller" className="text-xs cursor-pointer">Free Line (বিল জেনারেট হবে না)</Label>
-                      </div>
+                      <Input type="number" value={form.monthly_bill} onChange={(e) => update("monthly_bill", e.target.value)} className="h-9" placeholder="Auto from package" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Discount (৳)</Label>
-                      <Input type="number" value={form.discount} onChange={(e) => update("discount", e.target.value)} className="h-9" />
+                      <Input type="number" value="0" className="h-9 bg-muted" disabled title="রিসেলার ডিসকাউন্ট দিতে পারবেন না" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Due Date (Day)</Label>
