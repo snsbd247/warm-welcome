@@ -36,6 +36,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Billing() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id;
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [generateOpen, setGenerateOpen] = useState(false);
