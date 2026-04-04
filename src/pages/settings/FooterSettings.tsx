@@ -75,10 +75,12 @@ export default function FooterSettings() {
       ];
 
       for (const entry of entries) {
-        const { error } = await (db as any)
+        let q = (db as any)
           .from("system_settings")
           .update({ setting_value: entry.value, updated_at: new Date().toISOString() })
           .eq("setting_key", entry.key);
+        if (tenantId) q = q.eq("tenant_id", tenantId);
+        const { error } = await q;
         if (error) throw error;
       }
 
