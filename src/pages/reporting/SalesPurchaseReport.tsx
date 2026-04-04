@@ -27,7 +27,7 @@ export default function SalesPurchaseReport() {
   const { data: sales = [] } = useQuery({
     queryKey: ["sales-report", dateFrom, dateTo, tenantId],
     queryFn: async () => {
-      let q = ( db as any).from("sales").select("*");
+      let q = scopeByTenant(( db as any).from("sales").select("*"), tenantId);
       if (dateFrom) q = q.gte("sale_date", dateFrom);
       if (dateTo) q = q.lte("sale_date", dateTo);
       const { data } = await q.order("sale_date", { ascending: false });
