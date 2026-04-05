@@ -207,6 +207,7 @@ function App() {
                 <Route path="/admin/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/landing" element={<LandingPage />} />
+                <Route path="/demo-request" element={<DemoRequestPage />} />
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/customers" element={<PermissionGuard module="customers"><Customers /></PermissionGuard>} />
