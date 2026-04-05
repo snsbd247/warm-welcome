@@ -31,7 +31,7 @@ export default function DemoRequestPage() {
   const demoMeta = sections.find((s: any) => s.section_type === "hero")?.metadata || {};
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(210,80%,20%)] via-[hsl(210,70%,25%)] to-[hsl(200,60%,30%)]">
+    <div className="min-h-screen bg-gradient-to-br from-foreground via-foreground/95 to-foreground/90">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
