@@ -44,10 +44,13 @@ class Kernel extends ConsoleKernel
         $schedule->command('reports:daily-profit')->dailyAt('23:55');
 
         // ── Auto Backup ──────────────────────────────────
+        // Frequency is controlled via system_settings (auto_backup_frequency)
         // Daily auto backup at 2:30 AM
-        $schedule->command('backup:auto')->dailyAt('02:30');
+        $schedule->command('backup:auto --type=full')->dailyAt('02:30');
         // Weekly full backup on Sunday at 3 AM
-        $schedule->command('backup:auto')->weeklyOn(0, '03:00');
+        $schedule->command('backup:auto --type=full')->weeklyOn(0, '03:00');
+        // Monthly full backup on 1st at 3 AM
+        $schedule->command('backup:auto --type=full')->monthlyOn(1, '03:00');
     }
 
     /**
