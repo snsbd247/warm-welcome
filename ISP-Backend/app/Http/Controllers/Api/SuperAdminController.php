@@ -261,6 +261,7 @@ class SuperAdminController extends Controller
         }
 
         return response()->json($plan->load('modules'), 201);
+    }
 
     public function updatePlan(Request $request, string $id)
     {
