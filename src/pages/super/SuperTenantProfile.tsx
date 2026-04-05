@@ -232,7 +232,7 @@ function ImpersonateButton({ tenantId, tenantName, tenantSubdomain }: { tenantId
       toast.success(`Logging in as ${tenantName}...`);
 
       // Navigate to tenant dashboard
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (e: any) {
       toast.error(e.message || "Impersonation failed");
     } finally {

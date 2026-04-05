@@ -30,7 +30,7 @@ const NotFound = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             {nf.goBack}
           </Button>
-          <Button onClick={() => navigate("/")}>
+          <Button onClick={() => navigate("/dashboard")}>
             <Home className="h-4 w-4 mr-2" />
             {nf.dashboard}
           </Button>
