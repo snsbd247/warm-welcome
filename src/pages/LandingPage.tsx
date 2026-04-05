@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import DemoQuickModal from "@/components/demo/DemoQuickModal";
 import { db } from "@/integrations/supabase/client";
 import { superAdminApi } from "@/lib/superAdminApi";
 import { Button } from "@/components/ui/button";
