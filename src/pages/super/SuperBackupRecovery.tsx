@@ -28,6 +28,64 @@ interface AutoSettings {
   keep_count: number;
 }
 
+function normalizeBackupType(item: any): string {
+  const rawType = String(item?.backup_type || item?.type || "").toLowerCase();
+  const fileName = String(item?.file_name || item?.fileName || "").toLowerCase();
+
+  if (rawType === "tenant" || rawType === "tenant_restore") return rawType;
+  if (fileName.startsWith("restore_tenant_")) return "tenant_restore";
+  if (fileName.startsWith("tenant_")) return "tenant";
+  if (rawType.includes("restore")) return rawType.includes("tenant") ? "tenant_restore" : "full_restore";
+
+  if (["full", "sql", "json", "manual", "manual_sql", "emergency", "auto", "auto_daily", "auto_weekly", "auto_monthly"].includes(rawType)) {
+    return "full";
+  }
+
+  if (
+    fileName.startsWith("full_backup_") ||
+    fileName.startsWith("backup_sql_") ||
+    fileName.startsWith("backup_") ||
+    fileName.startsWith("emergency_") ||
+    fileName.startsWith("restore_")
+  ) {
+    return fileName.startsWith("restore_") ? "full_restore" : "full";
+  }
+
+  return rawType || "full";
+}
+
+function extractBackupResponse(response: any) {
+  const candidate = response?.data || response?.backup || response;
+
+  return {
+    fileName:
+      candidate?.file_name ||
+      candidate?.fileName ||
+      response?.file_name ||
+      response?.filename ||
+      response?.data?.file_name ||
+      response?.backup?.file_name ||
+      "",
+    size: Number(
+      candidate?.size ??
+      candidate?.file_size ??
+      response?.size ??
+      response?.file_size ??
+      response?.data?.size ??
+      response?.data?.file_size ??
+      response?.backup?.size ??
+      response?.backup?.file_size ??
+      0,
+    ),
+    tenantName:
+      candidate?.tenant_name ||
+      response?.tenant_name ||
+      response?.data?.tenant_name ||
+      response?.backup?.tenant_name ||
+      "",
+  };
+}
+
 function extractBackupLogs(response: any): BackupLog[] {
   const items = Array.isArray(response)
     ? response
@@ -42,7 +100,7 @@ function extractBackupLogs(response: any): BackupLog[] {
       id: String(item.id || `${item.file_name || item.fileName || "backup"}-${item.created_at || item.createdAt || ""}`),
       file_name: String(item.file_name || item.fileName || ""),
       file_size: Number(item.file_size ?? item.size ?? 0),
-      backup_type: String(item.backup_type || item.type || ""),
+      backup_type: normalizeBackupType(item),
       status: String(item.status || "completed"),
       created_by: String(item.created_by || "system"),
       created_at: String(item.created_at || item.createdAt || new Date().toISOString()),
@@ -59,8 +117,10 @@ export default function SuperBackupRecovery() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [autoSettings, setAutoSettings] = useState<AutoSettings>({ enabled: false, frequency: "daily", keep_count: 10 });
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (): Promise<BackupLog[]> => {
     setLoading(true);
+    let nextLogs: BackupLog[] = [];
+
     try {
       const [logsRes, tenantsRes, settingsRes] = await Promise.allSettled([
         superAdminApi.getBackupLogs(),
@@ -69,7 +129,8 @@ export default function SuperBackupRecovery() {
       ]);
 
       if (logsRes.status === "fulfilled") {
-        setLogs(extractBackupLogs(logsRes.value));
+        nextLogs = extractBackupLogs(logsRes.value);
+        setLogs(nextLogs);
       } else {
         console.error("Failed to load backup logs", logsRes.reason);
       }
@@ -91,6 +152,8 @@ export default function SuperBackupRecovery() {
     } finally {
       setLoading(false);
     }
+
+    return nextLogs;
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -107,12 +170,13 @@ export default function SuperBackupRecovery() {
     setActionLoading("full");
     try {
       const res = await superAdminApi.createFullBackup();
-      const d = res?.data || res;
-      const fileName = d?.file_name || d?.filename || "backup";
-      const size = d?.size || d?.file_size;
+      const result = extractBackupResponse(res);
+      const refreshedLogs = await loadData();
+      const latestFullBackup = refreshedLogs.find((log) => log.backup_type === "full");
+      const fileName = result.fileName || latestFullBackup?.file_name || "backup";
+      const size = result.size || latestFullBackup?.file_size || 0;
       const sizeStr = size ? ` (${formatSize(size)})` : "";
       toast.success(`Full backup created: ${fileName}${sizeStr}`);
-      await loadData();
     } catch (e: any) {
       toast.error(e?.message || "Backup failed");
     } finally {
@@ -125,11 +189,13 @@ export default function SuperBackupRecovery() {
     setActionLoading("tenant");
     try {
       const res = await superAdminApi.createTenantBackup(selectedTenant);
-      const d = res?.data || res;
-      const fileName = d?.file_name || d?.filename || "backup";
-      const tenantName = d?.tenant_name ? ` [${d.tenant_name}]` : "";
+      const result = extractBackupResponse(res);
+      const refreshedLogs = await loadData();
+      const latestTenantBackup = refreshedLogs.find((log) => log.backup_type === "tenant");
+      const fileName = result.fileName || latestTenantBackup?.file_name || "backup";
+      const tenantNameValue = result.tenantName || (selectedTenant && tenants.find((tenant) => tenant.id === selectedTenant)?.name) || "";
+      const tenantName = tenantNameValue ? ` [${tenantNameValue}]` : "";
       toast.success(`Tenant backup created: ${fileName}${tenantName}`);
-      await loadData();
     } catch (e: any) {
       toast.error(e?.message || "Backup failed");
     } finally {
