@@ -336,6 +336,137 @@ class ResellerController extends Controller
         return response()->json(['message' => 'Zone deleted']);
     }
 
+    // ══════════════════════════════════════════════════════
+    // ── BANDWIDTH ANALYTICS ──────────────────────────────
+    // ══════════════════════════════════════════════════════
+
+    /**
+     * Bandwidth usage data for reseller's customers (zone-wise)
+     */
+    public function bandwidth(Request $request)
+    {
+        $reseller = $request->get('reseller_user');
+
+        $dateFrom = $request->input('date_from', now()->subDays(7)->toDateString());
+        $dateTo = $request->input('date_to', now()->toDateString());
+
+        $data = \App\Models\CustomerBandwidthUsage::where('reseller_id', $reseller->id)
+            ->whereBetween('date', [$dateFrom, $dateTo])
+            ->with('zone:id,name')
+            ->orderBy('date')
+            ->get();
+
+        return response()->json($data);
+    }
+
+    /**
+     * Live bandwidth data for reseller's customers (via MikroTik)
+     */
+    public function liveBandwidth(Request $request)
+    {
+        $reseller = $request->get('reseller_user');
+
+        $customerIds = Customer::withoutGlobalScopes()
+            ->where('reseller_id', $reseller->id)
+            ->where('connection_status', 'online')
+            ->pluck('id');
+
+        // Get active PPPoE sessions from MikroTik routers
+        $users = [];
+        $totalUpload = 0;
+        $totalDownload = 0;
+        $heavyUsers = 0;
+        $idleUsers = 0;
+        $peakUser = null;
+
+        // Fetch customers with their router info
+        $customers = Customer::withoutGlobalScopes()
+            ->where('reseller_id', $reseller->id)
+            ->where('connection_status', 'online')
+            ->whereNotNull('pppoe_username')
+            ->with('router:id,name,host,api_port,username,password_hash')
+            ->get();
+
+        foreach ($customers as $customer) {
+            if (!$customer->router) continue;
+
+            try {
+                $router = $customer->router;
+                $client = new \RouterOS\Client([
+                    'host' => $router->host,
+                    'user' => $router->username,
+                    'pass' => $router->password_hash ? decrypt($router->password_hash) : '',
+                    'port' => $router->api_port ?: 8728,
+                    'timeout' => 3,
+                ]);
+
+                $query = new \RouterOS\Query('/ppp/active/print');
+                $query->where('name', $customer->pppoe_username);
+                $responses = $client->query($query)->read();
+
+                if (!empty($responses)) {
+                    $session = $responses[0];
+                    $uploadBps = (int)($session['tx-byte'] ?? 0) * 8;
+                    $downloadBps = (int)($session['rx-byte'] ?? 0) * 8;
+                    $totalBps = $uploadBps + $downloadBps;
+
+                    $status = 'normal';
+                    if ($totalBps > 50_000_000) { $status = 'heavy'; $heavyUsers++; }
+                    elseif ($totalBps < 100_000) { $status = 'idle'; $idleUsers++; }
+
+                    $user = [
+                        'pppoe_username' => $customer->pppoe_username,
+                        'customer_name' => $customer->name,
+                        'customer_id' => $customer->customer_id,
+                        'upload_bps' => $uploadBps,
+                        'download_bps' => $downloadBps,
+                        'total_bps' => $totalBps,
+                        'upload_mbps' => round($uploadBps / 1_000_000, 2),
+                        'download_mbps' => round($downloadBps / 1_000_000, 2),
+                        'total_mbps' => round($totalBps / 1_000_000, 2),
+                        'upload_formatted' => $this->formatBps($uploadBps),
+                        'download_formatted' => $this->formatBps($downloadBps),
+                        'total_formatted' => $this->formatBps($totalBps),
+                        'uptime' => $session['uptime'] ?? '0s',
+                        'ip_address' => $session['address'] ?? '',
+                        'router_name' => $router->name,
+                        'status' => $status,
+                    ];
+
+                    $users[] = $user;
+                    $totalUpload += $uploadBps;
+                    $totalDownload += $downloadBps;
+
+                    if (!$peakUser || $totalBps > ($peakUser['total_bps'] ?? 0)) {
+                        $peakUser = $user;
+                    }
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        usort($users, fn($a, $b) => $b['total_bps'] <=> $a['total_bps']);
+
+        return response()->json([
+            'users' => $users,
+            'total_upload' => $totalUpload,
+            'total_download' => $totalDownload,
+            'active_count' => count($users),
+            'heavy_users' => $heavyUsers,
+            'idle_users' => $idleUsers,
+            'peak_user' => $peakUser,
+        ]);
+    }
+
+    private function formatBps(int $bps): string
+    {
+        if ($bps >= 1_000_000_000) return round($bps / 1_000_000_000, 2) . ' Gbps';
+        if ($bps >= 1_000_000) return round($bps / 1_000_000, 1) . ' Mbps';
+        if ($bps >= 1_000) return round($bps / 1_000, 0) . ' Kbps';
+        return $bps . ' bps';
+    }
+
     // ── Profile ──────────────────────────────────────────
     public function profile(Request $request)
     {
