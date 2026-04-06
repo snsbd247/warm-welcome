@@ -48,30 +48,33 @@ Deno.serve(async (req: Request) => {
     }
 
     // Get admin user's tenant_id
-    const { data: adminUser } = await supabase
-      .from("users")
+    let adminTenantId: string | null = null;
+    const { data: adminProfile } = await supabase
+      .from("profiles")
       .select("tenant_id")
       .eq("id", session.admin_id)
       .maybeSingle();
 
-    if (!adminUser) {
-      return new Response(
-        JSON.stringify({ error: "Admin user not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (adminProfile?.tenant_id) {
+      adminTenantId = adminProfile.tenant_id;
     }
 
-    // Get reseller — must belong to the same tenant
-    const { data: reseller } = await supabase
+    // Get reseller
+    let resellerQuery = supabase
       .from("resellers")
       .select("*")
-      .eq("id", reseller_id)
-      .eq("tenant_id", adminUser.tenant_id)
-      .maybeSingle();
+      .eq("id", reseller_id);
+
+    // If admin tenant found, enforce same-tenant check
+    if (adminTenantId) {
+      resellerQuery = resellerQuery.eq("tenant_id", adminTenantId);
+    }
+
+    const { data: reseller } = await resellerQuery.maybeSingle();
 
     if (!reseller) {
       return new Response(
-        JSON.stringify({ error: "Reseller not found or cross-tenant access denied" }),
+        JSON.stringify({ error: "Reseller not found or access denied" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -92,7 +95,7 @@ Deno.serve(async (req: Request) => {
       module: "reseller",
       description: `Admin impersonated reseller: ${reseller.name}`,
       user_id: session.admin_id,
-      tenant_id: adminUser.tenant_id,
+      tenant_id: adminTenantId || reseller.tenant_id,
       metadata: { reseller_id: reseller.id, reseller_name: reseller.name },
     });
 
