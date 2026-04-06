@@ -13,6 +13,7 @@ interface CustomerSession {
   monthly_bill: number;
   package_id: string | null;
   photo_url: string | null;
+  tenant_id: string | null;
   session_token: string;
   expires_at: string;
 }
