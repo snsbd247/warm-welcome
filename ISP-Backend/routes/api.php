@@ -603,6 +603,10 @@ Route::middleware('reseller.auth')->prefix('reseller')->group(function () {
     Route::put('/profile', [\App\Http\Controllers\Api\ResellerController::class, 'updateProfile']);
     Route::post('/change-password', [\App\Http\Controllers\Api\ResellerController::class, 'changePassword']);
 
+    // Bandwidth Analytics
+    Route::get('/bandwidth', [\App\Http\Controllers\Api\ResellerController::class, 'bandwidth']);
+    Route::get('/live-bandwidth', [\App\Http\Controllers\Api\ResellerController::class, 'liveBandwidth']);
+
     // Zones CRUD
     Route::get('/zones', [\App\Http\Controllers\Api\ResellerController::class, 'zones']);
     Route::post('/zones', [\App\Http\Controllers\Api\ResellerController::class, 'storeZone']);
