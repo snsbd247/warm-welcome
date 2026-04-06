@@ -313,28 +313,30 @@ class GenericCrudController extends Controller
                         array_unshift($parsed['columns'], 'id');
                     }
                     // Include foreign keys for relations
+                    $fkMap = [
+                        'packages' => 'package_id',
+                        'mikrotik_routers' => 'router_id',
+                        'router' => 'router_id',
+                        'package' => 'package_id',
+                        'designation' => 'designation_id',
+                        'employee' => 'employee_id',
+                        'customer' => 'customer_id',
+                        'supplier' => 'supplier_id',
+                        'vendor' => 'vendor_id',
+                        'olt' => 'olt_id',
+                        'sale' => 'sale_id',
+                        'purchase' => 'purchase_id',
+                        'parent' => 'parent_id',
+                        'reseller' => 'reseller_id',
+                        'product' => 'product_id',
+                        'category' => 'category_id',
+                        'tenant' => 'tenant_id',
+                        'oldReseller' => 'old_reseller_id',
+                        'newReseller' => 'new_reseller_id',
+                        'zone' => 'zone_id',
+                    ];
                     foreach ($parsed['relations'] as $relName => $relCols) {
-                        // Common FK patterns
-                        $fkCol = $relName === 'packages' ? 'package_id' :
-                                ($relName === 'mikrotik_routers' ? 'router_id' :
-                                ($relName === 'router' ? 'router_id' :
-                                ($relName === 'package' ? 'package_id' :
-                                ($relName === 'designation' ? 'designation_id' :
-                                ($relName === 'employee' ? 'employee_id' :
-                                ($relName === 'customer' ? 'customer_id' :
-                                ($relName === 'supplier' ? 'supplier_id' :
-                                ($relName === 'vendor' ? 'vendor_id' :
-                                ($relName === 'olt' ? 'olt_id' :
-                                ($relName === 'sale' ? 'sale_id' :
-                                ($relName === 'purchase' ? 'purchase_id' :
-                                ($relName === 'parent' ? 'parent_id' :
-                                ($relName === 'reseller' ? 'reseller_id' :
-                                ($relName === 'product' ? 'product_id' :
-                                ($relName === 'category' ? 'category_id' :
-                                ($relName === 'tenant' ? 'tenant_id' :
-                                ($relName === 'oldReseller' ? 'old_reseller_id' :
-                                ($relName === 'newReseller' ? 'new_reseller_id' :
-                                "{$relName}_id")))))))))))))))))));
+                        $fkCol = $fkMap[$relName] ?? "{$relName}_id";
                         if ($this->tableHasColumn($model, $fkCol) && !in_array('*', $parsed['columns'])) {
                             $parsed['columns'][] = $fkCol;
                         }
