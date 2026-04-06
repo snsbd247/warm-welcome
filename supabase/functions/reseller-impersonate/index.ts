@@ -95,7 +95,7 @@ Deno.serve(async (req: Request) => {
       module: "reseller",
       description: `Admin impersonated reseller: ${reseller.name}`,
       user_id: session.admin_id,
-      tenant_id: adminUser.tenant_id,
+      tenant_id: adminTenantId || reseller.tenant_id,
       metadata: { reseller_id: reseller.id, reseller_name: reseller.name },
     });
 
