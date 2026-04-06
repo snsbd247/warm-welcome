@@ -328,7 +328,13 @@ class GenericCrudController extends Controller
                                 ($relName === 'sale' ? 'sale_id' :
                                 ($relName === 'purchase' ? 'purchase_id' :
                                 ($relName === 'parent' ? 'parent_id' :
-                                "{$relName}_id"))))))))))));
+                                ($relName === 'reseller' ? 'reseller_id' :
+                                ($relName === 'product' ? 'product_id' :
+                                ($relName === 'category' ? 'category_id' :
+                                ($relName === 'tenant' ? 'tenant_id' :
+                                ($relName === 'oldReseller' ? 'old_reseller_id' :
+                                ($relName === 'newReseller' ? 'new_reseller_id' :
+                                "{$relName}_id")))))))))))))))))));
                         if ($this->tableHasColumn($model, $fkCol) && !in_array('*', $parsed['columns'])) {
                             $parsed['columns'][] = $fkCol;
                         }
