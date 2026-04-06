@@ -23,13 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.plan_module' => \App\Http\Middleware\CheckPlanModule::class,
         ]);
 
-        // Apply tenant resolution + Sanctum to all API requests
+        // Apply tenant resolution to all API requests.
+        // This app uses stateless session tokens for admin/customer/super-admin APIs,
+        // so Sanctum's stateful SPA middleware must stay disabled on VPS deployments.
         $middleware->api(prepend: [
             \App\Http\Middleware\ResolveTenant::class,
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
-
-        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
