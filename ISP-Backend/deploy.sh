@@ -1,19 +1,19 @@
 #!/bin/bash
 # ══════════════════════════════════════════════════════════
-# Smart ISP - Production Deployment Script
-# Usage: bash deploy.sh
+# Smart ISP - VPS Production Deployment Script
+# Usage: cd /var/www/smartisp/backend && bash deploy.sh
 # ══════════════════════════════════════════════════════════
 
 set -e
 
-APP_DIR="/var/www/smartispapp.com/api"
-FRONTEND_DIR="/var/www/smartispapp.com/frontend"
+APP_DIR="/var/www/smartisp"
+BACKEND_DIR="${APP_DIR}/backend"
 
 echo "═══════════════════════════════════════════"
-echo "  Smart ISP - Production Deploy"
+echo "  Smart ISP - Production Deploy (Backend)"
 echo "═══════════════════════════════════════════"
 
-cd "$APP_DIR"
+cd "$BACKEND_DIR"
 
 # ── 1. Maintenance mode ──────────────────────────────
 echo "🔧 Enabling maintenance mode..."
