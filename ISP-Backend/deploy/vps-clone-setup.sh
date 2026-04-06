@@ -134,11 +134,18 @@ log "Composer dependencies installed"
 section "5/7 — Database Migration & Seeding"
 cd ${BACKEND_DIR}
 
+# Fresh install: drop all tables and re-migrate
+if [ "${FRESH_INSTALL:-}" = "true" ]; then
+    warn "FRESH INSTALL mode — dropping all tables..."
+    php artisan db:wipe --force
+    log "All tables dropped"
+fi
+
 php artisan migrate --force
-log "Database migrated"
+log "Database migrated (19 per-module migration files)"
 
 php artisan db:seed --class=DefaultSeeder --force
-log "Default data seeded"
+log "Default data seeded (roles, users, COA, ledger mappings, permissions)"
 
 php artisan db:seed --class=GeoSeeder --force 2>/dev/null || warn "GeoSeeder skipped (may not exist)"
 
