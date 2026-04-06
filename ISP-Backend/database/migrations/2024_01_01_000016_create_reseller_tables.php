@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        // ══════ Resellers ══════
         Schema::create('resellers', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('tenant_id')->nullable()->index();
@@ -26,7 +25,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // ══════ Reseller Sessions ══════
         Schema::create('reseller_sessions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('reseller_id')->index();
@@ -38,7 +36,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // ══════ Reseller Packages ══════
         Schema::create('reseller_packages', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('tenant_id')->nullable()->index();
@@ -48,7 +45,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // ══════ Reseller Package Commissions ══════
         Schema::create('reseller_package_commissions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('reseller_id')->index();
@@ -58,19 +54,17 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // ══════ Reseller Wallet Transactions ══════
         Schema::create('reseller_wallet_transactions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('reseller_id')->index();
             $table->uuid('tenant_id')->nullable()->index();
-            $table->string('type')->default('debit'); // credit, debit
+            $table->string('type')->default('debit');
             $table->decimal('amount', 12, 2)->default(0);
             $table->decimal('balance_after', 12, 2)->default(0);
             $table->text('description')->nullable();
             $table->timestamps();
         });
 
-        // ══════ Reseller Commissions ══════
         Schema::create('reseller_commissions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('reseller_id')->index();
@@ -84,7 +78,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // ══════ Reseller Zones ══════
         Schema::create('reseller_zones', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('tenant_id')->nullable()->index();
@@ -94,35 +87,29 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // ══════ Customer Reseller Migrations ══════
-        if (!Schema::hasTable('customer_reseller_migrations')) {
-            Schema::create('customer_reseller_migrations', function (Blueprint $table) {
-                $table->uuid('id')->primary();
-                $table->uuid('customer_id')->index();
-                $table->uuid('old_reseller_id')->nullable()->index();
-                $table->uuid('new_reseller_id')->nullable()->index();
-                $table->uuid('changed_by')->nullable();
-                $table->text('reason')->nullable();
-                $table->uuid('tenant_id')->nullable()->index();
-                $table->timestamps();
-            });
-        }
+        Schema::create('customer_reseller_migrations', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('customer_id')->index();
+            $table->uuid('old_reseller_id')->nullable()->index();
+            $table->uuid('new_reseller_id')->nullable()->index();
+            $table->uuid('changed_by')->nullable();
+            $table->text('reason')->nullable();
+            $table->uuid('tenant_id')->nullable()->index();
+            $table->timestamps();
+        });
 
-        // ══════ Customer Bandwidth Usages ══════
-        if (!Schema::hasTable('customer_bandwidth_usages')) {
-            Schema::create('customer_bandwidth_usages', function (Blueprint $table) {
-                $table->uuid('id')->primary();
-                $table->uuid('customer_id')->index();
-                $table->uuid('tenant_id')->index();
-                $table->uuid('reseller_id')->nullable()->index();
-                $table->uuid('zone_id')->nullable()->index();
-                $table->date('date')->default(now()->toDateString());
-                $table->decimal('upload_mb', 12, 2)->default(0);
-                $table->decimal('download_mb', 12, 2)->default(0);
-                $table->decimal('total_mb', 12, 2)->default(0);
-                $table->timestamps();
-            });
-        }
+        Schema::create('customer_bandwidth_usages', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('customer_id')->index();
+            $table->uuid('tenant_id')->index();
+            $table->uuid('reseller_id')->nullable()->index();
+            $table->uuid('zone_id')->nullable()->index();
+            $table->date('date');
+            $table->decimal('upload_mb', 12, 2)->default(0);
+            $table->decimal('download_mb', 12, 2)->default(0);
+            $table->decimal('total_mb', 12, 2)->default(0);
+            $table->timestamps();
+        });
     }
 
     public function down(): void
