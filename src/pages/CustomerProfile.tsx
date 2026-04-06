@@ -20,7 +20,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Download, Pencil, FileDown, CreditCard, Plus, Trash2, Printer, Receipt } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Pencil, FileDown, CreditCard, Plus, Trash2, Printer, Receipt, Activity } from "lucide-react";
+import CustomerLiveBandwidthWidget from "@/components/bandwidth/CustomerLiveBandwidthWidget";
 import { generateApplicationFormPDF } from "@/lib/applicationFormPdf";
 import { postSalePaymentToLedger } from "@/lib/ledger";
 import { toast } from "sonner";
@@ -277,6 +278,7 @@ export default function CustomerProfilePage() {
         <Tabs defaultValue="details">
           <TabsList>
             <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="live-bandwidth">Live Bandwidth</TabsTrigger>
             <TabsTrigger value="ledger">Ledger</TabsTrigger>
             <TabsTrigger value="invoices">Invoices ({customerBills.length})</TabsTrigger>
             <TabsTrigger value="sales">Sales History ({customerSales.length})</TabsTrigger>
@@ -287,6 +289,18 @@ export default function CustomerProfilePage() {
             <div className="glass-card rounded-xl p-6">
               <CustomerView customer={customer} />
             </div>
+          </TabsContent>
+
+          <TabsContent value="live-bandwidth">
+            {customer.tenant_id ? (
+              <CustomerLiveBandwidthWidget
+                tenantId={customer.tenant_id}
+                customerId={customer.id}
+                resellerId={customer.reseller_id}
+              />
+            ) : (
+              <p className="text-center text-muted-foreground py-8">Tenant ID not available</p>
+            )}
           </TabsContent>
 
           <TabsContent value="ledger">
