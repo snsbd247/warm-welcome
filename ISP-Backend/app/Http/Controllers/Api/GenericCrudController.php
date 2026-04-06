@@ -113,6 +113,32 @@ class GenericCrudController extends Controller
         'subscription_invoices' => \App\Models\SubscriptionInvoice::class,
         'impersonations' => \App\Models\Impersonation::class,
         'plan_modules' => \App\Models\PlanModule::class,
+        // Reseller
+        'resellers' => \App\Models\Reseller::class,
+        'reseller_wallet_transactions' => \App\Models\ResellerWalletTransaction::class,
+        'reseller_package_commissions' => \App\Models\ResellerPackageCommission::class,
+        'reseller_packages' => \App\Models\ResellerPackage::class,
+        'reseller_sessions' => \App\Models\ResellerSession::class,
+        'reseller_commissions' => \App\Models\ResellerCommission::class,
+        'reseller_zones' => \App\Models\ResellerZone::class,
+        // Customer extras
+        'customer_devices' => \App\Models\CustomerDevice::class,
+        'customer_bandwidth_usages' => \App\Models\CustomerBandwidthUsage::class,
+        'customer_reseller_migrations' => \App\Models\CustomerResellerMigration::class,
+        // Inventory extras
+        'product_serials' => \App\Models\ProductSerial::class,
+        'inventory_logs' => \App\Models\InventoryLog::class,
+        'categories' => \App\Models\Category::class,
+        // CMS & SaaS extras
+        'landing_sections' => \App\Models\LandingSection::class,
+        'demo_requests' => \App\Models\DemoRequest::class,
+        'tenant_company_info' => \App\Models\TenantCompanyInfo::class,
+        'smtp_settings' => \App\Models\SmtpSetting::class,
+        // Core connections (fiber)
+        'core_connections' => \App\Models\CoreConnection::class,
+        // Super Admin
+        'super_admins' => \App\Models\SuperAdmin::class,
+        'super_admin_sessions' => \App\Models\SuperAdminSession::class,
     ];
 
     protected function getModel(string $table)
