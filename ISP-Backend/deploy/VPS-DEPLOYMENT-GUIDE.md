@@ -1,8 +1,9 @@
-# Smart ISP — VPS Deployment Guide (v4)
+# Smart ISP — VPS Deployment Guide (v5)
 
 > **Last Updated:** April 2026  
 > **Architecture:** React (Frontend) + Laravel (Backend) — Mono-Repo  
-> **Server:** Ubuntu 22.04/24.04 LTS
+> **Server:** Ubuntu 22.04/24.04 LTS  
+> **Version:** 1.0.2
 
 ---
 
@@ -13,7 +14,7 @@
 | Ubuntu VPS | 22.04+ LTS (Min 2GB RAM, 2 vCPU) |
 | PHP | 8.2+ |
 | MySQL/MariaDB | 8.0+ / 10.6+ |
-| Node.js | 18+ |
+| Node.js | 18+ (20.x recommended) |
 | Composer | 2.x |
 | Nginx | Latest |
 | Git | Latest |
@@ -157,9 +158,6 @@ DB_PASSWORD=YOUR_STRONG_PASSWORD
 
 CENTRAL_DOMAINS=yourdomain.com,www.yourdomain.com
 SANCTUM_STATEFUL_DOMAINS=yourdomain.com,www.yourdomain.com
-
-# Super Admin Login Path (নিরাপত্তার জন্য পরিবর্তন করুন)
-SUPER_ADMIN_PATH=admin_login162
 ```
 
 ```bash
@@ -311,12 +309,16 @@ curl -s -o /dev/null -w "%{http_code}" https://yourdomain.com
 # Expected: 200
 ```
 
-### ডিফল্ট লগইন:
+### 🔑 ডিফল্ট লগইন ক্রেডেনশিয়াল:
 
-| Portal | URL | Credentials |
-|--------|-----|-------------|
-| **Super Admin** | `https://yourdomain.com/super-admin/login` | `admin` / `admin123` |
-| **Admin** | `https://yourdomain.com/admin/login` | `admin` / `admin123` |
+| Portal | URL | Username | Password |
+|--------|-----|----------|----------|
+| **Super Admin** | `https://yourdomain.com/super/login` | `superadmin` | `Admin@123` |
+| **Tenant Admin** | `https://yourdomain.com/admin/login` | `snb_admin` | `123456` |
+| **Reseller** | `https://yourdomain.com/reseller/login` | `sagorkhan` | `123456` |
+| **Customer** | `https://yourdomain.com/login` | Customer phone | OTP/Password |
+
+> ⚠️ **প্রোডাকশনে সুপার অ্যাডমিনের পাসওয়ার্ড অবশ্যই পরিবর্তন করুন!**
 
 ---
 
@@ -386,6 +388,16 @@ chown -R www-data:www-data /var/www/smartisp/backend/storage
 chmod -R 775 /var/www/smartisp/backend/storage /var/www/smartisp/backend/bootstrap/cache
 ```
 
+### Login সমস্যা (Wrong credentials)
+```bash
+cd /var/www/smartisp/backend
+# Re-seed default users
+php artisan db:seed --class=DefaultSeeder --force
+# Check super admin exists
+php artisan tinker
+>>> \App\Models\SuperAdmin::first();
+```
+
 ---
 
 ## 📁 VPS ডিরেক্টরি স্ট্রাকচার
@@ -427,10 +439,10 @@ chmod -R 775 /var/www/smartisp/backend/storage /var/www/smartisp/backend/bootstr
 
 1. **`VITE_DEPLOY_TARGET=vps`** — এই env ছাড়া frontend Supabase ব্যবহার করবে
 2. **`.env` ফাইল** — কখনো git-এ push করবেন না
-3. **`SUPER_ADMIN_PATH`** — প্রোডাকশনে ডিফল্ট path পরিবর্তন করুন
-4. **SSL** — HTTPS ছাড়া session token কাজ করবে না
-5. **`php artisan storage:link`** — ফাইল আপলোড/ডাউনলোডের জন্য আবশ্যক
-6. **`php artisan modules:scan`** — নতুন মডিউল যোগ হলে রান করুন
+3. **SSL** — HTTPS ছাড়া session token কাজ করবে না
+4. **`php artisan storage:link`** — ফাইল আপলোড/ডাউনলোডের জন্য আবশ্যক
+5. **`php artisan modules:scan`** — নতুন মডিউল যোগ হলে রান করুন
+6. **Super Admin URL** — `/super/login` (পরিবর্তন করা যাবে না)
 
 ---
 
@@ -459,3 +471,31 @@ chmod -R 775 /var/www/smartisp/backend/storage /var/www/smartisp/backend/bootstr
 | 19 | Reseller | `reseller` | ❌ |
 | 20 | Network Map | `network_map` | ❌ |
 | 21 | Live Bandwidth | `live_bandwidth` | ❌ |
+
+---
+
+## 👥 ডিফল্ট রোল ও পারমিশন (7 Roles, 84 Permissions)
+
+| Role | Access Level |
+|------|-------------|
+| Super Admin | সম্পূর্ণ সিস্টেম অ্যাক্সেস |
+| Admin | সম্পূর্ণ টেন্যান্ট অ্যাক্সেস |
+| Owner | টেন্যান্ট ওনার — সবকিছু করতে পারে |
+| Manager | ইউজার/রোল ম্যানেজমেন্ট ছাড়া সব |
+| Staff | কাস্টমার, বিলিং, পেমেন্ট, টিকেট, SMS |
+| Technician | MikroTik, ফাইবার নেটওয়ার্ক, নেটওয়ার্ক ম্যাপ |
+| Accountant | অ্যাকাউন্টিং, পেমেন্ট, বিলিং, ইনভেন্টরি, HR |
+
+---
+
+## 🌐 পোর্টাল URL সমূহ
+
+| Portal | URL Path | Description |
+|--------|----------|-------------|
+| Landing Page | `/` | পাবলিক ল্যান্ডিং পেজ |
+| Super Admin | `/super/login` | সুপার অ্যাডমিন প্যানেল |
+| Tenant Admin | `/admin/login` | টেন্যান্ট অ্যাডমিন প্যানেল |
+| Reseller | `/reseller/login` | রিসেলার পোর্টাল |
+| Customer | `/login` | কাস্টমার পোর্টাল |
+| Demo Request | `/demo-request` | ডেমো রিকোয়েস্ট ফর্ম |
+| Public Payment | `/pay?token=xxx` | পাবলিক পেমেন্ট লিংক |
