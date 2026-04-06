@@ -38,7 +38,7 @@ const DEFAULT_TEMPLATES = [
 function previewMessage(msg: string): string {
   let result = msg;
   for (const [key, val] of Object.entries(SAMPLE_DATA)) {
-    result = result.replaceAll(key, val);
+    result = result.split(key).join(val);
   }
   return result;
 }
