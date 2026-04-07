@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Smart ISP — Production Update Script (Mono-Repo)
+# Smart ISP — Production Update Script (Mono-Repo) v1.0.3
 # Usage: sudo ./deploy-update.sh
 # ═══════════════════════════════════════════════════════════════
 
@@ -18,15 +18,15 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-echo -e "${CYAN}═══ Smart ISP — Production Update ═══${NC}"
+echo -e "${CYAN}═══ Smart ISP — Production Update (v1.0.3) ═══${NC}"
 
 # ── 1. Maintenance mode ──────────────────────────────
-echo -e "${YELLOW}[1/8] Maintenance mode ON...${NC}"
+echo -e "${YELLOW}[1/9] Maintenance mode ON...${NC}"
 cd ${BACKEND_DIR}
 php artisan down --retry=60 2>/dev/null || true
 
 # ── 2. Pull latest code from GitHub ──────────────────
-echo -e "${YELLOW}[2/8] Pulling latest code from GitHub...${NC}"
+echo -e "${YELLOW}[2/9] Pulling latest code from GitHub...${NC}"
 if [ -d "${REPO_DIR}" ]; then
     cd ${REPO_DIR} && git pull origin main
 else
@@ -37,13 +37,15 @@ else
 fi
 
 # ── 3. Sync Backend files ────────────────────────────
-echo -e "${YELLOW}[3/8] Syncing backend files...${NC}"
+echo -e "${YELLOW}[3/9] Syncing backend files...${NC}"
 rsync -a --exclude='.git' --exclude='.env' --exclude='storage/app' \
     --exclude='storage/framework/cache/data' --exclude='storage/framework/sessions' \
     --exclude='storage/framework/views' --exclude='storage/logs' \
     "${REPO_DIR}/ISP-Backend/" "${BACKEND_DIR}/"
 echo -e "${GREEN}  ✓ Backend synced${NC}"
 
+# ── 4. Sync Nginx & Deploy configs ──────────────────
+echo -e "${YELLOW}[4/9] Syncing Nginx & deploy configs...${NC}"
 if [ -f "${BACKEND_DIR}/deploy/nginx-smartispapp.conf" ] && [ -f "${BACKEND_DIR}/deploy/nginx-rate-limits.conf" ]; then
     mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /etc/nginx/conf.d
     cp "${BACKEND_DIR}/deploy/nginx-smartispapp.conf" /etc/nginx/sites-available/smartispapp.com
@@ -54,8 +56,14 @@ if [ -f "${BACKEND_DIR}/deploy/nginx-smartispapp.conf" ] && [ -f "${BACKEND_DIR}
     echo -e "${GREEN}  ✓ Nginx config synced${NC}"
 fi
 
-# ── 4. Sync Frontend files ──────────────────────────
-echo -e "${YELLOW}[4/8] Syncing frontend files...${NC}"
+if [ -f "${BACKEND_DIR}/deploy/smartisp-queue.service" ]; then
+    cp "${BACKEND_DIR}/deploy/smartisp-queue.service" /etc/systemd/system/
+    systemctl daemon-reload
+    echo -e "${GREEN}  ✓ Queue worker service updated${NC}"
+fi
+
+# ── 5. Sync Frontend files ──────────────────────────
+echo -e "${YELLOW}[5/9] Syncing frontend files...${NC}"
 FRONTEND_DIRS=("src" "public" "supabase")
 FRONTEND_FILES=(
     "package.json" "vite.config.ts" "tsconfig.json" "tsconfig.app.json"
@@ -80,25 +88,25 @@ for lockfile in "bun.lock" "bun.lockb" "package-lock.json"; do
 done
 echo -e "${GREEN}  ✓ Frontend synced${NC}"
 
-# ── 5. Backend update ───────────────────────────────
-echo -e "${YELLOW}[5/8] Updating backend dependencies...${NC}"
+# ── 6. Backend update ───────────────────────────────
+echo -e "${YELLOW}[6/9] Updating backend dependencies...${NC}"
 cd ${BACKEND_DIR}
 composer install --no-dev --optimize-autoloader --no-interaction
 php artisan migrate --force
 php artisan modules:scan 2>/dev/null || true
 
-# ── 6. Frontend build ───────────────────────────────
-echo -e "${YELLOW}[6/8] Building frontend...${NC}"
+# ── 7. Frontend build ───────────────────────────────
+echo -e "${YELLOW}[7/9] Building frontend...${NC}"
 cd ${FRONTEND_DIR}
 npm ci --legacy-peer-deps
 VITE_DEPLOY_TARGET=vps npm run build
 
-# ── 7. Deploy frontend ──────────────────────────────
-echo -e "${YELLOW}[7/8] Deploying frontend build...${NC}"
+# ── 8. Deploy frontend ──────────────────────────────
+echo -e "${YELLOW}[8/9] Deploying frontend build...${NC}"
 rsync -a --delete ${FRONTEND_DIR}/dist/ ${APP_DIR}/public_html/
 
-# ── 8. Cache, permissions & restart ─────────────────
-echo -e "${YELLOW}[8/8] Caching, permissions & restart...${NC}"
+# ── 9. Cache, permissions & restart ─────────────────
+echo -e "${YELLOW}[9/9] Caching, permissions & restart...${NC}"
 cd ${BACKEND_DIR}
 php artisan config:cache
 php artisan route:cache
@@ -114,13 +122,14 @@ chmod -R 775 ${BACKEND_DIR}/storage ${BACKEND_DIR}/bootstrap/cache
 systemctl restart php${PHP_VERSION}-fpm
 nginx -t
 systemctl reload nginx
+systemctl restart smartisp-queue 2>/dev/null || true
 
 cd ${BACKEND_DIR}
 php artisan up
 
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════${NC}"
-echo -e "${GREEN}  ✅ Update complete!${NC}"
+echo -e "${GREEN}  ✅ Update complete! (v1.0.3)${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════${NC}"
 echo ""
 echo -e "  Verify: curl -s https://smartispapp.com/api/health"

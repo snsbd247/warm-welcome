@@ -1,9 +1,9 @@
-# Smart ISP — VPS Deployment Guide (v6)
+# Smart ISP — VPS Deployment Guide (v7)
 
 > **Last Updated:** April 2026  
 > **Architecture:** React (Frontend) + Laravel (Backend) — Mono-Repo  
 > **Server:** Ubuntu 22.04/24.04 LTS  
-> **Version:** 1.0.2
+> **Version:** 1.0.3
 
 ---
 
@@ -124,7 +124,7 @@ cd /tmp/smartisp-repo
 
 ```bash
 # Clone Setup Script রান (সব ফাইল সঠিক জায়গায় কপি করবে)
-sudo bash vps-clone-setup.sh
+sudo bash ISP-Backend/deploy/vps-clone-setup.sh
 ```
 
 **এই স্ক্রিপ্ট যা করে:**
@@ -132,7 +132,10 @@ sudo bash vps-clone-setup.sh
 - `src/`, `public/`, config files → `/var/www/smartisp/frontend/` কপি
 - `/var/www/smartisp/public_html/` তৈরি (Nginx root)
 - Nginx config কপি ও সিমলিংক
+- Queue worker service ইনস্টল
 - Deploy script সেটাপ
+- Database migration ও seeding
+- Frontend build ও deploy
 
 ---
 
@@ -170,11 +173,14 @@ composer install --no-dev --optimize-autoloader
 # Database migration
 php artisan migrate --force
 
-# Default data seed (Super Admin, Tenant Admin, Reseller, Roles, Permissions, etc.)
+# Default data seed (Super Admin, Tenant Admin, Reseller, Roles, Permissions, Modules, etc.)
 php artisan db:seed --class=DefaultSeeder --force
 
 # Geo data seed (বাংলাদেশের বিভাগ/জেলা/উপজেলা)
 php artisan db:seed --class=GeoSeeder --force
+
+# SaaS plans seed (Starter, Professional, Enterprise)
+php artisan db:seed --class=SaasSeeder --force
 
 # Module scan (21টি মডিউল রেজিস্টার করবে)
 php artisan modules:scan
@@ -208,19 +214,26 @@ php artisan view:cache
 ╚════════════════════════════════════════════════════╝
 ```
 
-**DefaultSeeder যা সিড করে:**
+**DefaultSeeder যা সিড করে (v1.0.3):**
 - ✅ 7টি কোর রোল (Super Admin, Admin, Owner, Manager, Staff, Technician, Accountant)
-- ✅ 80টি পারমিশন (20 মডিউল × 4 অ্যাকশন)
-- ✅ 330+ রোল-পারমিশন ম্যাপিং
+- ✅ 84টি পারমিশন (21 মডিউল × 4 অ্যাকশন) — `dashboard` মডিউল যুক্ত
+- ✅ 350+ রোল-পারমিশন ম্যাপিং
 - ✅ Super Admin ইউজার (`superadmin` / `Admin@123`)
 - ✅ Tenant Admin ইউজার (`snb_admin` / `123456`)
 - ✅ Reseller ইউজার (`sagorkhan` / `123456`)
-- ✅ General Settings, System Settings
+- ✅ General Settings, System Settings (version: 1.0.3)
 - ✅ SMS Settings ও 8টি SMS Template
 - ✅ 5টি Email Template
 - ✅ 4টি ডিফল্ট Internet Package
 - ✅ Chart of Accounts (ISP-specific hierarchy)
 - ✅ Ledger Mappings ও Payment Settings
+- ✅ 21টি সিস্টেম Module এন্ট্রি
+
+**SaasSeeder যা সিড করে:**
+- ✅ 3টি SaaS Plan (Starter, Professional, Enterprise)
+
+**GeoSeeder যা সিড করে:**
+- ✅ 8টি বিভাগ, 64টি জেলা, 495+ উপজেলা
 
 ---
 
@@ -285,6 +298,8 @@ systemctl restart php8.2-fpm
 # Config কপি (clone-setup এ হয়ে গেছে, না হলে ম্যানুয়ালি)
 cp /var/www/smartisp/backend/deploy/nginx-smartispapp.conf \
    /etc/nginx/sites-available/smartispapp.com
+cp /var/www/smartisp/backend/deploy/nginx-rate-limits.conf \
+   /etc/nginx/conf.d/smartisp-rate-limits.conf
 ln -sf /etc/nginx/sites-available/smartispapp.com /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 
@@ -335,16 +350,36 @@ chmod -R u=rwX,go=rX /var/www/smartisp/public_html
 
 ---
 
-## ✅ Step 15: ভেরিফিকেশন
+## ⚙️ Step 15: Queue Worker সেটআপ
+
+```bash
+# Service ফাইল কপি (clone-setup এ হয়ে গেছে)
+cp /var/www/smartisp/backend/deploy/smartisp-queue.service /etc/systemd/system/
+
+# Enable ও Start
+systemctl daemon-reload
+systemctl enable smartisp-queue
+systemctl start smartisp-queue
+
+# Status চেক
+systemctl status smartisp-queue
+```
+
+---
+
+## ✅ Step 16: ভেরিফিকেশন
 
 ```bash
 # API Health Check
 curl -s https://yourdomain.com/api/health
-# Expected: {"status":"ok","timestamp":"...","version":"1.0.2"}
+# Expected: {"status":"ok","timestamp":"...","version":"1.0.3"}
 
 # Frontend check
 curl -s -o /dev/null -w "%{http_code}" https://yourdomain.com
 # Expected: 200
+
+# Queue worker status
+systemctl status smartisp-queue
 ```
 
 ### 🔑 ডিফল্ট লগইন ক্রেডেনশিয়াল:
@@ -368,16 +403,16 @@ git pull origin main
 sudo /var/www/smartisp/deploy-update.sh
 ```
 
-**deploy-update.sh স্ক্রিপ্ট যা করে:**
+**deploy-update.sh স্ক্রিপ্ট যা করে (9 steps):**
 1. Maintenance mode ON
 2. GitHub থেকে latest code pull
 3. Backend ফাইল sync (`.env` ও `storage/` বাদে)
-4. Frontend ফাইল sync
-5. `composer install` + `php artisan migrate`
-6. `npm ci` + `VITE_DEPLOY_TARGET=vps npm run build`
-7. Build → `public_html/` deploy
-8. Cache, permissions, PHP-FPM restart, Nginx reload
-9. Maintenance mode OFF
+4. Nginx config ও queue service sync
+5. Frontend ফাইল sync
+6. `composer install` + `php artisan migrate`
+7. `npm ci` + `VITE_DEPLOY_TARGET=vps npm run build`
+8. Build → `public_html/` deploy
+9. Cache, permissions, PHP-FPM, Nginx, Queue worker restart → Maintenance OFF
 
 ---
 
@@ -436,6 +471,14 @@ php artisan tinker
 >>> \App\Models\SuperAdmin::first();
 ```
 
+### Queue Worker সমস্যা
+```bash
+systemctl status smartisp-queue
+tail -50 /var/log/smartisp-queue.log
+tail -20 /var/log/smartisp-queue-error.log
+systemctl restart smartisp-queue
+```
+
 ---
 
 ## 📁 VPS ডিরেক্টরি স্ট্রাকচার
@@ -446,10 +489,18 @@ php artisan tinker
 │   ├── app/
 │   ├── config/
 │   ├── database/
+│   │   └── seeders/
+│   │       ├── DatabaseSeeder.php
+│   │       ├── DefaultSeeder.php    ← Roles, Users, COA, Permissions, Modules
+│   │       ├── GeoSeeder.php        ← বাংলাদেশের ভৌগোলিক ডাটা
+│   │       └── SaasSeeder.php       ← SaaS Plans
 │   ├── deploy/
 │   │   ├── vps-setup.sh
+│   │   ├── vps-clone-setup.sh
 │   │   ├── deploy-update.sh
 │   │   ├── nginx-smartispapp.conf
+│   │   ├── nginx-rate-limits.conf
+│   │   ├── smartisp-queue.service
 │   │   ├── env.production
 │   │   └── VPS-DEPLOYMENT-GUIDE.md
 │   ├── public/
@@ -466,7 +517,9 @@ php artisan tinker
 ├── public_html/          ← Nginx root (build output)
 │   ├── index.html
 │   └── assets/
-└── deploy-update.sh      ← One-click update script
+├── deploy-update.sh      ← One-click update script
+├── vps-setup.sh          ← Initial server setup
+└── vps-clone-setup.sh    ← Clone & deploy script
 
 /tmp/smartisp-repo/       ← Git clone (updates এর জন্য)
 ```
@@ -501,7 +554,7 @@ php artisan tinker
 
 ---
 
-## 👥 ডিফল্ট রোল ও পারমিশন (7 Roles, 80 Permissions, 330+ Mappings)
+## 👥 ডিফল্ট রোল ও পারমিশন (7 Roles, 84 Permissions, 350+ Mappings)
 
 | Role | Access Level |
 |------|-------------|
@@ -509,9 +562,9 @@ php artisan tinker
 | Admin | সম্পূর্ণ টেন্যান্ট অ্যাক্সেস |
 | Owner | টেন্যান্ট ওনার — সবকিছু করতে পারে |
 | Manager | ইউজার/রোল ম্যানেজমেন্ট ছাড়া সব |
-| Staff | কাস্টমার, বিলিং, পেমেন্ট, টিকেট, SMS |
+| Staff | ড্যাশবোর্ড, কাস্টমার, বিলিং, পেমেন্ট, টিকেট, SMS |
 | Technician | MikroTik, ফাইবার নেটওয়ার্ক, নেটওয়ার্ক ম্যাপ |
-| Accountant | অ্যাকাউন্টিং, পেমেন্ট, বিলিং, ইনভেন্টরি, HR |
+| Accountant | ড্যাশবোর্ড, অ্যাকাউন্টিং, পেমেন্ট, বিলিং, ইনভেন্টরি, HR |
 
 ---
 
@@ -592,3 +645,5 @@ php artisan tinker
 5. **`php artisan modules:scan`** — নতুন মডিউল যোগ হলে রান করুন
 6. **Super Admin URL** — `/super/login` (পরিবর্তন করা যাবে না)
 7. **DefaultSeeder** — সিড করলে existing data overwrite হবে না (`firstOrCreate` ব্যবহার করা হয়)
+8. **Queue Worker** — SMS, Email, Background tasks এর জন্য আবশ্যক
+9. **DatabaseSeeder** — `php artisan db:seed` রান করলে DefaultSeeder + GeoSeeder + SaasSeeder তিনটিই রান হবে

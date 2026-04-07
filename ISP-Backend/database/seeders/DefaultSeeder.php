@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Account;
 use App\Models\CustomRole;
 use App\Models\GeneralSetting;
+use App\Models\Module;
 use App\Models\Package;
 use App\Models\Permission;
 use App\Models\Reseller;
@@ -42,6 +43,7 @@ class DefaultSeeder extends Seeder
         $this->seedChartOfAccounts();
         $this->seedLedgerMappings();
         $this->seedPermissions();
+        $this->seedModules();
 
         $this->command->info('');
         $this->command->info('╔════════════════════════════════════════════════════╗');
@@ -198,7 +200,7 @@ class DefaultSeeder extends Seeder
             'company_name' => 'ISP Billing System',
             'footer_link' => '#',
             'footer_developer' => 'Sync & Solutions IT',
-            'system_version' => '1.0.1',
+            'system_version' => '1.0.3',
             'auto_update_year' => 'true',
             'enabled_modules' => '["dashboard","customers","billing","payments","merchant_payments","tickets","sms","accounting","inventory","supplier","reports","users","roles","settings","hr","mikrotik","packages","fiber_network","reseller","network_map","live_bandwidth"]',
             'invoice_footer' => 'Thank you for using our internet service.',
@@ -409,7 +411,7 @@ class DefaultSeeder extends Seeder
     private function seedPermissions(): void
     {
         $modules = [
-            'customers', 'billing', 'payments', 'merchant_payments',
+            'dashboard', 'customers', 'billing', 'payments', 'merchant_payments',
             'tickets', 'sms', 'accounting', 'inventory', 'hr',
             'supplier', 'reports', 'settings', 'users', 'roles',
             'mikrotik', 'packages', 'fiber_network', 'reseller', 'network_map',
@@ -464,7 +466,7 @@ class DefaultSeeder extends Seeder
 
         // Staff → view all + create/edit on core modules
         if (isset($roles['Staff'])) {
-            $staffModules = ['customers', 'billing', 'payments', 'merchant_payments', 'tickets', 'sms', 'packages'];
+            $staffModules = ['dashboard', 'customers', 'billing', 'payments', 'merchant_payments', 'tickets', 'sms', 'packages'];
             foreach ($permissionIds as $key => $permId) {
                 [$mod, $act] = explode('.', $key);
                 if ($act === 'view' || in_array($mod, $staffModules)) {
@@ -491,7 +493,7 @@ class DefaultSeeder extends Seeder
                         'role_id' => $roles['Technician']->id,
                         'permission_id' => $permId,
                     ]);
-                } elseif ($mod === 'settings' && $act === 'view') {
+                } elseif (in_array($mod, ['dashboard', 'settings']) && $act === 'view') {
                     \App\Models\RolePermission::create([
                         'role_id' => $roles['Technician']->id,
                         'permission_id' => $permId,
@@ -502,7 +504,7 @@ class DefaultSeeder extends Seeder
 
         // Accountant → accounting, payments, billing, expenses, reports, supplier, inventory, hr
         if (isset($roles['Accountant'])) {
-            $accModules = ['accounting', 'payments', 'billing', 'merchant_payments', 'reports', 'supplier', 'inventory', 'hr'];
+            $accModules = ['dashboard', 'accounting', 'payments', 'billing', 'merchant_payments', 'reports', 'supplier', 'inventory', 'hr'];
             foreach ($permissionIds as $key => $permId) {
                 [$mod, $act] = explode('.', $key);
                 if (in_array($mod, $accModules) || ($act === 'view' && in_array($mod, ['customers']))) {
@@ -512,6 +514,41 @@ class DefaultSeeder extends Seeder
                     ]);
                 }
             }
+        }
+    }
+
+    // ── Modules (21 system modules) ──────────────────────
+    private function seedModules(): void
+    {
+        $modules = [
+            ['name' => 'Dashboard',           'slug' => 'dashboard',          'description' => 'Main dashboard overview',           'is_core' => true,  'sort_order' => 1],
+            ['name' => 'Customer Management', 'slug' => 'customers',          'description' => 'Customer CRUD and management',      'is_core' => true,  'sort_order' => 2],
+            ['name' => 'Billing',             'slug' => 'billing',            'description' => 'Bill generation and management',    'is_core' => true,  'sort_order' => 3],
+            ['name' => 'Payments',            'slug' => 'payments',           'description' => 'Payment collection and tracking',   'is_core' => true,  'sort_order' => 4],
+            ['name' => 'Merchant Payments',   'slug' => 'merchant_payments',  'description' => 'bKash/Nagad auto-matching',         'is_core' => false, 'sort_order' => 5],
+            ['name' => 'Support Tickets',     'slug' => 'tickets',            'description' => 'Customer support ticket system',    'is_core' => false, 'sort_order' => 6],
+            ['name' => 'SMS & Reminders',     'slug' => 'sms',               'description' => 'SMS sending and reminders',          'is_core' => false, 'sort_order' => 7],
+            ['name' => 'Accounting',          'slug' => 'accounting',         'description' => 'Double-entry accounting system',    'is_core' => false, 'sort_order' => 8],
+            ['name' => 'Inventory & Sales',   'slug' => 'inventory',          'description' => 'Product inventory and sales',       'is_core' => false, 'sort_order' => 9],
+            ['name' => 'Human Resource',      'slug' => 'hr',                'description' => 'Employee and HR management',         'is_core' => false, 'sort_order' => 10],
+            ['name' => 'Supplier Management', 'slug' => 'supplier',           'description' => 'Supplier and purchase management', 'is_core' => false, 'sort_order' => 11],
+            ['name' => 'Reports & Analytics', 'slug' => 'reports',            'description' => 'Reports and analytics',             'is_core' => false, 'sort_order' => 12],
+            ['name' => 'User Management',     'slug' => 'users',             'description' => 'User account management',            'is_core' => true,  'sort_order' => 13],
+            ['name' => 'Roles & Permissions', 'slug' => 'roles',             'description' => 'Role-based access control',          'is_core' => true,  'sort_order' => 14],
+            ['name' => 'System Settings',     'slug' => 'settings',           'description' => 'System configuration',              'is_core' => true,  'sort_order' => 15],
+            ['name' => 'MikroTik',            'slug' => 'mikrotik',           'description' => 'MikroTik router integration',       'is_core' => false, 'sort_order' => 16],
+            ['name' => 'Packages',            'slug' => 'packages',           'description' => 'Internet package management',       'is_core' => true,  'sort_order' => 17],
+            ['name' => 'Fiber Network',       'slug' => 'fiber_network',      'description' => 'FTTH topology management',          'is_core' => false, 'sort_order' => 18],
+            ['name' => 'Reseller',            'slug' => 'reseller',           'description' => 'Reseller management system',        'is_core' => false, 'sort_order' => 19],
+            ['name' => 'Network Map',         'slug' => 'network_map',        'description' => 'Visual network topology map',       'is_core' => false, 'sort_order' => 20],
+            ['name' => 'Live Bandwidth',      'slug' => 'live_bandwidth',     'description' => 'Real-time bandwidth monitoring',    'is_core' => false, 'sort_order' => 21],
+        ];
+
+        foreach ($modules as $module) {
+            Module::firstOrCreate(
+                ['slug' => $module['slug']],
+                $module
+            );
         }
     }
 }

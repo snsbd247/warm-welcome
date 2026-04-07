@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Smart ISP — VPS Clone Setup Script
+# Smart ISP — VPS Clone Setup Script (v1.0.3)
 # Maps GitHub repo files → /var/www/smartisp directory structure
 # ═══════════════════════════════════════════════════════════════
 #
@@ -154,12 +154,14 @@ if [ "${FRESH_INSTALL:-}" = "true" ]; then
 fi
 
 php artisan migrate --force
-log "Database migrated (19 per-module migration files)"
+log "Database migrated"
 
 php artisan db:seed --class=DefaultSeeder --force
-log "Default data seeded (roles, users, COA, ledger mappings, permissions)"
+log "Default data seeded (roles, users, COA, ledger, permissions, modules)"
 
 php artisan db:seed --class=GeoSeeder --force 2>/dev/null || warn "GeoSeeder skipped (may not exist)"
+
+php artisan db:seed --class=SaasSeeder --force 2>/dev/null || warn "SaasSeeder skipped (may not exist)"
 
 php artisan modules:scan 2>/dev/null || true
 php artisan storage:link 2>/dev/null || true
@@ -198,14 +200,14 @@ chmod -R 775 ${BACKEND_DIR}/storage ${BACKEND_DIR}/bootstrap/cache
 nginx -t
 systemctl restart php${PHP_VERSION}-fpm
 systemctl reload nginx
-systemctl start smartisp-queue 2>/dev/null || true
+systemctl restart smartisp-queue 2>/dev/null || true
 
 log "Services restarted"
 
 # ── Summary ───────────────────────────────────────────────────
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  ✅ Smart ISP Clone Setup Complete!${NC}"
+echo -e "${GREEN}  ✅ Smart ISP Clone Setup Complete! (v1.0.3)${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "  ${YELLOW}Directories:${NC}"
@@ -217,6 +219,11 @@ echo -e "  ${YELLOW}Default Logins:${NC}"
 echo -e "    Super Admin:  superadmin / Admin@123"
 echo -e "    Tenant Admin: snb_admin  / 123456"
 echo -e "    Reseller:     sagorkhan  / 123456"
+echo ""
+echo -e "  ${YELLOW}Services:${NC}"
+echo -e "    PHP-FPM:      systemctl status php${PHP_VERSION}-fpm"
+echo -e "    Nginx:        systemctl status nginx"
+echo -e "    Queue Worker: systemctl status smartisp-queue"
 echo ""
 echo -e "  ${YELLOW}Next Steps:${NC}"
 echo -e "    1. Edit ${BACKEND_DIR}/.env — set DB credentials, APP_URL, etc."

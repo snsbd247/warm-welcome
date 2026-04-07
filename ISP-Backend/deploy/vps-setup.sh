@@ -1,18 +1,19 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
 # Smart ISP — VPS Production Deployment Script (Ubuntu 22/24)
+# Version: 1.0.3
 # ═══════════════════════════════════════════════════════════════
 #
 # Usage:
-#   chmod +x deploy.sh
-#   sudo ./deploy.sh
+#   chmod +x vps-setup.sh
+#   sudo ./vps-setup.sh
 #
 # This script:
 #   1. Installs Nginx, PHP 8.2, MySQL 8, Node.js 20, Composer
 #   2. Configures Nginx for wildcard + custom domains
 #   3. Deploys Laravel backend + React frontend
 #   4. Sets up SSL with Let's Encrypt (wildcard via Cloudflare DNS)
-#   5. Configures systemd services and cron jobs
+#   5. Configures systemd services (queue worker) and cron jobs
 #
 # ⚠️ Run as root or with sudo
 # ═══════════════════════════════════════════════════════════════
@@ -45,15 +46,15 @@ section() { echo -e "\n${CYAN}═══ $1 ═══${NC}\n"; }
 
 # ── Pre-checks ────────────────────────────────────────────────
 if [ "$EUID" -ne 0 ]; then
-    err "Please run as root: sudo ./deploy.sh"
+    err "Please run as root: sudo ./vps-setup.sh"
 fi
 
-section "1/8 — System Update"
+section "1/9 — System Update"
 apt update && apt upgrade -y
 apt install -y software-properties-common curl wget git unzip acl ufw
 
 # ── PHP 8.2 ───────────────────────────────────────────────────
-section "2/8 — Installing PHP ${PHP_VERSION}"
+section "2/9 — Installing PHP ${PHP_VERSION}"
 add-apt-repository -y ppa:ondrej/php
 apt update
 apt install -y \
@@ -102,7 +103,7 @@ systemctl restart php${PHP_VERSION}-fpm
 log "PHP ${PHP_VERSION} installed and configured"
 
 # ── MySQL 8 ───────────────────────────────────────────────────
-section "3/8 — Installing MySQL"
+section "3/9 — Installing MySQL"
 apt install -y mysql-server
 
 systemctl start mysql
@@ -116,21 +117,21 @@ mysql -e "FLUSH PRIVILEGES;"
 log "MySQL configured — DB: ${DB_NAME}, User: ${DB_USER}"
 
 # ── Node.js ───────────────────────────────────────────────────
-section "4/8 — Installing Node.js ${NODE_VERSION}"
+section "4/9 — Installing Node.js ${NODE_VERSION}"
 curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
 apt install -y nodejs
 npm install -g npm@latest
 log "Node.js $(node -v) + npm $(npm -v) installed"
 
 # ── Composer ──────────────────────────────────────────────────
-section "5/8 — Installing Composer"
+section "5/9 — Installing Composer"
 if ! command -v composer &> /dev/null; then
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 fi
 log "Composer $(composer --version --no-ansi 2>/dev/null | head -1) installed"
 
 # ── Application Directory ────────────────────────────────────
-section "6/8 — Setting Up Application"
+section "6/9 — Setting Up Application"
 mkdir -p ${APP_DIR}
 mkdir -p ${BACKEND_DIR}
 mkdir -p ${FRONTEND_DIR}/dist
@@ -160,8 +161,8 @@ php artisan storage:link 2>/dev/null || true
 
 # Frontend
 cd ${FRONTEND_DIR}
-npm ci --production=false
-npm run build
+npm ci --legacy-peer-deps
+VITE_DEPLOY_TARGET=vps npm run build
 
 # Copy frontend build to Nginx root
 rsync -a --delete ${FRONTEND_DIR}/dist/ ${APP_DIR}/public_html/
@@ -175,6 +176,7 @@ chmod -R 775 ${BACKEND_DIR}/storage ${BACKEND_DIR}/bootstrap/cache
 # Restart services
 systemctl restart php${PHP_VERSION}-fpm
 systemctl reload nginx
+systemctl restart smartisp-queue 2>/dev/null || true
 
 echo "✅ Deployment complete!"
 DEPLOY_SCRIPT
@@ -186,7 +188,7 @@ mkdir -p ${APP_DIR}/public_html
 log "Application directories created"
 
 # ── Nginx Configuration ──────────────────────────────────────
-section "7/8 — Configuring Nginx"
+section "7/9 — Configuring Nginx"
 apt install -y nginx
 
 # Install shared rate-limit zones once at the http level
@@ -222,8 +224,46 @@ systemctl enable nginx
 
 log "Nginx configured for wildcard + custom domains"
 
+# ── Queue Worker Service ─────────────────────────────────────
+section "8/9 — Queue Worker & Cron Jobs"
+
+# Install queue worker service
+if [ -f "${SCRIPT_DIR}/smartisp-queue.service" ]; then
+    cp "${SCRIPT_DIR}/smartisp-queue.service" /etc/systemd/system/
+    systemctl daemon-reload
+    systemctl enable smartisp-queue
+    log "Queue worker service installed"
+else
+    cat > /etc/systemd/system/smartisp-queue.service << 'QUEUESERVICE'
+[Unit]
+Description=Smart ISP Queue Worker
+After=network.target mysql.service
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=3
+WorkingDirectory=/var/www/smartisp/backend
+ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+StandardOutput=append:/var/log/smartisp-queue.log
+StandardError=append:/var/log/smartisp-queue-error.log
+
+[Install]
+WantedBy=multi-user.target
+QUEUESERVICE
+    systemctl daemon-reload
+    systemctl enable smartisp-queue
+    log "Queue worker service created and enabled"
+fi
+
+# Laravel scheduler cron
+(crontab -l 2>/dev/null; echo "* * * * * cd ${BACKEND_DIR} && php artisan schedule:run >> /dev/null 2>&1") | sort -u | crontab -
+
+log "Cron jobs configured"
+
 # ── Firewall ──────────────────────────────────────────────────
-section "8/8 — Firewall & Security"
+section "9/9 — Firewall & Security"
 ufw --force enable
 ufw allow ssh
 ufw allow 'Nginx Full'
@@ -231,16 +271,10 @@ ufw allow 3306/tcp  # MySQL (remove if not needed externally)
 
 log "Firewall configured"
 
-# ── Cron Jobs ─────────────────────────────────────────────────
-# Laravel scheduler
-(crontab -l 2>/dev/null; echo "* * * * * cd ${BACKEND_DIR} && php artisan schedule:run >> /dev/null 2>&1") | sort -u | crontab -
-
-log "Cron jobs configured"
-
 # ── Summary ───────────────────────────────────────────────────
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  ✅ Smart ISP VPS Setup Complete!${NC}"
+echo -e "${GREEN}  ✅ Smart ISP VPS Setup Complete! (v1.0.3)${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "  ${YELLOW}Database:${NC}"
@@ -252,6 +286,11 @@ echo -e "  ${YELLOW}Directories:${NC}"
 echo -e "    Backend:  ${BACKEND_DIR}"
 echo -e "    Frontend: ${FRONTEND_DIR}"
 echo -e "    Web Root: ${APP_DIR}/public_html"
+echo ""
+echo -e "  ${YELLOW}Services:${NC}"
+echo -e "    PHP-FPM:      systemctl status php${PHP_VERSION}-fpm"
+echo -e "    Nginx:        systemctl status nginx"
+echo -e "    Queue Worker: systemctl status smartisp-queue"
 echo ""
 echo -e "  ${YELLOW}Next Steps:${NC}"
 echo -e "    1. Clone your repos into ${BACKEND_DIR} and ${FRONTEND_DIR}"
@@ -271,6 +310,7 @@ echo ""
 cat > /root/.smartisp-credentials << EOF
 Smart ISP — Server Credentials
 Generated: $(date)
+Version: 1.0.3
 ================================
 Database: ${DB_NAME}
 Username: ${DB_USER}

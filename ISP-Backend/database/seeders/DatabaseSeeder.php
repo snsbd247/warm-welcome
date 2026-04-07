@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             DefaultSeeder::class,
+            GeoSeeder::class,
+            SaasSeeder::class,
         ]);
     }
 }
