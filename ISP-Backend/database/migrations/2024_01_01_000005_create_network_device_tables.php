@@ -68,10 +68,27 @@ return new class extends Migration {
             $table->string('mikrotik_id')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('online_sessions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('pppoe_username');
+            $table->string('ip_address')->nullable();
+            $table->string('mac_address')->nullable();
+            $table->string('uptime')->nullable();
+            $table->bigInteger('bytes_in')->nullable();
+            $table->bigInteger('bytes_out')->nullable();
+            $table->uuid('customer_id')->nullable()->index();
+            $table->uuid('router_id')->nullable()->index();
+            $table->string('status')->default('online');
+            $table->timestamp('connected_at')->nullable();
+            $table->timestamp('last_seen')->nullable();
+            $table->timestamp('created_at')->useCurrent();
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('online_sessions');
         Schema::dropIfExists('ip_pools');
         Schema::dropIfExists('onus');
         Schema::dropIfExists('olts');

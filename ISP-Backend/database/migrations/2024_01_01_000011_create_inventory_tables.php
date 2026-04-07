@@ -13,7 +13,10 @@ return new class extends Migration {
             $table->string('name');
             $table->string('sku')->nullable()->unique();
             $table->string('category')->nullable()->index();
+            $table->uuid('category_id')->nullable()->index();
             $table->text('description')->nullable();
+            $table->string('brand')->nullable();
+            $table->string('model')->nullable();
             $table->decimal('buy_price', 12, 2)->default(0);
             $table->decimal('sell_price', 12, 2)->default(0);
             $table->integer('stock')->default(0);
@@ -61,6 +64,7 @@ return new class extends Migration {
         });
 
         Schema::create('purchases', function (Blueprint $table) {
+            $table->uuid('tenant_id')->nullable()->index();
             $table->uuid('id')->primary();
             $table->string('purchase_no')->unique();
             $table->uuid('supplier_id')->index();
@@ -83,6 +87,7 @@ return new class extends Migration {
         });
 
         Schema::create('sales', function (Blueprint $table) {
+            $table->uuid('tenant_id')->nullable()->index();
             $table->uuid('id')->primary();
             $table->string('sale_no')->unique();
             $table->uuid('customer_id')->nullable()->index();
@@ -110,6 +115,7 @@ return new class extends Migration {
         });
 
         Schema::create('supplier_payments', function (Blueprint $table) {
+            $table->uuid('tenant_id')->nullable()->index();
             $table->uuid('id')->primary();
             $table->uuid('supplier_id')->index();
             $table->uuid('purchase_id')->nullable()->index();

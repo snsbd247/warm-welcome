@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->string('plan')->default('basic');
             $table->timestamp('trial_ends_at')->nullable();
             $table->json('settings')->nullable();
+            $table->boolean('setup_payment_gateways')->default(false);
             $table->timestamps();
         });
 

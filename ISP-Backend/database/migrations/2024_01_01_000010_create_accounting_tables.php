@@ -24,6 +24,7 @@ return new class extends Migration {
         });
 
         Schema::create('transactions', function (Blueprint $table) {
+            $table->uuid('tenant_id')->nullable()->index();
             $table->uuid('id')->primary();
             $table->string('type')->default('journal');
             $table->string('category')->nullable();
@@ -72,6 +73,7 @@ return new class extends Migration {
 
         Schema::create('income_heads', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('tenant_id')->nullable()->index();
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('status')->default('active');
@@ -89,6 +91,7 @@ return new class extends Migration {
 
         Schema::create('other_heads', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('tenant_id')->nullable()->index();
             $table->string('name');
             $table->string('type')->default('other');
             $table->text('description')->nullable();

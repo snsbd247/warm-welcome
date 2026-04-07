@@ -46,6 +46,7 @@ return new class extends Migration {
 
         Schema::create('merchant_payments', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('tenant_id')->nullable()->index();
             $table->string('transaction_id')->unique();
             $table->string('sender_phone');
             $table->decimal('amount', 10, 2)->default(0);

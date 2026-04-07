@@ -33,6 +33,7 @@ return new class extends Migration {
             $table->string('browser')->nullable();
             $table->string('device_name')->nullable();
             $table->string('status')->default('active');
+            $table->timestamp('last_activity')->nullable();
             $table->timestamps();
         });
 
@@ -62,6 +63,7 @@ return new class extends Migration {
             $table->decimal('amount', 12, 2)->default(0);
             $table->decimal('balance_after', 12, 2)->default(0);
             $table->text('description')->nullable();
+            $table->string('reference')->nullable();
             $table->timestamps();
         });
 
@@ -74,6 +76,7 @@ return new class extends Migration {
             $table->decimal('commission_rate', 5, 2)->default(0);
             $table->decimal('commission_amount', 12, 2)->default(0);
             $table->string('status')->default('pending');
+            $table->text('notes')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });

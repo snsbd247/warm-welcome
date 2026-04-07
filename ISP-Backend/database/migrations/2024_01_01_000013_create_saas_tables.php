@@ -50,7 +50,9 @@ return new class extends Migration {
             $table->decimal('amount', 10, 2)->default(0);
             $table->decimal('tax_amount', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
+            $table->uuid('subscription_id')->nullable()->index();
             $table->decimal('proration_credit', 10, 2)->default(0);
+            $table->string('transaction_id')->nullable();
             $table->string('billing_cycle')->nullable();
             $table->date('due_date')->nullable();
             $table->date('paid_date')->nullable();

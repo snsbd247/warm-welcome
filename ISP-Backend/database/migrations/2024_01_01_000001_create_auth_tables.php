@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->string('staff_id')->nullable();
             $table->string('status')->default('active');
             $table->string('language')->default('en');
+            $table->boolean('must_change_password')->default(false);
             $table->timestamps();
         });
 

@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             $table->uuid('tenant_id')->unique();
             $table->integer('balance')->default(0);
+            $table->decimal('sms_rate', 8, 4)->default(0.25);
             $table->timestamps();
         });
 

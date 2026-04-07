@@ -47,6 +47,7 @@ return new class extends Migration {
         });
 
         Schema::create('loans', function (Blueprint $table) {
+            $table->uuid('tenant_id')->nullable()->index();
             $table->uuid('id')->primary();
             $table->uuid('employee_id')->index();
             $table->decimal('amount', 12, 2)->default(0);

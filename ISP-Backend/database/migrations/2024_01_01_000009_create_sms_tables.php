@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->boolean('sms_on_suspension')->default(false);
             $table->boolean('sms_on_new_customer_bill')->default(true);
             $table->boolean('sms_on_reminder')->default(false);
+            $table->decimal('admin_cost_rate', 8, 4)->nullable();
             $table->boolean('whatsapp_enabled')->default(false);
             $table->string('whatsapp_token')->nullable();
             $table->string('whatsapp_phone_id')->nullable();
@@ -41,6 +42,9 @@ return new class extends Migration {
             $table->text('response')->nullable();
             $table->uuid('customer_id')->nullable()->index();
             $table->integer('sms_count')->default(1);
+            $table->decimal('cost', 10, 4)->default(0);
+            $table->decimal('admin_cost', 10, 4)->nullable();
+            $table->decimal('profit', 10, 4)->nullable();
             $table->timestamp('created_at')->useCurrent();
         });
 
