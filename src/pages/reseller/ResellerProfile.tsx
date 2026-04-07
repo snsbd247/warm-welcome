@@ -69,13 +69,14 @@ export default function ResellerProfile() {
       if (passwordForm.new_password.length < 6) throw new Error("Password must be at least 6 characters");
       if (passwordForm.new_password !== passwordForm.confirm_password) throw new Error("Passwords do not match");
 
-      // Use edge function for secure server-side password change
-      const { data, error } = await supabase.functions.invoke("reseller-change-password", {
-        body: {
-          reseller_id: reseller!.id,
-          old_password: passwordForm.old_password,
-          new_password: passwordForm.new_password,
-        },
+      const payload = {
+        reseller_id: reseller!.id,
+        old_password: passwordForm.old_password,
+        new_password: passwordForm.new_password,
+      };
+
+      const { data, error } = await db.functions.invoke("reseller-change-password", {
+        body: payload,
       });
 
       if (error) throw new Error(error.message || "Password change failed");
