@@ -302,7 +302,15 @@ function HowItWorks() {
 
 // ─── Pricing ─────────────────────────────────────────────────
 function PricingSection({ sections, onCta }: { sections: any[]; onCta: () => void }) {
-  const { data: plans = [] } = useQuery({ queryKey: ["landing-plans"], queryFn: superAdminApi.getPlans });
+  const { data: plans = [] } = useQuery({
+    queryKey: ["landing-plans"],
+    queryFn: async () => {
+      const { data, error } = await db.from("saas_plans").select("*").eq("is_active", true).order("sort_order");
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 60_000,
+  });
   const pricingMeta = sections.find((s: any) => s.section_type === "hero")?.metadata || {};
   const heading = pricingMeta.pricing_title || "Simple, Transparent Pricing";
   const subtitle = pricingMeta.pricing_subtitle || "Choose the plan that fits your business";
