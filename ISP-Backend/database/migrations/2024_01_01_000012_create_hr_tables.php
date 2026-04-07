@@ -61,6 +61,7 @@ return new class extends Migration {
 
         Schema::create('salary_sheets', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('tenant_id')->nullable()->index();
             $table->uuid('employee_id')->index();
             $table->string('month');
             $table->decimal('basic_salary', 12, 2)->default(0);

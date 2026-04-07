@@ -16,9 +16,21 @@ return new class extends Migration {
             $table->string('logo_url')->nullable();
             $table->string('status')->default('active');
             $table->string('plan')->default('basic');
+            $table->uuid('plan_id')->nullable()->index();
+            $table->integer('max_customers')->nullable();
+            $table->integer('max_users')->nullable();
+            $table->integer('grace_days')->default(0);
+            $table->date('plan_expire_date')->nullable();
+            $table->text('plan_expiry_message')->nullable();
             $table->timestamp('trial_ends_at')->nullable();
             $table->json('settings')->nullable();
+            $table->string('setup_status')->nullable();
             $table->boolean('setup_payment_gateways')->default(false);
+            $table->boolean('setup_accounts')->default(false);
+            $table->boolean('setup_geo')->default(false);
+            $table->boolean('setup_ledger')->default(false);
+            $table->boolean('setup_templates')->default(false);
+            $table->boolean('auto_setup')->default(false);
             $table->timestamps();
         });
 

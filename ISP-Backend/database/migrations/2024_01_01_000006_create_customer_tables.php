@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->string('bandwidth_profile')->nullable();
             $table->string('burst_limit')->nullable();
             $table->uuid('router_id')->nullable()->index();
+            $table->uuid('ip_pool_id')->nullable()->index();
             $table->timestamps();
         });
 

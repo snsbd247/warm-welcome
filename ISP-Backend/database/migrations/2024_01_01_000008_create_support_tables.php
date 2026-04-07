@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('priority')->default('medium');
             $table->string('status')->default('open');
             $table->string('assigned_to')->nullable();
+            $table->text('admin_notes')->nullable();
             $table->timestamps();
         });
 
