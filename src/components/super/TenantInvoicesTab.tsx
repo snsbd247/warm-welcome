@@ -31,7 +31,7 @@ export default function TenantInvoicesTab({ tenantId, tenantName }: Props) {
   const { data: invoices = [], isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      const { data } = await (supabase.from as any)("subscription_invoices")
+      const { data } = await (db.from as any)("subscription_invoices")
         .select("*")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
@@ -42,7 +42,7 @@ export default function TenantInvoicesTab({ tenantId, tenantName }: Props) {
   const { data: plans = [] } = useQuery({
     queryKey: ["saas-plans-lookup"],
     queryFn: async () => {
-      const { data } = await (supabase.from as any)("saas_plans").select("id, name, price_monthly, price_yearly, billing_cycle");
+      const { data } = await (db.from as any)("saas_plans").select("id, name, price_monthly, price_yearly, billing_cycle");
       return data || [];
     },
   });
@@ -55,7 +55,7 @@ export default function TenantInvoicesTab({ tenantId, tenantName }: Props) {
       const invoice = invoices.find((i: any) => i.id === invoiceId);
       if (!invoice) throw new Error("Invoice not found");
 
-      await (supabase.from as any)("subscription_invoices").update({
+      await (db.from as any)("subscription_invoices").update({
         status: "paid",
         paid_date: new Date().toISOString(),
         payment_method: "manual",
@@ -68,13 +68,13 @@ export default function TenantInvoicesTab({ tenantId, tenantName }: Props) {
         newExpiry.setMonth(newExpiry.getMonth() + 1);
       }
 
-      await (supabase.from as any)("tenants").update({
+      await (db.from as any)("tenants").update({
         plan_expire_date: newExpiry.toISOString().split("T")[0],
         plan_id: invoice.plan_id,
         status: "active",
       }).eq("id", invoice.tenant_id);
 
-      await (supabase.from as any)("subscriptions").update({ status: "active" })
+      await (db.from as any)("subscriptions").update({ status: "active" })
         .eq("tenant_id", invoice.tenant_id).eq("status", "expired");
     },
     onSuccess: () => {
@@ -90,7 +90,7 @@ export default function TenantInvoicesTab({ tenantId, tenantName }: Props) {
 
   const editInvoice = useMutation({
     mutationFn: async (form: any) => {
-      const { error } = await (supabase.from as any)("subscription_invoices").update({
+      const { error } = await (db.from as any)("subscription_invoices").update({
         amount: Number(form.amount),
         tax_amount: Number(form.tax_amount || 0),
         total_amount: Number(form.total_amount),
@@ -115,7 +115,7 @@ export default function TenantInvoicesTab({ tenantId, tenantName }: Props) {
 
   const deleteInvoice = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from as any)("subscription_invoices").delete().eq("id", id);
+      const { error } = await (db.from as any)("subscription_invoices").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
