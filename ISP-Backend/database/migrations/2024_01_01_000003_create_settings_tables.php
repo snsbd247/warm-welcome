@@ -25,9 +25,11 @@ return new class extends Migration {
 
         Schema::create('system_settings', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('setting_key')->unique();
+            $table->uuid('tenant_id')->nullable()->index();
+            $table->string('setting_key');
             $table->text('setting_value')->nullable();
             $table->timestamps();
+            $table->unique(['tenant_id', 'setting_key']);
         });
 
         Schema::create('payment_gateways', function (Blueprint $table) {
