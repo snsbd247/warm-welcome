@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->text('address')->nullable();
-            $table->uuid('user_id')->nullable()->index();
+            $table->string('user_id')->nullable()->unique();
             $table->string('password_hash')->nullable();
             $table->decimal('wallet_balance', 12, 2)->default(0);
             $table->decimal('commission_rate', 5, 2)->default(0);

@@ -11,6 +11,9 @@ use App\Models\Reseller;
 use App\Models\SmsTemplate;
 use App\Models\SuperAdmin;
 use App\Models\SystemSetting;
+use App\Models\Tenant;
+use App\Models\TenantCompanyInfo;
+use App\Models\Domain;
 use App\Models\User;
 use App\Models\SmsSetting;
 use App\Models\UserRole;
@@ -27,6 +30,7 @@ class DefaultSeeder extends Seeder
     {
         $this->seedRoles();
         $this->seedSuperAdmin();
+        $this->seedDefaultTenant();
         $this->seedAdminUsers();
         $this->seedReseller();
         $this->seedGeneralSettings();
@@ -89,6 +93,43 @@ class DefaultSeeder extends Seeder
         );
     }
 
+    // ── Default Tenant ──────────────────────────────────
+    private ?string $defaultTenantId = null;
+
+    private function seedDefaultTenant(): void
+    {
+        $tenant = Tenant::firstOrCreate(
+            ['subdomain' => 'demo'],
+            [
+                'name' => 'SNB Networks',
+                'email' => 'snb@smartisp.com',
+                'phone' => '01700000000',
+                'status' => 'active',
+                'plan' => 'enterprise',
+            ]
+        );
+        $this->defaultTenantId = $tenant->id;
+
+        Domain::firstOrCreate(
+            ['domain' => 'demo.smartispapp.com'],
+            [
+                'tenant_id' => $tenant->id,
+                'is_primary' => true,
+                'is_verified' => true,
+            ]
+        );
+
+        TenantCompanyInfo::firstOrCreate(
+            ['tenant_id' => $tenant->id],
+            [
+                'company_name' => 'SNB Networks',
+                'company_phone' => '01700000000',
+                'company_email' => 'snb@smartisp.com',
+                'invoice_prefix' => 'SNB',
+            ]
+        );
+    }
+
     // ── Admin / Tenant / Reseller Users ─────────────────
     private function seedAdminUsers(): void
     {
@@ -102,8 +143,13 @@ class DefaultSeeder extends Seeder
                 'email' => 'snb@smartisp.com',
                 'password_hash' => Hash::make('123456'),
                 'status' => 'active',
+                'tenant_id' => $this->defaultTenantId,
             ]
         );
+        // Update tenant_id if already exists but was null
+        if (!$tenantAdmin->tenant_id && $this->defaultTenantId) {
+            $tenantAdmin->update(['tenant_id' => $this->defaultTenantId]);
+        }
         if ($ownerRole) {
             UserRole::firstOrCreate(
                 ['user_id' => $tenantAdmin->id],
@@ -115,31 +161,20 @@ class DefaultSeeder extends Seeder
     // ── Reseller ─────────────────────────────────────────
     private function seedReseller(): void
     {
-        // Create reseller user account
-        $resellerUser = User::firstOrCreate(
-            ['username' => 'sagorkhan'],
-            [
-                'full_name' => 'Sagor Khan',
-                'email' => 'sagor@smartisp.com',
-                'password_hash' => Hash::make('123456'),
-                'status' => 'active',
-            ]
-        );
-
-        // Create reseller record (tenant_id will be assigned when tenant exists)
         Reseller::firstOrCreate(
-            ['phone' => '01700000001'],
+            ['user_id' => 'sagorkhan'],
             [
                 'name' => 'Sagor Khan',
                 'company_name' => 'Sagor Networks',
                 'email' => 'sagor@smartisp.com',
-                'user_id' => $resellerUser->id,
+                'phone' => '01700000001',
                 'password_hash' => Hash::make('123456'),
                 'wallet_balance' => 0,
                 'commission_rate' => 10,
                 'default_commission' => 10,
                 'status' => 'active',
                 'allow_all_packages' => true,
+                'tenant_id' => $this->defaultTenantId,
             ]
         );
     }
