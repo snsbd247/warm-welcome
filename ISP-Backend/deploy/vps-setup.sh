@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
 # Smart ISP — VPS Production Deployment Script (Ubuntu 22/24)
-# Version: 1.0.3
+# Version: 1.0.4
 # ═══════════════════════════════════════════════════════════════
 #
 # Usage:
@@ -274,7 +274,7 @@ log "Firewall configured"
 # ── Summary ───────────────────────────────────────────────────
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  ✅ Smart ISP VPS Setup Complete! (v1.0.3)${NC}"
+echo -e "${GREEN}  ✅ Smart ISP VPS Setup Complete! (v1.0.4)${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "  ${YELLOW}Database:${NC}"
@@ -310,7 +310,7 @@ echo ""
 cat > /root/.smartisp-credentials << EOF
 Smart ISP — Server Credentials
 Generated: $(date)
-Version: 1.0.3
+Version: 1.0.4
 ================================
 Database: ${DB_NAME}
 Username: ${DB_USER}
