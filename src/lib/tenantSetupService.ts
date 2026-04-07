@@ -7,7 +7,7 @@
  * Geo tables (geo_divisions, geo_districts, geo_upazilas) and sms_templates are global.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/supabase/client";
 import { unwrapApiResult } from "@/lib/apiResult";
 import { DIVISIONS, DISTRICTS, UPAZILAS } from "@/lib/bangladeshGeo";
 
@@ -43,7 +43,7 @@ async function withErrorHandling(
 
 // ─── Helper: safe count (with optional tenant scoping) ──────────
 async function tableCount(table: string, tenantId?: string): Promise<number> {
-  let query = (supabase.from as any)(table).select("id", { count: "exact", head: true });
+  let query = (db.from as any)(table).select("id", { count: "exact", head: true });
   if (tenantId) query = query.eq("tenant_id", tenantId);
   const { count, error } = await query;
   if (error) return 0;
@@ -51,7 +51,7 @@ async function tableCount(table: string, tenantId?: string): Promise<number> {
 }
 
 async function countSystemSettings(keys: string[], tenantId?: string): Promise<number> {
-  let query = (supabase.from as any)("system_settings")
+  let query = (db.from as any)("system_settings")
     .select("id", { count: "exact", head: true })
     .in("setting_key", keys);
   if (tenantId) query = query.eq("tenant_id", tenantId);
@@ -61,7 +61,7 @@ async function countSystemSettings(keys: string[], tenantId?: string): Promise<n
 }
 
 async function saveSystemSetting(settingKey: string, settingValue: string, tenantId?: string): Promise<void> {
-  let query = (supabase.from as any)("system_settings")
+  let query = (db.from as any)("system_settings")
     .select("id")
     .eq("setting_key", settingKey);
   if (tenantId) query = query.eq("tenant_id", tenantId);
@@ -70,7 +70,7 @@ async function saveSystemSetting(settingKey: string, settingValue: string, tenan
 
   if (existing?.id) {
     unwrapApiResult(
-      await (supabase.from as any)("system_settings")
+      await (db.from as any)("system_settings")
         .update({ setting_value: settingValue, updated_at: new Date().toISOString() })
         .eq("id", existing.id)
     );
@@ -81,7 +81,7 @@ async function saveSystemSetting(settingKey: string, settingValue: string, tenan
   if (tenantId) insertData.tenant_id = tenantId;
 
   unwrapApiResult(
-    await (supabase.from as any)("system_settings").insert(insertData)
+    await (db.from as any)("system_settings").insert(insertData)
   );
 }
 
@@ -94,15 +94,15 @@ export async function importGeoData(force = false): Promise<SetupResult> {
     }
 
     if (force && existingCount > 0) {
-      await (supabase.from as any)("geo_upazilas").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await (supabase.from as any)("geo_districts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await (supabase.from as any)("geo_divisions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await (db.from as any)("geo_upazilas").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await (db.from as any)("geo_districts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await (db.from as any)("geo_divisions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     }
 
     let totalInserted = 0;
 
     const divisionRows = DIVISIONS.map((name) => ({ name, status: "active" }));
-    const { data: insertedDivisions, error: divErr } = await (supabase.from as any)("geo_divisions")
+    const { data: insertedDivisions, error: divErr } = await (db.from as any)("geo_divisions")
       .insert(divisionRows)
       .select("id, name");
     if (divErr) throw new Error(`Divisions: ${divErr.message}`);
@@ -123,7 +123,7 @@ export async function importGeoData(force = false): Promise<SetupResult> {
     const insertedDistricts: any[] = [];
     for (let i = 0; i < districtRows.length; i += 50) {
       const batch = districtRows.slice(i, i + 50);
-      const { data, error } = await (supabase.from as any)("geo_districts").insert(batch).select("id, name");
+      const { data, error } = await (db.from as any)("geo_districts").insert(batch).select("id, name");
       if (error) throw new Error(`Districts batch: ${error.message}`);
       insertedDistricts.push(...(data || []));
     }
@@ -143,7 +143,7 @@ export async function importGeoData(force = false): Promise<SetupResult> {
 
     for (let i = 0; i < upazilaRows.length; i += 50) {
       const batch = upazilaRows.slice(i, i + 50);
-      const { error } = await (supabase.from as any)("geo_upazilas").insert(batch);
+      const { error } = await (db.from as any)("geo_upazilas").insert(batch);
       if (error) throw new Error(`Upazilas batch: ${error.message}`);
     }
     totalInserted += upazilaRows.length;
@@ -227,7 +227,7 @@ export async function importChartOfAccounts(force = false, tenantId?: string): P
     }
 
     if (force && existingCount > 0) {
-      await (supabase.from as any)("accounts").delete().eq("tenant_id", tenantId);
+      await (db.from as any)("accounts").delete().eq("tenant_id", tenantId);
     }
 
     // First pass: insert root accounts (no parent)
@@ -239,7 +239,7 @@ export async function importChartOfAccounts(force = false, tenantId?: string): P
       is_active: true,
       status: "active",
     }));
-    const { data: insertedRoots, error: rootErr } = await (supabase.from as any)("accounts")
+    const { data: insertedRoots, error: rootErr } = await (db.from as any)("accounts")
       .insert(rootInserts)
       .select("id, code");
     if (rootErr) throw new Error(`Root accounts: ${rootErr.message}`);
@@ -260,7 +260,7 @@ export async function importChartOfAccounts(force = false, tenantId?: string): P
 
     for (let i = 0; i < level1Inserts.length; i += 20) {
       const batch = level1Inserts.slice(i, i + 20);
-      const { data, error } = await (supabase.from as any)("accounts").insert(batch).select("id, code");
+      const { data, error } = await (db.from as any)("accounts").insert(batch).select("id, code");
       if (error) throw new Error(`Level 1 accounts: ${error.message}`);
       for (const r of (data || [])) codeMap[r.code] = r.id;
     }
@@ -276,7 +276,7 @@ export async function importChartOfAccounts(force = false, tenantId?: string): P
         is_active: true,
         status: "active",
       }));
-      const { error } = await (supabase.from as any)("accounts").insert(level2Inserts);
+      const { error } = await (db.from as any)("accounts").insert(level2Inserts);
       if (error) throw new Error(`Level 2 accounts: ${error.message}`);
     }
 
@@ -318,10 +318,10 @@ export async function importTemplates(force = false): Promise<SetupResult> {
     }
 
     if (force && existingCount > 0) {
-      await (supabase.from as any)("sms_templates").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await (db.from as any)("sms_templates").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     }
 
-    const { error } = await (supabase.from as any)("sms_templates").insert(DEFAULT_TEMPLATES);
+    const { error } = await (db.from as any)("sms_templates").insert(DEFAULT_TEMPLATES);
     if (error) throw new Error(error.message);
 
     const verifyCount = await tableCount("sms_templates");
@@ -398,15 +398,15 @@ export async function importLedgerSettings(force = false, tenantId?: string): Pr
 
     if (force) {
       if (expCount > 0) {
-        unwrapApiResult(await (supabase.from as any)("expense_heads").delete().eq("tenant_id", tenantId));
+        unwrapApiResult(await (db.from as any)("expense_heads").delete().eq("tenant_id", tenantId));
       }
       if (incCount > 0) {
-        unwrapApiResult(await (supabase.from as any)("income_heads").delete().eq("tenant_id", tenantId));
+        unwrapApiResult(await (db.from as any)("income_heads").delete().eq("tenant_id", tenantId));
       }
     }
 
     // Lookup accounts for this tenant
-    const { data: accounts, error: accountsErr } = await (supabase.from as any)("accounts")
+    const { data: accounts, error: accountsErr } = await (db.from as any)("accounts")
       .select("id, code")
       .eq("tenant_id", tenantId);
     if (accountsErr) throw new Error(`Accounts lookup failed: ${accountsErr.message}`);
@@ -431,12 +431,12 @@ export async function importLedgerSettings(force = false, tenantId?: string): Pr
 
     // Insert expense heads with tenant_id
     const expenseHeadsWithTenant = DEFAULT_EXPENSE_HEADS.map((h) => ({ ...h, tenant_id: tenantId }));
-    const { error: expErr } = await (supabase.from as any)("expense_heads").insert(expenseHeadsWithTenant);
+    const { error: expErr } = await (db.from as any)("expense_heads").insert(expenseHeadsWithTenant);
     if (expErr) throw new Error(`Expense heads: ${expErr.message}`);
 
     // Insert income heads with tenant_id
     const incomeHeadsWithTenant = DEFAULT_INCOME_HEADS.map((h) => ({ ...h, tenant_id: tenantId }));
-    const { error: incErr } = await (supabase.from as any)("income_heads").insert(incomeHeadsWithTenant);
+    const { error: incErr } = await (db.from as any)("income_heads").insert(incomeHeadsWithTenant);
     if (incErr) throw new Error(`Income heads: ${incErr.message}`);
 
     // Save ledger mapping settings with tenant_id
@@ -478,7 +478,7 @@ export async function importPaymentGateways(force = false, tenantId?: string): P
     }
 
     if (force && existingCount > 0) {
-      await (supabase.from as any)("payment_gateways").delete().eq("tenant_id", tenantId);
+      await (db.from as any)("payment_gateways").delete().eq("tenant_id", tenantId);
     }
 
     const gateways = [
@@ -508,7 +508,7 @@ export async function importPaymentGateways(force = false, tenantId?: string): P
       },
     ];
 
-    const { error } = await (supabase.from as any)("payment_gateways").insert(gateways);
+    const { error } = await (db.from as any)("payment_gateways").insert(gateways);
     if (error) throw new Error(`Payment gateways: ${error.message}`);
 
     return {
@@ -596,7 +596,7 @@ export async function resetTenantBusinessData(): Promise<ResetResult> {
 
   for (const table of BUSINESS_DATA_TABLES) {
     try {
-      const { error } = await (supabase.from as any)(table)
+      const { error } = await (db.from as any)(table)
         .delete()
         .neq("id", "00000000-0000-0000-0000-000000000000");
       if (error) {
@@ -711,7 +711,7 @@ export async function fullSystemReset(): Promise<FullResetResult> {
       continue;
     }
     try {
-      const { error } = await (supabase.from as any)(table)
+      const { error } = await (db.from as any)(table)
         .delete()
         .neq("id", "00000000-0000-0000-0000-000000000000");
       if (error) {

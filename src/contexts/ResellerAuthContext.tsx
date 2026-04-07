@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { db, supabase } from "@/integrations/supabase/client";
+import { IS_LOVABLE } from "@/lib/environment";
+import api from "@/lib/api";
 
 interface ResellerUser {
   id: string;
@@ -64,12 +66,20 @@ export function ResellerAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (userId: string, password: string): Promise<ResellerUser> => {
-    const { data, error } = await supabase.functions.invoke("reseller-login", {
-      body: { user_id: userId, password },
-    });
+    let data: any;
 
-    if (error) throw new Error(error.message || "Login failed");
-    if (data?.error) throw new Error(data.error);
+    if (IS_LOVABLE) {
+      const { data: fnData, error } = await supabase.functions.invoke("reseller-login", {
+        body: { user_id: userId, password },
+      });
+      if (error) throw new Error(error.message || "Login failed");
+      if (fnData?.error) throw new Error(fnData.error);
+      data = fnData;
+    } else {
+      const res = await api.post("/reseller/login", { user_id: userId, password });
+      data = res.data;
+    }
+
     if (!data?.user || !data?.token) throw new Error("Invalid response from server");
 
     const user: ResellerUser = data.user;
@@ -82,12 +92,20 @@ export function ResellerAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInAsImpersonation = async (resellerId: string, adminToken: string): Promise<ResellerUser> => {
-    const { data, error } = await supabase.functions.invoke("reseller-impersonate", {
-      body: { reseller_id: resellerId, admin_session_token: adminToken },
-    });
+    let data: any;
 
-    if (error) throw new Error(error.message || "Impersonation failed");
-    if (data?.error) throw new Error(data.error);
+    if (IS_LOVABLE) {
+      const { data: fnData, error } = await supabase.functions.invoke("reseller-impersonate", {
+        body: { reseller_id: resellerId, admin_session_token: adminToken },
+      });
+      if (error) throw new Error(error.message || "Impersonation failed");
+      if (fnData?.error) throw new Error(fnData.error);
+      data = fnData;
+    } else {
+      const res = await api.post("/reseller/" + resellerId + "/impersonate", { admin_session_token: adminToken });
+      data = res.data;
+    }
+
     if (!data?.user || !data?.token) throw new Error("Invalid response from server");
 
     const user: ResellerUser = data.user;
