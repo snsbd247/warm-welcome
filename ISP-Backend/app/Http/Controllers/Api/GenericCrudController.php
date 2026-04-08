@@ -284,20 +284,25 @@ class GenericCrudController extends Controller
                 }
 
                 if (in_array($key, $model->getFillable())) {
+                    // Normalize boolean string values for MySQL tinyint columns
+                    $normalizedValue = $value;
+                    if ($value === 'true') $normalizedValue = 1;
+                    elseif ($value === 'false') $normalizedValue = 0;
+
                     if ($value === 'null') {
                         $query->whereNull($key);
-                    } elseif (str_starts_with($value, 'not:')) {
+                    } elseif (is_string($value) && str_starts_with($value, 'not:')) {
                         $query->where($key, '!=', substr($value, 4));
-                    } elseif (str_starts_with($value, 'gte:')) {
+                    } elseif (is_string($value) && str_starts_with($value, 'gte:')) {
                         $query->where($key, '>=', substr($value, 4));
-                    } elseif (str_starts_with($value, 'lte:')) {
+                    } elseif (is_string($value) && str_starts_with($value, 'lte:')) {
                         $query->where($key, '<=', substr($value, 4));
-                    } elseif (str_starts_with($value, 'like:')) {
+                    } elseif (is_string($value) && str_starts_with($value, 'like:')) {
                         $query->where($key, 'like', '%' . substr($value, 5) . '%');
-                    } elseif (str_contains($value, ',')) {
+                    } elseif (is_string($value) && str_contains($value, ',')) {
                         $query->whereIn($key, explode(',', $value));
                     } else {
-                        $query->where($key, $value);
+                        $query->where($key, $normalizedValue);
                     }
                 }
             }
