@@ -74,11 +74,15 @@ Route::get('/health', function () {
     ]);
 });
 
-// ── Public read-only settings (needed for login page branding) ──
+// ── Public read-only settings (needed for login page branding & landing page) ──
 Route::get('/general_settings', [GenericCrudController::class, 'index'])->defaults('table', 'general_settings');
 Route::get('/general-settings', [GenericCrudController::class, 'index'])->defaults('table', 'general_settings');
 Route::get('/system_settings', [GenericCrudController::class, 'index'])->defaults('table', 'system_settings');
 Route::get('/system-settings', [GenericCrudController::class, 'index'])->defaults('table', 'system_settings');
+Route::get('/saas_plans', [GenericCrudController::class, 'index'])->defaults('table', 'saas_plans');
+Route::get('/saas-plans', [GenericCrudController::class, 'index'])->defaults('table', 'saas_plans');
+Route::get('/landing_sections', [GenericCrudController::class, 'index'])->defaults('table', 'landing_sections');
+Route::get('/landing-sections', [GenericCrudController::class, 'index'])->defaults('table', 'landing_sections');
 
 // ── HTTP Setup Routes (secured by APP_KEY token) ─────
 Route::middleware('throttle:sensitive')->group(function () {
