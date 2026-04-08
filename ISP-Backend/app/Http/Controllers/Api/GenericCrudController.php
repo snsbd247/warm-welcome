@@ -518,9 +518,23 @@ class GenericCrudController extends Controller
         try {
             $model = $this->getModel($table);
             $normalizedTable = str_replace('-', '_', $table);
-
-            // Filter input to only fillable fields
             $fillable = $model->getFillable();
+
+            // ── Batch insert: request body is a JSON array ──
+            $content = $request->getContent();
+            $decoded = json_decode($content, true);
+            if (is_array($decoded) && isset($decoded[0]) && is_array($decoded[0])) {
+                $created = [];
+                foreach (array_chunk($decoded, 50) as $chunk) {
+                    $rows = array_map(fn($row) => array_intersect_key($row, array_flip($fillable)), $chunk);
+                    foreach ($rows as $row) {
+                        $created[] = $model->newInstance()->create($row);
+                    }
+                }
+                return response()->json($created, 201);
+            }
+
+            // ── Single record flow ──
             $input = $request->only($fillable);
 
             // Singleton upsert
@@ -550,7 +564,6 @@ class GenericCrudController extends Controller
                 }
             }
 
-            // Remove non-fillable fields before create
             $record = $model->create($input);
             return response()->json($record, 201);
         } catch (\Exception $e) {
@@ -572,11 +585,36 @@ class GenericCrudController extends Controller
         }
     }
 
-    public function destroy(Request $request, string $table, string $id)
+    public function destroy(Request $request, string $table, string $id = null)
     {
         try {
             $normalizedTable = str_replace('-', '_', $table);
 
+            // ── Bulk delete (no id, filters via query params) ──
+            if (!$id) {
+                $model = $this->getModel($table);
+                $query = $model->newQuery();
+                $fillable = $model->getFillable();
+
+                foreach ($request->except(['paginate', 'per_page', 'page']) as $key => $value) {
+                    if (str_contains($key, '__')) {
+                        [$col, $op] = explode('__', $key, 2);
+                        if (!in_array($col, $fillable) && $col !== 'id') continue;
+                        switch ($op) {
+                            case 'neq': $query->where($col, '!=', $value); break;
+                            case 'in': $query->whereIn($col, is_array($value) ? $value : explode(',', $value)); break;
+                            default: $query->where($col, $value); break;
+                        }
+                    } elseif (in_array($key, $fillable) || $key === 'id') {
+                        $query->where($key, $value);
+                    }
+                }
+
+                $deleted = $query->delete();
+                return response()->json(['success' => true, 'deleted' => $deleted]);
+            }
+
+            // ── Single delete ──
             if ($normalizedTable === 'accounts') {
                 return $this->destroyAccount($id);
             }

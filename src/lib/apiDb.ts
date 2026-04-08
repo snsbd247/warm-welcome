@@ -177,7 +177,11 @@ class QueryBuilder<T = any> {
           const { data: response } = await api.delete(buildTableApiPath(tablePath, String(idFilter.value)));
           return { data: response, error: null };
         }
-        return { data: null, error: null };
+        // Bulk delete with filters (e.g. .delete().neq("id", "xxx") or .eq("tenant_id", "xxx"))
+        const params = this._buildParams();
+        // Send filters as query params to a DELETE on the collection
+        const { data: response } = await api.delete(collectionPath, { params });
+        return { data: response, error: null };
       }
 
       if (this._operation === "upsert") {
