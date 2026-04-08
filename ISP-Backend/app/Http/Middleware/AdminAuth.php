@@ -17,24 +17,48 @@ class AdminAuth
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Try admin_sessions first
         $session = AdminSession::where('session_token', $token)
             ->where('status', 'active')
             ->first();
 
-        if (!$session) {
-            return response()->json(['error' => 'Invalid or expired session'], 401);
+        if ($session) {
+            $user = $session->user;
+            if (!$user || $user->status !== 'active') {
+                return response()->json(['error' => 'Account disabled'], 403);
+            }
+            $session->touch();
+            $request->merge(['admin_user' => $user, 'admin_session' => $session]);
+            return $next($request);
         }
 
-        $user = $session->user;
-        if (!$user || $user->status !== 'active') {
-            return response()->json(['error' => 'Account disabled'], 403);
+        // Fallback: check super_admin_sessions (allows super admin to access generic CRUD routes)
+        $superSession = \App\Models\SuperAdminSession::where('session_token', $token)
+            ->where('status', 'active')
+            ->first();
+
+        if ($superSession) {
+            $admin = $superSession->superAdmin;
+            if (!$admin || $admin->status !== 'active') {
+                return response()->json(['error' => 'Account disabled'], 403);
+            }
+            $superSession->touch();
+            // Create a synthetic user-like object for compatibility
+            $request->merge([
+                'admin_user' => (object) [
+                    'id' => $admin->id,
+                    'full_name' => $admin->name,
+                    'email' => $admin->email,
+                    'username' => $admin->username,
+                    'status' => $admin->status,
+                    'tenant_id' => null,
+                    'is_super_admin' => true,
+                ],
+                'admin_session' => $superSession,
+            ]);
+            return $next($request);
         }
 
-        // Touch session updated_at to extend activity
-        $session->touch();
-
-        $request->merge(['admin_user' => $user, 'admin_session' => $session]);
-
-        return $next($request);
+        return response()->json(['error' => 'Invalid or expired session'], 401);
     }
 }
