@@ -141,6 +141,44 @@ class GenericCrudController extends Controller
         'super_admin_sessions' => \App\Models\SuperAdminSession::class,
     ];
 
+    public static function supportedRouteTables(): array
+    {
+        static $tables = null;
+
+        if ($tables !== null) {
+            return $tables;
+        }
+
+        $routeTables = [];
+
+        foreach (array_keys((new static())->tableModelMap) as $table) {
+            $routeTables[$table] = true;
+            $routeTables[str_replace('_', '-', $table)] = true;
+        }
+
+        $tables = array_keys($routeTables);
+
+        usort($tables, fn (string $a, string $b) => strlen($b) <=> strlen($a));
+
+        return $tables;
+    }
+
+    public static function routeTablePattern(): string
+    {
+        static $pattern = null;
+
+        if ($pattern !== null) {
+            return $pattern;
+        }
+
+        $pattern = implode('|', array_map(
+            fn (string $table) => preg_quote($table, '/'),
+            static::supportedRouteTables()
+        ));
+
+        return $pattern;
+    }
+
     protected function getModel(string $table)
     {
         $normalizedTable = str_replace('-', '_', $table);

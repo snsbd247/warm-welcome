@@ -631,9 +631,14 @@ Route::middleware('customer.auth')->prefix('portal')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['admin.auth', 'check.subscription'])->group(function () {
-    Route::get('/{table}', [GenericCrudController::class, 'index']);
-    Route::get('/{table}/{id}', [GenericCrudController::class, 'show']);
-    Route::post('/{table}', [GenericCrudController::class, 'store']);
-    Route::put('/{table}/{id}', [GenericCrudController::class, 'update']);
-    Route::delete('/{table}/{id}', [GenericCrudController::class, 'destroy']);
+    Route::get('/{table}', [GenericCrudController::class, 'index'])
+        ->where('table', GenericCrudController::routeTablePattern());
+    Route::get('/{table}/{id}', [GenericCrudController::class, 'show'])
+        ->where('table', GenericCrudController::routeTablePattern());
+    Route::post('/{table}', [GenericCrudController::class, 'store'])
+        ->where('table', GenericCrudController::routeTablePattern());
+    Route::put('/{table}/{id}', [GenericCrudController::class, 'update'])
+        ->where('table', GenericCrudController::routeTablePattern());
+    Route::delete('/{table}/{id}', [GenericCrudController::class, 'destroy'])
+        ->where('table', GenericCrudController::routeTablePattern());
 });
