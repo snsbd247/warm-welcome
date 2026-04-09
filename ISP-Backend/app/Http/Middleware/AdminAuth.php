@@ -43,9 +43,9 @@ class AdminAuth
                 return response()->json(['error' => 'Account disabled'], 403);
             }
             $superSession->touch();
-            // Create a synthetic user-like object for compatibility
+            // Store as arrays to avoid InputBag stdClass error
             $request->merge([
-                'admin_user' => (object) [
+                'admin_user' => [
                     'id' => $admin->id,
                     'full_name' => $admin->name,
                     'email' => $admin->email,
@@ -54,8 +54,17 @@ class AdminAuth
                     'tenant_id' => null,
                     'is_super_admin' => true,
                 ],
-                'admin_session' => $superSession,
             ]);
+            $request->attributes->set('admin_user_object', (object) [
+                'id' => $admin->id,
+                'full_name' => $admin->name,
+                'email' => $admin->email,
+                'username' => $admin->username,
+                'status' => $admin->status,
+                'tenant_id' => null,
+                'is_super_admin' => true,
+            ]);
+            $request->attributes->set('admin_session', $superSession);
             return $next($request);
         }
 
