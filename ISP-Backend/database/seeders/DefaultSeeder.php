@@ -44,6 +44,7 @@ class DefaultSeeder extends Seeder
         $this->seedLedgerMappings();
         $this->seedPermissions();
         $this->seedModules();
+        $this->seedLandingSections();
 
         $this->command->info('');
         $this->command->info('╔════════════════════════════════════════════════════╗');
@@ -188,6 +189,11 @@ class DefaultSeeder extends Seeder
             GeneralSetting::create([
                 'site_name' => 'Smart ISP',
                 'primary_color' => '#3B82F6',
+                'email' => 'info@smartispapp.com',
+                'mobile' => '01700000000',
+                'address' => '',
+                'support_email' => 'support@smartispapp.com',
+                'support_phone' => '01700000000',
             ]);
         }
     }
@@ -200,11 +206,13 @@ class DefaultSeeder extends Seeder
             'company_name' => 'ISP Billing System',
             'footer_link' => '#',
             'footer_developer' => 'Sync & Solutions IT',
-            'system_version' => '1.0.7',
+            'system_version' => '1.0.8',
             'auto_update_year' => 'true',
             'enabled_modules' => '["dashboard","customers","billing","payments","merchant_payments","tickets","sms","accounting","inventory","supplier","reports","users","roles","settings","hr","mikrotik","packages","fiber_network","reseller","network_map","live_bandwidth"]',
             'invoice_footer' => 'Thank you for using our internet service.',
             'ledger_type' => 'running_balance',
+            'branding_footer_text' => 'Smart ISP - Complete ISP Management Solution',
+            'branding_copyright_text' => '© {year} Smart ISP. All rights reserved.',
         ];
         foreach ($settings as $key => $value) {
             SystemSetting::firstOrCreate(['setting_key' => $key], ['setting_value' => $value]);
@@ -549,6 +557,94 @@ class DefaultSeeder extends Seeder
                 ['slug' => $module['slug']],
                 $module
             );
+        }
+    }
+
+    // ── Landing Page Default Sections ────────────────────
+    private function seedLandingSections(): void
+    {
+        if (\App\Models\LandingSection::count() > 0) return;
+
+        $sections = [
+            [
+                'section_type' => 'hero',
+                'title' => 'Complete ISP Management Solution',
+                'subtitle' => 'Manage your ISP business with powerful billing, customer management, and network monitoring tools.',
+                'button_text' => 'Get Started',
+                'button_url' => '#pricing',
+                'sort_order' => 1,
+                'is_active' => true,
+                'metadata' => json_encode([
+                    'cta_nav' => 'Get Started',
+                    'nav_links' => [
+                        ['label' => 'Features', 'href' => '#features'],
+                        ['label' => 'How It Works', 'href' => '#how-it-works'],
+                        ['label' => 'Pricing', 'href' => '#pricing'],
+                        ['label' => 'FAQ', 'href' => '#faq'],
+                        ['label' => 'Contact', 'href' => '#contact'],
+                    ],
+                ]),
+            ],
+            [
+                'section_type' => 'stats',
+                'title' => 'Trusted by ISPs',
+                'sort_order' => 2,
+                'is_active' => true,
+                'metadata' => json_encode([
+                    'items' => [
+                        ['value' => '500+', 'label' => 'Active ISPs'],
+                        ['value' => '50K+', 'label' => 'Customers Managed'],
+                        ['value' => '99.9%', 'label' => 'Uptime'],
+                        ['value' => '24/7', 'label' => 'Support'],
+                    ],
+                ]),
+            ],
+            [
+                'section_type' => 'features',
+                'title' => 'Everything You Need',
+                'subtitle' => 'A comprehensive suite of tools to run your ISP business efficiently.',
+                'sort_order' => 3,
+                'is_active' => true,
+            ],
+            [
+                'section_type' => 'how_it_works',
+                'title' => 'Get Started in Minutes',
+                'subtitle' => 'Simple setup process to get your ISP management system running.',
+                'sort_order' => 4,
+                'is_active' => true,
+                'metadata' => json_encode([
+                    'steps' => [
+                        ['title' => 'Sign Up', 'description' => 'Create your account and choose a plan.'],
+                        ['title' => 'Configure', 'description' => 'Set up your network, packages, and billing.'],
+                        ['title' => 'Go Live', 'description' => 'Start managing your ISP business!'],
+                    ],
+                ]),
+            ],
+            [
+                'section_type' => 'faq',
+                'title' => 'Frequently Asked Questions',
+                'sort_order' => 6,
+                'is_active' => true,
+                'metadata' => json_encode([
+                    'items' => [
+                        ['question' => 'How long does setup take?', 'answer' => 'You can be up and running in less than 30 minutes.'],
+                        ['question' => 'Can I migrate from another system?', 'answer' => 'Yes, we support data import from CSV and other formats.'],
+                        ['question' => 'Is there a free trial?', 'answer' => 'Yes, we offer a 14-day free trial with full features.'],
+                    ],
+                ]),
+            ],
+            [
+                'section_type' => 'cta',
+                'title' => 'Ready to Transform Your ISP?',
+                'subtitle' => 'Join hundreds of ISPs already using Smart ISP to grow their business.',
+                'button_text' => 'Start Free Trial',
+                'sort_order' => 7,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($sections as $section) {
+            \App\Models\LandingSection::create($section);
         }
     }
 }

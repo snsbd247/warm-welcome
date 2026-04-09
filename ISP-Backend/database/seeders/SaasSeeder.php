@@ -3,37 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\SaasPlan;
-use App\Models\SuperAdmin;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class SaasSeeder extends Seeder
 {
-    private const DEFAULT_SUPER_ADMIN_EMAIL = 'admin@smartisp.com';
-    private const DEFAULT_SUPER_ADMIN_USERNAME = 'admin';
-    private const DEFAULT_SUPER_ADMIN_PASSWORD = 'admin123';
-
     public function run(): void
     {
-        $this->seedSuperAdmin();
         $this->seedPlans();
-        $this->command->info('SaaS data seeded!');
-        $this->command->info('Super Admin → username: ' . self::DEFAULT_SUPER_ADMIN_USERNAME . ' / email: ' . self::DEFAULT_SUPER_ADMIN_EMAIL . ' / password: ' . self::DEFAULT_SUPER_ADMIN_PASSWORD);
-    }
-
-    private function seedSuperAdmin(): void
-    {
-        SuperAdmin::updateOrCreate(
-            ['email' => self::DEFAULT_SUPER_ADMIN_EMAIL],
-            [
-                'name' => 'Super Admin',
-                'username' => self::DEFAULT_SUPER_ADMIN_USERNAME,
-                'password_hash' => Hash::make(self::DEFAULT_SUPER_ADMIN_PASSWORD),
-                'status' => 'active',
-                'failed_attempts' => 0,
-                'locked_until' => null,
-            ]
-        );
+        $this->command->info('SaaS plans seeded!');
     }
 
     private function seedPlans(): void
