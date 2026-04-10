@@ -517,6 +517,8 @@ Route::middleware(['super.admin.auth'])->prefix('super-admin')->group(function (
     // Subscription Management
     Route::get('/subscriptions', [SuperAdminController::class, 'subscriptions']);
     Route::post('/subscriptions', [SuperAdminController::class, 'assignSubscription']);
+    Route::put('/subscriptions/{id}', [SuperAdminController::class, 'updateSubscription']);
+    Route::delete('/subscriptions/{id}', [SuperAdminController::class, 'deleteSubscription']);
 
     // Domain Management (global)
     Route::get('/domains', [SuperAdminController::class, 'allDomains']);

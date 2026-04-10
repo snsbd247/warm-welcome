@@ -434,6 +434,18 @@ export const superAdminApi = {
     }
     return request("/subscriptions", { method: "POST", body: JSON.stringify(data) });
   },
+  updateSubscription: async (id: string, data: any) => {
+    if (IS_LOVABLE) return sbUpdate("subscriptions", id, data);
+    return request(`/subscriptions/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+  deleteSubscription: async (id: string) => {
+    if (IS_LOVABLE) {
+      const { error } = await supabase.from("subscriptions").delete().eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    }
+    return request(`/subscriptions/${id}`, { method: "DELETE" });
+  },
 
   // Domains
   getDomains: async () => {
