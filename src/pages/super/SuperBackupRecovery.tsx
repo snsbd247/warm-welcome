@@ -407,8 +407,11 @@ export default function SuperBackupRecovery() {
                         <td className="p-3 text-xs">{formatDate(log.created_at)}</td>
                         <td className="p-3">
                           <div className="flex gap-1 flex-wrap">
-                            <Button size="sm" variant="outline" onClick={() => verifyBackup(log)} disabled={!!actionLoading}>
+                            <Button size="sm" variant="outline" onClick={() => verifyBackup(log)} disabled={!!actionLoading} title="Verify">
                               {actionLoading === `verify-${log.id}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shield className="h-3 w-3" />}
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => downloadBackup(log)} title="Download SQL">
+                              <Download className="h-3 w-3" />
                             </Button>
                             {!log.backup_type.includes("restore") && (
                               <AlertDialog>
@@ -507,8 +510,11 @@ export default function SuperBackupRecovery() {
                         <td className="p-3 text-xs">{formatDate(log.created_at)}</td>
                         <td className="p-3">
                           <div className="flex gap-1 flex-wrap">
-                            <Button size="sm" variant="outline" onClick={() => verifyBackup(log)} disabled={!!actionLoading}>
+                            <Button size="sm" variant="outline" onClick={() => verifyBackup(log)} disabled={!!actionLoading} title="Verify">
                               {actionLoading === `verify-${log.id}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shield className="h-3 w-3" />}
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => downloadBackup(log)} title="Download SQL">
+                              <Download className="h-3 w-3" />
                             </Button>
                             {!log.backup_type.includes("restore") && (
                               <AlertDialog>
