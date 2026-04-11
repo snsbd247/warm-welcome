@@ -33,11 +33,6 @@ export default function SuperTenants() {
     queryFn: superAdminApi.getPlans,
   });
 
-  const createMut = useMutation({
-    mutationFn: superAdminApi.createTenant,
-    onSuccess: () => { toast.success("Tenant created"); setShowCreate(false); qc.invalidateQueries({ queryKey: ["super-tenants"] }); },
-    onError: (e: any) => toast.error(e.message),
-  });
 
   const suspendMut = useMutation({
     mutationFn: superAdminApi.suspendTenant,
