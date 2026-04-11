@@ -142,17 +142,9 @@ function Navbar({ branding, onCta, sections }: { branding: any; onCta: () => voi
         <div className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-xl pb-4 px-4 space-y-1">
           {navLinks.map((link: any, i: number) => (
             <a key={i} href={link.href} onClick={(e) => {
+              e.preventDefault();
               setMobileOpen(false);
-              const href = link.href as string;
-              const hash = href.includes("#") ? "#" + href.split("#")[1] : "";
-              if (hash) {
-                e.preventDefault();
-                const el = document.getElementById(hash.slice(1));
-                if (el) {
-                  el.scrollIntoView({ behavior: "smooth" });
-                  window.history.replaceState(null, "", hash);
-                }
-              }
+              scrollToSection(link.href);
             }}
               className="block py-2 text-sm text-muted-foreground hover:text-foreground font-medium">
               {link.label}
