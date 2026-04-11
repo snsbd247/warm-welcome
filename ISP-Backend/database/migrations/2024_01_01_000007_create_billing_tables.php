@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('bills', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('tenant_id')->nullable()->index();
             $table->uuid('customer_id')->index();
             $table->string('month');
             $table->decimal('amount', 10, 2)->default(0);
@@ -40,6 +41,9 @@ return new class extends Migration {
             $table->string('bkash_payment_id')->nullable();
             $table->string('bkash_trx_id')->nullable();
             $table->string('month')->nullable();
+            $table->uuid('reseller_id')->nullable()->index();
+            $table->uuid('collected_by')->nullable()->index();
+            $table->text('notes')->nullable();
             $table->timestamp('paid_at')->useCurrent();
             $table->timestamps();
         });
