@@ -207,7 +207,7 @@ class MikrotikService
             ->where('status', '!=', 'disconnected')
             ->get();
 
-        $results = ['synced' => 0, 'failed' => 0, 'total' => $customers->count()];
+        $results = ['success' => true, 'synced' => 0, 'failed' => 0, 'total' => $customers->count()];
 
         foreach ($customers as $customer) {
             $result = $this->syncCustomer($customer->id);

@@ -104,7 +104,7 @@ class MikrotikBillControlController extends Controller
     public function bulkSyncPackages()
     {
         $packages = Package::whereNotNull('router_id')->where('is_active', true)->get();
-        $results  = ['synced' => 0, 'failed' => 0, 'total' => $packages->count()];
+        $results  = ['success' => true, 'synced' => 0, 'failed' => 0, 'total' => $packages->count()];
 
         foreach ($packages as $package) {
             $r = $this->mikrotikService->syncProfile($package);

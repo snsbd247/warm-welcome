@@ -485,7 +485,7 @@ class GenericCrudController extends Controller
         }
     }
 
-    protected array $singletonTables = ['sms_settings', 'general_settings', 'smtp_settings'];
+    protected array $singletonTables = ['sms_settings', 'general_settings', 'smtp_settings', 'tenant_company_info'];
 
     protected function destroyAccount(string $id)
     {
@@ -582,6 +582,19 @@ class GenericCrudController extends Controller
             // Key-based upsert for system_settings (setting_key is unique per tenant)
             if ($request->has('_upsert') && $normalizedTable === 'system_settings' && $request->has('setting_key')) {
                 $existing = $model->where('setting_key', $request->setting_key)->first();
+                if ($existing) {
+                    $existing->update(array_intersect_key($request->except(['_upsert', 'id']), array_flip($fillable)));
+                    return response()->json($existing->fresh());
+                }
+            }
+
+            // Key-based upsert for payment_gateways (gateway_name is unique per tenant)
+            if ($request->has('_upsert') && $normalizedTable === 'payment_gateways' && $request->has('gateway_name')) {
+                $query = $model->where('gateway_name', $request->gateway_name);
+                if ($request->has('tenant_id')) {
+                    $query->where('tenant_id', $request->tenant_id);
+                }
+                $existing = $query->first();
                 if ($existing) {
                     $existing->update(array_intersect_key($request->except(['_upsert', 'id']), array_flip($fillable)));
                     return response()->json($existing->fresh());

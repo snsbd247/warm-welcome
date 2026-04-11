@@ -191,6 +191,22 @@ class QueryBuilder<T = any> {
       }
 
       if (this._operation === "upsert") {
+        // Handle array upsert: send each item individually with _upsert flag
+        if (Array.isArray(this._data)) {
+          const results = [];
+          for (const item of this._data) {
+            try {
+              const { data: response } = await api.post(collectionPath, {
+                ...item,
+                _upsert: true,
+              });
+              results.push(response);
+            } catch (itemErr: any) {
+              console.warn(`[apiDb] upsert item failed:`, itemErr.message);
+            }
+          }
+          return { data: results, error: null };
+        }
         const { data: response } = await api.post(collectionPath, {
           ...this._data,
           _upsert: true,
