@@ -740,7 +740,7 @@ class SuperAdminController extends Controller
      */
     public function smtpSettings()
     {
-        $smtp = SmtpSetting::first();
+        $smtp = SmtpSetting::withoutGlobalScopes()->first();
         return response()->json($smtp);
     }
 
@@ -764,12 +764,12 @@ class SuperAdminController extends Controller
             $data['password'] = $request->password;
         }
 
-        $smtp = SmtpSetting::first();
+        $smtp = SmtpSetting::withoutGlobalScopes()->first();
         if ($smtp) {
             $smtp->update($data);
         } else {
             $data['password'] = $request->password ?? '';
-            $smtp = SmtpSetting::create($data);
+            $smtp = SmtpSetting::withoutGlobalScopes()->create($data);
         }
 
         return response()->json($smtp);
