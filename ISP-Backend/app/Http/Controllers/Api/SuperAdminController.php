@@ -106,7 +106,7 @@ class SuperAdminController extends Controller
 
     public function createTenant(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'subdomain' => 'required|string|max:100|unique:tenants,subdomain|alpha_dash',
             'email' => 'required|email',
@@ -117,58 +117,75 @@ class SuperAdminController extends Controller
             'admin_password' => 'nullable|string|min:6',
         ]);
 
-        $tenant = Tenant::create([
-            'name' => $request->name,
-            'subdomain' => strtolower($request->subdomain),
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'status' => 'active',
-            'plan' => 'basic',
-        ]);
+        $adminName = $validated['admin_name'] ?? ($validated['name'] . ' Admin');
+        $adminEmail = $validated['admin_email'] ?? $validated['email'];
+        $adminPassword = $validated['admin_password'] ?? '123456789';
+        $adminUsername = strtolower($validated['subdomain']) . '_admin';
 
-        // Create subscription if plan selected
-        if ($request->plan_id) {
-            $plan = SaasPlan::find($request->plan_id);
-            $amount = $plan->price_monthly;
-            $sub = Subscription::create([
-                'tenant_id' => $tenant->id,
-                'plan_id' => $plan->id,
-                'billing_cycle' => 'monthly',
-                'start_date' => now()->toDateString(),
-                'end_date' => now()->addMonth()->toDateString(),
-                'status' => 'active',
-                'amount' => $amount,
+        try {
+            $tenant = DB::transaction(function () use ($validated, $adminName, $adminEmail, $adminPassword, $adminUsername) {
+                $tenant = Tenant::create([
+                    'name' => $validated['name'],
+                    'subdomain' => strtolower($validated['subdomain']),
+                    'email' => $validated['email'],
+                    'phone' => $validated['phone'] ?? null,
+                    'status' => 'active',
+                    'plan' => 'basic',
+                ]);
+
+                if (!empty($validated['plan_id'])) {
+                    $plan = SaasPlan::findOrFail($validated['plan_id']);
+                    $amount = $plan->price_monthly;
+                    $sub = Subscription::create([
+                        'tenant_id' => $tenant->id,
+                        'plan_id' => $plan->id,
+                        'billing_cycle' => 'monthly',
+                        'start_date' => now()->toDateString(),
+                        'end_date' => now()->addMonth()->toDateString(),
+                        'status' => 'active',
+                        'amount' => $amount,
+                    ]);
+
+                    $tenant->update(['plan' => $plan->slug]);
+                    $this->createSubscriptionInvoice($sub, $plan, $amount);
+                }
+
+                $user = User::create([
+                    'tenant_id' => $tenant->id,
+                    'full_name' => $adminName,
+                    'email' => $adminEmail,
+                    'mobile' => $validated['phone'] ?? null,
+                    'username' => $adminUsername,
+                    'password_hash' => Hash::make($adminPassword),
+                    'status' => 'active',
+                    'must_change_password' => true,
+                ]);
+
+                $superAdminRole = CustomRole::where('name', 'Super Admin')->first();
+                UserRole::create([
+                    'user_id' => $user->id,
+                    'role' => 'super_admin',
+                    'custom_role_id' => $superAdminRole?->id,
+                ]);
+
+                return $tenant->load('domains');
+            });
+        } catch (\Throwable $e) {
+            Log::error('Tenant creation failed', [
+                'subdomain' => $validated['subdomain'],
+                'email' => $validated['email'],
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
-            $tenant->update(['plan' => $plan->slug]);
 
-            // Auto-create subscription invoice
-            $this->createSubscriptionInvoice($sub, $plan, $amount);
+            return response()->json([
+                'error' => 'Failed to create tenant',
+            ], 500);
         }
 
-        // Create tenant admin user (use defaults if not provided)
-        $adminName = $request->admin_name ?? $request->name . ' Admin';
-        $adminEmail = $request->admin_email ?? $request->email;
-        $adminPassword = $request->admin_password ?? '123456789';
-
-        $user = User::create([
-            'tenant_id' => $tenant->id,
-            'full_name' => $adminName,
-            'email' => $adminEmail,
-            'username' => strtolower($request->subdomain) . '_admin',
-            'password_hash' => Hash::make($adminPassword),
-            'status' => 'active',
-            'must_change_password' => true,
-        ]);
-
-        $superAdminRole = CustomRole::where('name', 'Super Admin')->first();
-        UserRole::create([
-            'user_id' => $user->id,
-            'role' => 'super_admin',
-            'custom_role_id' => $superAdminRole?->id,
-        ]);
-
-        // Send welcome email with credentials
         $loginUrl = "https://{$tenant->subdomain}.smartispapp.com/admin/login";
+
         try {
             $emailService = new TenantEmailService();
             $emailService->sendTenantCredentials(
@@ -182,18 +199,21 @@ class SuperAdminController extends Controller
             Log::warning('Tenant welcome email failed: ' . $e->getMessage());
         }
 
-        // Send welcome SMS
-        if ($request->phone) {
+        if (!empty($validated['phone'])) {
             try {
                 $smsService = new SmsService();
-                $smsMessage = "Welcome to Smart ISP! Login: {$loginUrl}, User: " . strtolower($request->subdomain) . "_admin, Password: {$adminPassword}. Please change your password after first login.";
-                $smsService->send($request->phone, $smsMessage);
+                $smsMessage = "Welcome to Smart ISP! Login: {$loginUrl}, User: {$adminUsername}, Password: {$adminPassword}. Please change your password after first login.";
+                $smsService->send($validated['phone'], $smsMessage);
             } catch (\Exception $e) {
                 Log::warning('Tenant welcome SMS failed: ' . $e->getMessage());
             }
         }
 
-        return response()->json($tenant->load('domains'), 201);
+        return response()->json([
+            'success' => true,
+            'tenant' => $tenant,
+            'id' => $tenant->id,
+        ], 201);
     }
 
     public function updateTenant(Request $request, string $id)

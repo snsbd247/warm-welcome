@@ -227,7 +227,6 @@ export const superAdminApi = {
       });
       // Auto-create default tenant admin user
       const tenantId = Array.isArray(tenant) ? tenant[0]?.id : tenant?.id;
-      const tenantRecord = Array.isArray(tenant) ? tenant[0] : tenant;
       if (tenantId) {
         const defaultUserId = crypto.randomUUID();
         const defaultUsername = (data.subdomain || data.name || "admin").toLowerCase().replace(/[^a-z0-9]/g, "") + "_admin";
@@ -304,14 +303,58 @@ export const superAdminApi = {
       }
       return tenant;
     }
-    // VPS: auto-fill admin fields if not provided
+
     const payload = {
       ...data,
       admin_name: data.admin_name || `${data.name} Admin`,
       admin_email: data.admin_email || data.email,
       admin_password: data.admin_password || "123456789",
     };
-    return request("/tenants", { method: "POST", body: JSON.stringify(payload) });
+
+    const normalizeCreateTenantResponse = (result: any) => {
+      const tenant = Array.isArray(result)
+        ? result[0]
+        : result?.tenant || result?.data?.tenant || result?.data || result;
+
+      if (!tenant?.id) return result;
+
+      return result && typeof result === "object" && !Array.isArray(result)
+        ? { ...result, tenant, id: tenant.id }
+        : { tenant, id: tenant.id };
+    };
+
+    const recoverExistingTenant = async () => {
+      const tenants = await request(`/tenants?search=${encodeURIComponent(payload.subdomain)}`, {
+        headers: { Accept: "application/json" },
+      });
+
+      const match = Array.isArray(tenants)
+        ? tenants.find((tenant: any) =>
+            tenant?.subdomain?.toLowerCase() === payload.subdomain?.toLowerCase() &&
+            (!payload.email || tenant?.email === payload.email)
+          )
+        : null;
+
+      return match?.id ? { success: true, tenant: match, id: match.id, recovered: true } : null;
+    };
+
+    try {
+      const result = await request("/tenants", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const normalized = normalizeCreateTenantResponse(result);
+      if ((normalized as any)?.id) return normalized;
+
+      const recovered = await recoverExistingTenant();
+      return recovered || normalized;
+    } catch (error: any) {
+      const recovered = await recoverExistingTenant().catch(() => null);
+      if (recovered) return recovered;
+      throw error;
+    }
   },
   updateTenant: async (id: string, data: any) => {
     if (IS_LOVABLE) return sbUpdate("tenants", id, data);
