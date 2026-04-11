@@ -291,6 +291,13 @@ export default function SuperBackupRecovery() {
     return match?.[1] || "";
   };
 
+  const downloadBackup = (log: BackupLog) => {
+    const filePath = log.backup_type === "full" || log.backup_type === "full_restore"
+      ? `backups/full/${log.file_name}`
+      : `backups/tenants/${extractTenantId(log.file_name)}/${log.file_name}`;
+    superAdminApi.downloadBackup(filePath);
+  };
+
   const typeColor = (type: string) => {
     if (type === "full") return "default";
     if (type === "tenant") return "secondary";
