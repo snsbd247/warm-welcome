@@ -129,16 +129,20 @@ class SuperAdminController extends Controller
         // Create subscription if plan selected
         if ($request->plan_id) {
             $plan = SaasPlan::find($request->plan_id);
-            Subscription::create([
+            $amount = $plan->price_monthly;
+            $sub = Subscription::create([
                 'tenant_id' => $tenant->id,
                 'plan_id' => $plan->id,
                 'billing_cycle' => 'monthly',
                 'start_date' => now()->toDateString(),
                 'end_date' => now()->addMonth()->toDateString(),
                 'status' => 'active',
-                'amount' => $plan->price_monthly,
+                'amount' => $amount,
             ]);
             $tenant->update(['plan' => $plan->slug]);
+
+            // Auto-create subscription invoice
+            $this->createSubscriptionInvoice($sub, $plan, $amount);
         }
 
         // Create tenant admin user with forced password change
@@ -160,8 +164,8 @@ class SuperAdminController extends Controller
         ]);
 
         // Send welcome email with credentials
+        $loginUrl = "https://{$tenant->subdomain}.smartispapp.com/admin/login";
         try {
-            $loginUrl = "https://{$tenant->subdomain}.smartispapp.com/admin/login";
             $emailService = new TenantEmailService();
             $emailService->sendTenantCredentials(
                 $tenant->toArray(),
@@ -171,7 +175,18 @@ class SuperAdminController extends Controller
                 $loginUrl
             );
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning('Tenant welcome email failed: ' . $e->getMessage());
+            Log::warning('Tenant welcome email failed: ' . $e->getMessage());
+        }
+
+        // Send welcome SMS
+        if ($request->phone) {
+            try {
+                $smsService = new SmsService();
+                $smsMessage = "Welcome to Smart ISP! Login: {$loginUrl}, User: " . strtolower($request->subdomain) . "_admin, Password: {$request->admin_password}. Please change your password after first login.";
+                $smsService->send($request->phone, $smsMessage);
+            } catch (\Exception $e) {
+                Log::warning('Tenant welcome SMS failed: ' . $e->getMessage());
+            }
         }
 
         return response()->json($tenant->load('domains'), 201);
