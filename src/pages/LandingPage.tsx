@@ -71,6 +71,20 @@ function useLandingSections() {
   });
 }
 
+// ─── Scroll Helper ───────────────────────────────────────────
+function scrollToSection(href: string) {
+  const hash = href.includes("#") ? href.split("#").pop() || "" : "";
+  if (!hash) return false;
+  // Try direct ID match first, then data-section fallback
+  const el = document.getElementById(hash) || document.querySelector(`[data-section="${hash}"]`);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth" });
+    window.history.replaceState(null, "", "#" + hash);
+    return true;
+  }
+  return false;
+}
+
 // ─── Navbar ──────────────────────────────────────────────────
 function Navbar({ branding, onCta, sections }: { branding: any; onCta: () => void; sections: any[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
