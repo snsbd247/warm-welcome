@@ -81,8 +81,11 @@ class BackupRecoveryController extends Controller
     // ── Download backup ───────────────────────────────────
     public function download(Request $request)
     {
-        $request->validate(['file_path' => 'required|string']);
-        $filePath = $request->input('file_path');
+        $filePath = $request->input('file_path') ?? $request->query('file_path');
+
+        if (!$filePath || !is_string($filePath)) {
+            return response()->json(['error' => 'file_path is required'], 400);
+        }
 
         // Security: prevent path traversal
         if (str_contains($filePath, '..')) {
@@ -95,7 +98,10 @@ class BackupRecoveryController extends Controller
             return response()->json(['error' => 'File not found'], 404);
         }
 
-        return response()->download($fullPath);
+        $fileName = basename($fullPath);
+        return response()->download($fullPath, $fileName, [
+            'Content-Type' => 'application/sql',
+        ]);
     }
 
     // ── Restore full backup ───────────────────────────────

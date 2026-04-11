@@ -554,6 +554,7 @@ Route::middleware(['super.admin.auth'])->prefix('super-admin')->group(function (
     Route::post('/backups/full', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'createFull']);
     Route::post('/backups/tenant', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'createTenant']);
     Route::post('/backups/download', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'download']);
+    Route::get('/backups/download', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'download']);
     Route::post('/backups/restore-full', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'restoreFull']);
     Route::post('/backups/restore-tenant', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'restoreTenant']);
     Route::post('/backups/verify', [\App\Http\Controllers\Api\BackupRecoveryController::class, 'verify']);
