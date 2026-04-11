@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import DemoQuickModal from "@/components/demo/DemoQuickModal";
 import { db } from "@/integrations/supabase/client";
