@@ -27,7 +27,8 @@ return new class extends Migration {
 
         Schema::create('sms_templates', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name')->unique();
+            $table->uuid('tenant_id')->nullable()->index();
+            $table->string('name');
             $table->text('message');
             $table->timestamps();
         });
@@ -50,6 +51,7 @@ return new class extends Migration {
 
         Schema::create('reminder_logs', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('tenant_id')->nullable()->index();
             $table->string('phone');
             $table->text('message');
             $table->string('channel')->default('sms');
