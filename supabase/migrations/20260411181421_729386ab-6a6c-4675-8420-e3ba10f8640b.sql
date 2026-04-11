@@ -1,0 +1,1 @@
+UPDATE smtp_settings SET password = 'ncdpscqxdrjeqibc', from_name = 'SmartISPApp', updated_at = now() WHERE id = 'aefc258b-2a25-470d-92f4-edcb301ba922';
