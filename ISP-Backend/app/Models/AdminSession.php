@@ -10,8 +10,9 @@ class AdminSession extends Model
     use HasUuid;
 
     protected $fillable = [
-        'id', 'admin_id', 'session_token', 'ip_address',
-        'browser', 'device_name', 'status',
+        'id', 'tenant_id', 'admin_id', 'session_token', 'ip_address',
+        'browser', 'device_name', 'city', 'country',
+        'last_activity', 'status',
     ];
 
     public function user()
