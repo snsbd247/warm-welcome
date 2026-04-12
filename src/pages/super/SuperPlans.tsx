@@ -80,13 +80,20 @@ export default function SuperPlans() {
         if (error) throw error;
         planId = data.id;
       }
-      await db.from("plan_modules").delete().eq("plan_id", planId);
+      // Delete existing plan modules
+      const { error: delErr } = await db.from("plan_modules").delete().eq("plan_id", planId);
+      if (delErr) {
+        console.error("Failed to delete plan_modules:", delErr);
+        throw new Error(delErr.message || "Failed to remove old modules");
+      }
+      // Insert new plan modules
       if (form.modules.length > 0) {
-        const { data: modRows } = await db.from("modules").select("id").in("slug", form.modules);
+        const { data: modRows, error: modErr } = await db.from("modules").select("id, slug").in("slug", form.modules);
+        if (modErr) throw new Error(modErr.message || "Failed to fetch module IDs");
         if (modRows && modRows.length > 0) {
           const inserts = modRows.map((m: any) => ({ plan_id: planId, module_id: m.id }));
           const { error: pmErr } = await db.from("plan_modules").insert(inserts);
-          if (pmErr) throw pmErr;
+          if (pmErr) throw new Error(pmErr.message || "Failed to save modules");
         }
       }
       toast.success(editPlan ? sa.planUpdated : sa.planCreated);
