@@ -1,4 +1,5 @@
 import { sessionStore } from "@/lib/sessionStore";
+import { useServerInfo } from "@/hooks/useServerInfo";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -116,11 +117,7 @@ function DomainAddDialog({ tenantId, onSuccess }: { tenantId: string; onSuccess:
             <Label>{sa.domainName}</Label>
             <Input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="billing.yourisp.com" />
           </div>
-          <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground text-sm">{sa.dnsConfiguration}</p>
-            <p>Add an A record pointing to: <code className="bg-muted px-1 rounded">185.158.133.1</code></p>
-            <p>Or CNAME to: <code className="bg-muted px-1 rounded">smartispapp.com</code></p>
-          </div>
+          <DnsConfigBox />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>{t.common.cancel}</Button>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useServerInfo } from "@/hooks/useServerInfo";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { superAdminApi } from "@/lib/superAdminApi";
@@ -363,11 +364,7 @@ export default function SuperOnboarding() {
                 <Input value={domainForm.domain} onChange={(e) => update({ domainForm: { domain: e.target.value } })} placeholder="billing.yourisp.com" />
               </div>
               {domainForm.domain && (
-                <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground space-y-1">
-                  <p className="font-medium text-foreground text-sm">{sa.dnsInstructions}</p>
-                  <p>Add an <strong>A record</strong> → <code className="bg-muted px-1 rounded">185.158.133.1</code></p>
-                  <p>Or <strong>CNAME</strong> → <code className="bg-muted px-1 rounded">smartispapp.com</code></p>
-                </div>
+                <OnboardingDnsBox />
               )}
               <div className="flex justify-between">
                 <Button variant="ghost" onClick={() => update({ step: 0 })} disabled={isPending}>
