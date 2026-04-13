@@ -886,7 +886,23 @@ export default function SuperTenantProfile() {
       } else {
         const result: SetupResult = await runSetupStep(step, forceReimport, id!);
         if (!result.success) throw new Error(result.message);
-        await superAdminApi.updateTenant(id!, { [`setup_${step}`]: true });
+        const updateData: any = { [`setup_${step}`]: true };
+        // After individual step, check if all steps are now complete
+        const currentTenant = qc.getQueryData<any>(["super-tenant", id]);
+        if (currentTenant) {
+          const flags: Record<string, boolean> = {
+            setup_geo: currentTenant.setup_geo,
+            setup_accounts: currentTenant.setup_accounts,
+            setup_templates: currentTenant.setup_templates,
+            setup_ledger: currentTenant.setup_ledger,
+            setup_payment_gateways: currentTenant.setup_payment_gateways,
+          };
+          flags[`setup_${step}`] = true;
+          if (Object.values(flags).every(Boolean)) {
+            updateData.setup_status = "completed";
+          }
+        }
+        await superAdminApi.updateTenant(id!, updateData);
         return result;
       }
     },
